@@ -1,6 +1,3 @@
-
-# solooo Siniestros y eventos
-
 from django.db import models
 from polizas.models import Poliza, BienAsegurado
 from usuarios.models import AsesorUTPL
@@ -22,6 +19,12 @@ class Siniestro(models.Model):
     fecha_cierre = models.DateField(null=True, blank=True)
     tiempo = models.IntegerField()
 
+    # 🔥 BIEN (AÑADIDO AQUÍ)
+    tipo_bien = models.CharField(max_length=50)
+    marca = models.CharField(max_length=100, blank=True)
+    modelo = models.CharField(max_length=100, blank=True)
+    numero_serie = models.CharField(max_length=100)
+
     poliza = models.ForeignKey(Poliza, on_delete=models.CASCADE)
     broker = models.ForeignKey(Broker, on_delete=models.SET_NULL, null=True, blank=True)
     asesor_asignado = models.ForeignKey(
@@ -39,6 +42,10 @@ class Evento(models.Model):
     estado = models.IntegerField()
     fecha_ocurrencia = models.DateField()
     fecha_reporte = models.DateField()
+
+    # 🔥 EVENTO (AÑADIDO AQUÍ)
+    ubicacion = models.CharField(max_length=255)
+    tipo_evento = models.CharField(max_length=50)
 
     siniestro = models.ForeignKey(Siniestro, on_delete=models.CASCADE)
     bien = models.ForeignKey(BienAsegurado, on_delete=models.CASCADE)
