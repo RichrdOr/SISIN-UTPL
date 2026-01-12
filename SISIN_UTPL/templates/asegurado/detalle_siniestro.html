@@ -1,0 +1,88 @@
+{% extends "asegurado/base_asegurado.html" %}
+{% load static %}
+
+{% block title %}Detalle del Siniestro{% endblock %}
+
+{% block content %}
+<div class="flex justify-center py-10 px-4">
+    <div class="w-full max-w-5xl space-y-8">
+
+        <!-- HEADER -->
+        <div class="border-b pb-4">
+            <h1 class="text-3xl font-black">Detalle del Siniestro</h1>
+            <p class="text-slate-500 text-sm">
+                Estado actual del reclamo y documentos requeridos
+            </p>
+        </div>
+
+        <!-- INFO GENERAL -->
+        <div class="card">
+            <h3 class="card-title">Información del Siniestro</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <span class="label">Fecha del siniestro</span>
+                    <p class="value">{{ siniestro.fecha }}</p>
+                </div>
+
+                <div>
+                    <span class="label">Ubicación</span>
+                    <p class="value">{{ siniestro.ubicacion }}</p>
+                </div>
+
+                <div class="md:col-span-2">
+                    <span class="label">Descripción</span>
+                    <p class="value">{{ siniestro.descripcion }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCUMENTOS -->
+        <div class="card">
+            <h3 class="card-title">Documentos Requeridos</h3>
+
+            <form method="post" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% csrf_token %}
+
+                <!-- DOCUMENTO 1 -->
+                <label class="upload-box">
+                    <div class="upload-icon">
+                        <span class="material-symbols-outlined">upload_file</span>
+                    </div>
+
+                    <div class="upload-text">
+                        <p class="font-semibold">Informe técnico</p>
+                        <p class="text-xs text-slate-500">PDF</p>
+                    </div>
+
+                    <input type="file" name="informe_tecnico" accept=".pdf" class="upload-input" required>
+                </label>
+
+                <!-- DOCUMENTO 2 -->
+                <label class="upload-box">
+                    <div class="upload-icon">
+                        <span class="material-symbols-outlined">photo_camera</span>
+                    </div>
+
+                    <div class="upload-text">
+                        <p class="font-semibold">Evidencia fotográfica</p>
+                        <p class="text-xs text-slate-500">PNG / JPG</p>
+                    </div>
+
+                    <input type="file" name="evidencia_fotografica" accept=".png,.jpg,.jpeg" class="upload-input"
+                        required>
+                </label>
+
+                <!-- BOTÓN -->
+                <div class="md:col-span-2 flex justify-end">
+                    <button type="submit" class="btn-primary">
+                        Guardar documentos
+                    </button>
+                </div>
+            </form>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}SISIN - Asegurado{% endblock %}</title>
+
+    <!-- Tailwind CDN (solo utilidades visuales) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#1179d4",
+                        "background-light": "#f6f7f8",
+                    },
+                    fontFamily: {
+                        display: ["Public Sans", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- CSS propio -->
+    <link rel="stylesheet" href="{% static 'css/asegurado.css' %}">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+</head>
+
+<body class="bg-background-light font-display text-slate-800">
+
+<header class="app-header">
+    <div class="header-container">
+        <div class="header-inner">
+
+            <!-- IZQUIERDA -->
+            <div class="header-left">
+                <img src="{% static 'img/UTPL_logo.png' %}"
+                     alt="Logo UTPL"
+                     class="logo-utpl">
+
+                <h1 class="header-title">
+                    Gestión de Siniestros UTPL
+                </h1>
+            </div>
+
+            <!-- DERECHA -->
+            <div class="header-right">
+
+                <!-- NOTIFICACIONES -->
+                <button class="text-slate-500 hover:text-primary transition">
+                    <span class="material-symbols-outlined text-4xl">
+                        notifications
+                    </span>
+                </button>
+
+                <!-- PERFIL -->
+                <div class="profile-box">
+                    {% if request.user.perfil.foto %}
+                        <img src="{{ request.user.perfil.foto.url }}"
+                             alt="Foto de perfil"
+                             class="profile-img">
+                    {% else %}
+                        <span class="material-symbols-outlined profile-icon">
+                            account_circle
+                        </span>
+                    {% endif %}
+
+                    <div class="profile-text">
+                        <p class="profile-name">
+                            {{ request.user.get_full_name|default:request.user.username }}
+                        </p>
+                        <p class="profile-role">
+                            Asegurado
+                        </p>
+                    </div>
+                </div>
+
+                <!-- LOGOUT -->
+                <button class="text-slate-500 hover:text-primary transition">
+                    <span class="material-symbols-outlined text-3xl">
+                        logout
+                    </span>
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+</header>
+
+<main class="app-main">
+    {% block content %}
+    {% endblock %}
+</main>
+
+<script src="{% static 'js/asegurado.js' %}"></script>
+
+</body>
+</html>

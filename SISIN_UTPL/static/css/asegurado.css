@@ -1,0 +1,354 @@
+/* ================================
+   CONFIGURACIÓN BASE
+================================ */
+html {
+    font-size: 16px;
+}
+
+body {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    background-color: #f6f7f8;
+    color: #1f2937;
+    margin: 0;
+}
+
+/* ================================
+   HEADER / NAVBAR
+================================ */
+.app-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* CONTENEDOR EXTERNO */
+.header-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 30px 0px;
+    /* 🔥 controla esquinas aquí */
+}
+
+/* CONTENEDOR INTERNO */
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* IZQUIERDA */
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* DERECHA */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+/* LOGO UTPL */
+.logo-utpl {
+    height: 72px;
+    /* 🔥 cambia SOLO este valor */
+    width: auto;
+    object-fit: contain;
+}
+
+/* TÍTULO */
+.header-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #1f2937;
+    margin: 0;
+}
+
+/* ================================
+   PERFIL USUARIO
+================================ */
+.profile-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-img {
+    height: 44px;
+    width: 44px;
+    border-radius: 9999px;
+    object-fit: cover;
+    border: 1px solid #e5e7eb;
+}
+
+.profile-icon {
+    font-size: 3rem;
+    color: #64748b;
+}
+
+.profile-text {
+    text-align: right;
+    line-height: 1.2;
+}
+
+.profile-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.profile-role {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0;
+}
+
+/* ================================
+   ICONOS HEADER
+================================ */
+.header-right button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.material-symbols-outlined {
+    vertical-align: middle;
+}
+
+/* ================================
+   MAIN
+================================ */
+.app-main {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 40px;
+}
+
+/* ================================
+   SCROLLBAR
+================================ */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+/* ================================
+   Cards
+================================ */
+.card {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    position: relative;
+}
+
+/* Barra lateral de estado (opcional) */
+.card::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: #cbd5e1;
+}
+
+/* Estados */
+.card.en-proceso::after {
+    background: #1179d4;
+}
+
+.card.finalizado::after {
+    background: #22c55e;
+}
+
+/* ================================
+   FORMULARIOS
+================================ */
+
+/* Label */
+.form-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 0.35rem;
+}
+
+/* Inputs / Select / Textarea */
+.form-input {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.9rem;
+    border-radius: 0.5rem;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #0f172a;
+    transition: all 0.15s ease;
+}
+
+.form-input::placeholder {
+    color: #94a3b8;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #1179d4;
+    box-shadow: 0 0 0 2px rgba(17, 121, 212, 0.15);
+}
+
+/* Hint / ayuda */
+.form-hint {
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+/* ================================
+   BOTONES
+================================ */
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.6rem;
+    border-radius: 0.6rem;
+    background-color: #1179d4;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #0f6ab8;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.6rem;
+    border-radius: 0.6rem;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #334155;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #f1f5f9;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 0.45rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-radius: 0.6rem;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #0f172a;
+    transition: all 0.15s ease;
+}
+
+.form-hint {
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+/* ==============================
+   DETALLE SINIESTRO
+============================== */
+
+.card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.75rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+}
+
+.label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.value {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+/* ==============================
+   UPLOAD DOCUMENTS
+============================== */
+
+.upload-box {
+    position: relative;
+    border: 2px dashed #cbd5e1;
+    border-radius: 0.75rem;
+    padding: 2rem 1.5rem;
+    background-color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.upload-box:hover {
+    border-color: #1179d4;
+    background: #f1f5f9;
+}
+
+.upload-icon {
+    font-size: 2.5rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.upload-text {
+    margin-bottom: 0.75rem;
+}
+
+.upload-input {
+    display: none;
+}
