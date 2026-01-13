@@ -5,96 +5,55 @@
 
 {% block content %}
 
+{% if messages %}
+<div class="mb-4">
+  {% for message in messages %}
+  <div
+    class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
 <div class="flex flex-col gap-8">
 
-  <!-- ================= TITULO ================= -->
+  <!-- TITULO -->
   <div class="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
     <div>
-      <h1 class="text-3xl font-black text-slate-900">
-        Dashboard de Reclamos
-      </h1>
-      <p class="text-slate-500">
-        Gestione y realice el seguimiento de sus siniestros.
-      </p>
+      <h1 class="text-3xl font-black text-slate-900">Dashboard de Reclamos</h1>
+      <p class="text-slate-500">Gestione y realice el seguimiento de sus siniestros.</p>
     </div>
 
-    <a href="{% url 'generar_siniestro' %}"
-       class="flex items-center gap-2 rounded-lg h-11 px-6 bg-primary text-white font-bold shadow hover:opacity-90 transition">
+    <a href="{% url 'crear_siniestro' %}"
+      class="flex items-center gap-2 rounded-lg h-11 px-6 bg-primary text-white font-bold shadow hover:opacity-90 transition">
       <span class="material-symbols-outlined">add_circle</span>
       Reportar Nuevo Reclamo
     </a>
   </div>
 
-  <!-- ================= STATS ================= -->
+  <!-- STATS -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
     <div class="card">
       <p class="label">Total Reclamos</p>
       <p class="value">{{ stats.total }}</p>
     </div>
-
     <div class="card">
       <p class="label">Creados</p>
       <p class="value">{{ stats.creados }}</p>
     </div>
-
     <div class="card en-proceso">
       <p class="label text-primary">En Proceso</p>
       <p class="value">{{ stats.en_proceso }}</p>
     </div>
-
     <div class="card finalizado">
       <p class="label text-green-600">Finalizados</p>
       <p class="value">{{ stats.finalizados }}</p>
     </div>
-
   </div>
 
-  <!-- ================= FILTROS + BUSCADOR ================= -->
-  <div class="flex flex-col lg:flex-row gap-4 justify-between items-center bg-white p-4 rounded-xl border shadow-sm">
-
-    <!-- FILTROS -->
-    <div class="flex gap-2 overflow-x-auto w-full lg:w-auto">
-
-      <button class="h-9 px-4 rounded-lg bg-slate-900 text-white text-sm font-semibold">
-        Todos
-      </button>
-
-      <button class="h-9 px-4 rounded-lg bg-slate-100 text-slate-600 text-sm font-medium">
-        <span class="inline-block w-2 h-2 rounded-full bg-gray-400 mr-2"></span>
-        Creados
-      </button>
-
-      <button class="h-9 px-4 rounded-lg bg-slate-100 text-slate-600 text-sm font-medium">
-        <span class="inline-block w-2 h-2 rounded-full bg-primary mr-2"></span>
-        En Proceso
-      </button>
-
-      <button class="h-9 px-4 rounded-lg bg-slate-100 text-slate-600 text-sm font-medium">
-        <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-        Finalizados
-      </button>
-
-    </div>
-
-    <!-- BUSCADOR -->
-    <div class="w-full lg:max-w-md">
-      <div class="relative flex items-center h-10 rounded-lg bg-slate-50 border border-slate-200">
-        <span class="material-symbols-outlined px-3 text-slate-400">
-          search
-        </span>
-        <input
-          type="text"
-          placeholder="Buscar por código o bien afectado..."
-          class="w-full h-full bg-transparent outline-none text-sm pr-3 text-slate-700 placeholder:text-slate-400">
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ================= TABLA ================= -->
+  <!-- TABLA DE SINIESTROS -->
   <div class="overflow-hidden rounded-xl border bg-white shadow-sm">
-
     <table class="w-full text-sm">
       <thead class="bg-slate-50 text-xs uppercase text-slate-500">
         <tr>
@@ -105,27 +64,16 @@
           <th class="px-6 py-4 text-right">Acciones</th>
         </tr>
       </thead>
-
       <tbody class="divide-y">
         {% for siniestro in siniestros %}
         <tr class="hover:bg-slate-50 transition">
-          <td class="px-6 py-4 font-medium">
-            {{ siniestro.codigo }}
-          </td>
-          <td class="px-6 py-4">
-            {{ siniestro.bien_afectado }}
-          </td>
-          <td class="px-6 py-4">
-            {{ siniestro.fecha_evento }}
-          </td>
-          <td class="px-6 py-4">
-            {{ siniestro.estado }}
-          </td>
+          <td class="px-6 py-4 font-medium">{{ siniestro.id }}</td>
+          <td class="px-6 py-4">{{ siniestro.tipo_bien }}</td>
+          <td class="px-6 py-4">{{ siniestro.fecha|date:"d/m/Y" }}</td>
+          <td class="px-6 py-4">{{ siniestro.estado }}</td>
           <td class="px-6 py-4 text-right">
-            <a href="#" class="text-primary hover:opacity-80">
-              <span class="material-symbols-outlined">
-                visibility
-              </span>
+            <a href="{% url 'detalle_siniestro' siniestro.id %}" class="text-primary hover:opacity-80">
+              <span class="material-symbols-outlined">visibility</span>
             </a>
           </td>
         </tr>
@@ -136,9 +84,9 @@
           </td>
         </tr>
         {% endfor %}
+
       </tbody>
     </table>
-
   </div>
 
 </div>

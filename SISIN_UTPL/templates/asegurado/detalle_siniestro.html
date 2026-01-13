@@ -7,6 +7,15 @@
 <div class="flex justify-center py-10 px-4">
     <div class="w-full max-w-5xl space-y-8">
 
+        <!-- VOLVER -->
+        <nav class="flex items-center text-sm text-slate-500">
+            <a href="{% url 'inicio_asegurado' %}"
+               class="hover:text-primary transition flex items-center gap-1">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                Volver al Dashboard
+            </a>
+        </nav>
+
         <!-- HEADER -->
         <div class="border-b pb-4">
             <h1 class="text-3xl font-black">Detalle del Siniestro</h1>
@@ -61,16 +70,15 @@
                 <!-- DOCUMENTO 2 -->
                 <label class="upload-box">
                     <div class="upload-icon">
-                        <span class="material-symbols-outlined">photo_camera</span>
+                        <span class="material-symbols-outlined">upload_file</span>
                     </div>
 
                     <div class="upload-text">
-                        <p class="font-semibold">Evidencia fotográfica</p>
-                        <p class="text-xs text-slate-500">PNG / JPG</p>
+                        <p class="font-semibold">Documento 2</p>
+                        <p class="text-xs text-slate-500">PDF</p>
                     </div>
 
-                    <input type="file" name="evidencia_fotografica" accept=".png,.jpg,.jpeg" class="upload-input"
-                        required>
+                    <input type="file" name="documento_2" accept=".pdf" class="upload-input" required>
                 </label>
 
                 <!-- BOTÓN -->

@@ -1,10 +1,7 @@
-
-# solooo Siniestros y eventos
-
 from django.db import models
 from django_fsm import FSMField, transition
-from polizas.models import Poliza, BienAsegurado
-from usuarios.models import Usuario, AsesorUTPL
+from polizas.models import *
+from usuarios.models import *
 
 class Broker(models.Model):
     nombre = models.CharField(max_length=100)
@@ -37,6 +34,12 @@ class Siniestro(models.Model):
     fecha_apertura = models.DateField()
     fecha_cierre = models.DateField(null=True, blank=True)
     tiempo = models.IntegerField()
+
+    # 🔥 BIEN (AÑADIDO AQUÍ)
+    tipo_bien = models.CharField(max_length=50)
+    marca = models.CharField(max_length=100, blank=True)
+    modelo = models.CharField(max_length=100, blank=True)
+    numero_serie = models.CharField(max_length=100)
 
     broker = models.ForeignKey(Broker, on_delete=models.SET_NULL, null=True, blank=True)
     asesor_asignado = models.ForeignKey(
