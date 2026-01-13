@@ -30,22 +30,15 @@
         <!-- CARD FORM -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
 
-            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center gap-2">
-                <span class="flex items-center justify-center size-6 rounded-full bg-primary text-white text-xs font-bold">
-                    1
-                </span>
-                <span class="text-sm font-semibold">
-                    Datos del Siniestro
-                </span>
-            </div>
-
-            <form method="POST" class="p-8 md:p-10 space-y-12 text-lg">
+            <!-- Form apuntando a la view -->
+            <form method="POST" action="{% url 'crear_siniestro' %}" class="p-8 md:p-10 space-y-12 text-lg">
                 {% csrf_token %}
 
-                <!-- CAMPOS OCULTOS SINIESTRO -->
-                <input type="hidden" name="fecha_apertura" value="{{ today }}">
+                <!-- CAMPOS OCULTOS -->
+                <input type="hidden" name="fecha_apertura" value="{{ today|date:'Y-m-d' }}">
                 <input type="hidden" name="tiempo" value="0">
                 <input type="hidden" name="poliza" value="1">
+                <input type="hidden" name="fecha_reporte" value="{{ today|date:'Y-m-d' }}">
 
                 <!-- DETALLES DEL EVENTO -->
                 <section class="space-y-6">
@@ -55,7 +48,6 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
                         <div>
                             <label class="form-label">Fecha del siniestro *</label>
                             <input type="date"
@@ -63,8 +55,6 @@
                                    class="form-input"
                                    required>
                         </div>
-
-                        <input type="hidden" name="fecha_reporte" value="{{ today }}">
 
                         <div>
                             <label class="form-label">Ubicación del bien *</label>
@@ -84,14 +74,12 @@
                             </select>
                         </div>
 
-                        <!-- Campo NO persistente (no rompe nada) -->
                         <div>
                             <label class="form-label">Causa probable</label>
                             <input type="text"
                                    name="causa_probable"
                                    class="form-input">
                         </div>
-
                     </div>
                 </section>
 
@@ -103,7 +91,6 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
                         <div>
                             <label class="form-label">Tipo de bien *</label>
                             <select name="tipo_bien" id="tipo_bien" class="form-input" required>
@@ -118,7 +105,7 @@
 
                         <div id="otro_bien_container" class="hidden">
                             <label class="form-label">Especifique el tipo de bien</label>
-                            <input type="text" class="form-input">
+                            <input type="text" class="form-input" name="otro_tipo_bien">
                         </div>
 
                         <div>
@@ -142,7 +129,6 @@
                                    name="modelo"
                                    class="form-input">
                         </div>
-
                     </div>
                 </section>
 

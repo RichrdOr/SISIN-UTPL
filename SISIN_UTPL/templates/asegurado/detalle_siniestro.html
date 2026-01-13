@@ -7,6 +7,15 @@
 <div class="flex justify-center py-10 px-4">
     <div class="w-full max-w-5xl space-y-8">
 
+        <!-- VOLVER -->
+        <nav class="flex items-center text-sm text-slate-500">
+            <a href="{% url 'inicio_asegurado' %}"
+               class="hover:text-primary transition flex items-center gap-1">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                Volver al Dashboard
+            </a>
+        </nav>
+
         <!-- HEADER -->
         <div class="border-b pb-4">
             <h1 class="text-3xl font-black">Detalle del Siniestro</h1>

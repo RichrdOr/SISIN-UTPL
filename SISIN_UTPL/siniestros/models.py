@@ -25,7 +25,7 @@ class Siniestro(models.Model):
     modelo = models.CharField(max_length=100, blank=True)
     numero_serie = models.CharField(max_length=100)
 
-    poliza = models.ForeignKey(Poliza, on_delete=models.CASCADE)
+    poliza = models.ForeignKey(Poliza, on_delete=models.CASCADE, null=True, blank=True)
     broker = models.ForeignKey(Broker, on_delete=models.SET_NULL, null=True, blank=True)
     asesor_asignado = models.ForeignKey(
         AsesorUTPL,
@@ -42,13 +42,10 @@ class Evento(models.Model):
     estado = models.IntegerField()
     fecha_ocurrencia = models.DateField()
     fecha_reporte = models.DateField()
-
-    # 🔥 EVENTO (AÑADIDO AQUÍ)
     ubicacion = models.CharField(max_length=255)
     tipo_evento = models.CharField(max_length=50)
-
     siniestro = models.ForeignKey(Siniestro, on_delete=models.CASCADE)
-    bien = models.ForeignKey(BienAsegurado, on_delete=models.CASCADE)
+    bien = models.ForeignKey(BienAsegurado, on_delete=models.CASCADE, null=True, blank=True)
 
 
 class Danio(models.Model):
