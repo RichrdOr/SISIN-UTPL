@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+app_name = 'aseguradora'
+
 urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard_aseguradora'),
     path('bandeja/', views.bandeja_siniestros, name='bandeja_siniestros'), # <--- Aquí estaba fallando
