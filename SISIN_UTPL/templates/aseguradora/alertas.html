@@ -1,0 +1,232 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tablero de Alertas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="header-left">
+            <div class="brand"><span class="material-symbols-outlined brand-icon" style="font-size:28px;">shield_person</span> Gestión Siniestros</div>
+            <nav class="nav-links">
+                <a href="{% url 'dashboard_aseguradora' %}" class="nav-link">Inicio</a>
+                <a href="{% url 'bandeja_siniestros' %}" class="nav-link">Siniestros</a>
+                <a href="{% url 'gestion_polizas' %}" class="nav-link">Pólizas</a>
+                </nav>
+        </div>
+        <div class="header-right">
+            <div class="search-input" style="width:auto;">
+                <button class="btn-icon-circle" style="position:relative;">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span style="position:absolute; top:8px; right:8px; width:8px; height:8px; background:#ef4444; border-radius:50%; border:2px solid white;"></span>
+                </button>
+            </div>
+            <img src="https://ui-avatars.com/api/?name=Ana+Garcia&background=0D8ABC&color=fff" class="user-avatar">
+        </div>
+    </header>
+
+    <main class="app-content">
+        
+        <div class="page-header">
+            <div>
+                <h1>Tablero de Alertas</h1>
+                <p>Gestión de tareas críticas y seguimiento.</p>
+            </div>
+            <div class="search-input-lg" style="max-width:300px;">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" placeholder="Buscar alerta...">
+            </div>
+        </div>
+
+        <div class="alert-cards-grid">
+            <div class="alert-kpi-card kpi-red">
+                <div class="kpi-header">
+                    <span class="kpi-label">Vencidas (Crítico)</span>
+                    <div class="icon-box"><span class="material-symbols-outlined">warning</span></div>
+                </div>
+                <span class="kpi-number">5</span>
+                <span class="kpi-trend trend"><span class="material-symbols-outlined" style="font-size:14px;">arrow_upward</span> +2 hoy</span>
+            </div>
+
+            <div class="alert-kpi-card kpi-amber">
+                <div class="kpi-header">
+                    <span class="kpi-label">Sin Pago (>3 días)</span>
+                    <div class="icon-box"><span class="material-symbols-outlined">payments</span></div>
+                </div>
+                <span class="kpi-number">3</span>
+                <span class="kpi-trend trend">Requieren llamada</span>
+            </div>
+
+            <div class="alert-kpi-card kpi-yellow">
+                <div class="kpi-header">
+                    <span class="kpi-label">Por Vencer</span>
+                    <div class="icon-box"><span class="material-symbols-outlined">schedule</span></div>
+                </div>
+                <span class="kpi-number">12</span>
+                <span class="kpi-trend trend">Próximas 48h</span>
+            </div>
+
+            <div class="alert-kpi-card kpi-blue">
+                <div class="kpi-header">
+                    <span class="kpi-label">Sin Documentación</span>
+                    <div class="icon-box"><span class="material-symbols-outlined">folder_off</span></div>
+                </div>
+                <span class="kpi-number">8</span>
+                <span class="kpi-trend trend">Pendiente cliente</span>
+            </div>
+        </div>
+
+        <div class="filters-bar">
+            <div class="filter-group">
+                <button class="btn-filter active">Todo</button>
+                <button class="btn-filter"><span class="color-dot" style="background:#ef4444;"></span> Críticos</button>
+                <button class="btn-filter"><span class="color-dot" style="background:#eab308;"></span> Advertencias</button>
+                <button class="btn-filter"><span class="material-symbols-outlined" style="font-size:16px;">filter_list</span> Filtros</button>
+            </div>
+            <div class="filter-group">
+                <button class="btn-filter"><span class="material-symbols-outlined" style="font-size:16px;">download</span> Exportar</button>
+                <button class="btn-add" style="height:2.5rem; font-size:0.9rem;">
+                    <span class="material-symbols-outlined" style="font-size:18px;">add</span> Nueva Alerta
+                </button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th align="center">ID</th>
+                            <th>Estado / Prioridad</th>
+                            <th>Cliente</th>
+                            <th>Detalle Alerta</th>
+                            <th>Referencia</th>
+                            <th align="center">Días</th>
+                            <th align="right">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="alert-row">
+                            <td align="center" style="font-family:monospace; color:var(--text-muted);">#1024</td>
+                            <td>
+                                <span class="alert-badge ab-red">
+                                    <div class="dot-pulse" style="background:#dc2626;"></div> Tarea Vencida
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-weight:700; font-size:0.9rem;">Juan Pérez</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted);">ID: 8847291</div>
+                            </td>
+                            <td style="color:#dc2626; font-weight:500;">Enviar carta rechazo (Plazo Legal)</td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:0.5rem; color:var(--text-muted); font-size:0.85rem;">
+                                    <span class="material-symbols-outlined" style="font-size:16px;">directions_car</span> Autos • 993-A
+                                </div>
+                            </td>
+                            <td align="center"><span class="days-badge db-red">+5</span></td>
+                            <td align="right"><button class="btn-outline" style="padding:0.25rem 0.75rem; font-size:0.8rem;">Gestionar</button></td>
+                        </tr>
+
+                        <tr class="alert-row">
+                            <td align="center" style="font-family:monospace; color:var(--text-muted);">#1023</td>
+                            <td>
+                                <span class="alert-badge ab-red">
+                                    <span class="material-symbols-outlined" style="font-size:14px;">payments</span> Sin Pago
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-weight:700; font-size:0.9rem;">Logística S.A.</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted);">Flota</div>
+                            </td>
+                            <td style="font-weight:500;">Pago indemnización pendiente</td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:0.5rem; color:var(--text-muted); font-size:0.85rem;">
+                                    <span class="material-symbols-outlined" style="font-size:16px;">local_shipping</span> Transporte
+                                </div>
+                            </td>
+                            <td align="center"><span class="days-badge db-red">4</span></td>
+                            <td align="right"><button class="btn-outline" style="padding:0.25rem 0.75rem; font-size:0.8rem;">Reclamar</button></td>
+                        </tr>
+
+                        <tr class="alert-row">
+                            <td align="center" style="font-family:monospace; color:var(--text-muted);">#1022</td>
+                            <td>
+                                <span class="alert-badge ab-yellow">
+                                    <div class="dot" style="background:#eab308;"></div> Por Vencer
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-weight:700; font-size:0.9rem;">María Rodríguez</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted);">ID: 4421</div>
+                            </td>
+                            <td style="font-weight:500;">Renovación de póliza anual</td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:0.5rem; color:var(--text-muted); font-size:0.85rem;">
+                                    <span class="material-symbols-outlined" style="font-size:16px;">home</span> Hogar
+                                </div>
+                            </td>
+                            <td align="center"><span class="days-badge db-yellow">-2</span></td>
+                            <td align="right"><button class="btn-outline" style="padding:0.25rem 0.75rem; font-size:0.8rem;">Contactar</button></td>
+                        </tr>
+
+                        <tr class="alert-row">
+                            <td align="center" style="font-family:monospace; color:var(--text-muted);">#1021</td>
+                            <td>
+                                <span class="alert-badge ab-orange">
+                                    <span class="material-symbols-outlined" style="font-size:14px;">folder_off</span> Falta Doc.
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-weight:700; font-size:0.9rem;">Carlos Gutiérrez</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted);">ID: 9912</div>
+                            </td>
+                            <td style="font-weight:500;">Falta denuncia policial</td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:0.5rem; color:var(--text-muted); font-size:0.85rem;">
+                                    <span class="material-symbols-outlined" style="font-size:16px;">directions_car</span> Autos
+                                </div>
+                            </td>
+                            <td align="center"><span class="days-badge db-gray">7</span></td>
+                            <td align="right"><button class="btn-outline" style="padding:0.25rem 0.75rem; font-size:0.8rem;">Solicitar</button></td>
+                        </tr>
+
+                        <tr class="alert-row">
+                            <td align="center" style="font-family:monospace; color:var(--text-muted);">#1019</td>
+                            <td>
+                                <span class="alert-badge ab-green">
+                                    <div class="dot" style="background:#22c55e;"></div> En Proceso
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-weight:700; font-size:0.9rem;">Lucía Méndez</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted);">ID: 7721</div>
+                            </td>
+                            <td style="font-weight:500;">Verificación presupuesto taller</td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:0.5rem; color:var(--text-muted); font-size:0.85rem;">
+                                    <span class="material-symbols-outlined" style="font-size:16px;">directions_car</span> Autos
+                                </div>
+                            </td>
+                            <td align="center"><span class="days-badge db-gray">1</span></td>
+                            <td align="right"><span class="btn-action" style="font-size:0.8rem;">Ver Detalles</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <span>Mostrando 1-6 de 24 alertas</span>
+                <div style="display:flex; gap:0.5rem;">
+                    <button class="page-btn">Anterior</button>
+                    <button class="page-btn">Siguiente</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</body>
+</html>
