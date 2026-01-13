@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Siniestro #8492</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-left">
+            <div class="brand"><span class="material-symbols-outlined brand-icon" style="font-size:28px;">shield_person</span> Gestión Siniestros</div>
+            <nav class="nav-links">
+                <a href="{% url 'dashboard_aseguradora' %}" class="nav-link">Inicio</a>
+                <a href="{% url 'bandeja_siniestros' %}" class="nav-link active">Siniestros</a>
+                <a href="{% url 'gestion_polizas' %}" class="nav-link">Pólizas</a>
+            </nav>
+        </div>
+        <div class="header-right">
+            <input type="text" class="search-input" placeholder="Buscar...">
+            <img src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" class="user-avatar">
+        </div>
+    </header>
+
+    <main class="app-content">
+        
+        <div class="breadcrumbs">
+            <a href="{% url 'bandeja_siniestros' %}" class="bc-link" style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="material-symbols-outlined" style="font-size: 18px;">arrow_back</span>
+                Volver a la Bandeja
+            </a>
+        </div>
+
+        <div class="detail-header">
+            <div>
+                <div class="dh-title"><h1>Siniestro #8492</h1><span class="status-badge">En Proceso</span></div>
+                <p>Daño Eléctrico | Equipos | Juan Pérez</p>
+            </div>
+            <div style="display:flex; gap:0.5rem;">
+                <button class="btn-outline"><span class="material-symbols-outlined">edit</span> Editar</button>
+                <button class="btn-outline"><span class="material-symbols-outlined">history</span> Historial</button>
+            </div>
+        </div>
+
+        <div class="timeline-card">
+            <div class="section-label">D. Línea de Tiempo</div>
+            <div class="timeline-steps">
+                <div class="timeline-line"></div>
+                <div class="step-item"><div class="step-circle active"><span class="material-symbols-outlined">check</span></div><p style="font-size:0.875rem; color:var(--primary); font-weight:700;">Creado</p></div>
+                <div class="step-item"><div class="step-circle active"><span class="material-symbols-outlined">sync</span></div><p style="font-size:0.875rem; color:var(--primary); font-weight:700;">En Proceso</p></div>
+                <div class="step-item"><div class="step-circle pending"><span class="material-symbols-outlined">payments</span></div><p style="font-size:0.875rem; color:#9ca3af;">Liquidado</p></div>
+                <div class="step-item"><div class="step-circle pending"><span class="material-symbols-outlined">lock</span></div><p style="font-size:0.875rem; color:#9ca3af;">Cerrado</p></div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                <div class="info-card">
+                    <div class="card-header"><span style="display:flex; align-items:center; gap:0.5rem;"><span class="material-symbols-outlined" style="color:var(--primary);">info</span> Información General</span></div>
+                    <div class="card-body">
+                        <div class="alert-banner">
+                            <div style="display:flex; gap:0.5rem; align-items:center;">
+                                <span class="material-symbols-outlined" style="color:#059669;">alarm_on</span>
+                                <div><h4 style="margin:0; color:#065f46;">Dentro de Plazo</h4><p style="margin:0; font-size:0.75rem; color:#059669;">Quedan 12 días</p></div>
+                            </div>
+                        </div>
+                        <div class="data-grid">
+                            <div class="data-item"><label>Asegurado</label><p>Juan Pérez</p></div>
+                            <div class="data-item"><label>RUT</label><p>12.345.678-9</p></div>
+                            <div class="data-item"><label>Equipo</label><p>MacBook Pro</p></div>
+                            <div class="data-item"><label>Fecha</label><p>12 Oct 2023</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-header"><span style="display:flex; align-items:center; gap:0.5rem;"><span class="material-symbols-outlined" style="color:var(--primary);">checklist</span> Documentación</span> <span>2/4</span></div>
+                    <div style="display:flex; flex-direction:column;">
+                        <div class="doc-item"><div style="display:flex; gap:1rem; align-items:center;"><div class="doc-icon di-green"><span class="material-symbols-outlined">description</span></div><div><h4>Informe Técnico</h4><p style="margin:0; font-size:0.75rem; color:#6b7280;">Subido 16 Oct</p></div></div><span class="pill pill-green">Validado</span></div>
+                        <div class="doc-item" style="border-left:4px solid #facc15;"><div style="display:flex; gap:1rem; align-items:center;"><div class="doc-icon di-amber"><span class="material-symbols-outlined">image</span></div><div><h4>Preexistencia</h4><p style="margin:0; font-size:0.75rem; color:#ef4444; font-weight:700;">Requerido</p></div></div><button class="btn-outline" style="font-size:0.75rem;">Subir</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card" style="height:fit-content;">
+                <div class="card-body">
+                    <h3 class="section-title" style="font-size:1rem; margin-bottom:1.5rem;">Acciones Rápidas</h3>
+                    <button class="btn-primary-block">
+                        <div style="text-align:left;"><span>Validar y Liquidar</span><br><span style="font-size:0.75rem; opacity:0.8;">Si todo está listo</span></div>
+                        <span class="material-symbols-outlined">check_circle</span>
+                    </button>
+
+                    <div style="height:1px; background:#e5e7eb; margin:0.5rem 0;"></div>
+
+                    <a href="{% url 'enviar_correo' %}" class="action-list-btn" style="text-decoration: none; color: inherit;">
+                        <div class="alb-icon" style="color:var(--primary);">
+                            <span class="material-symbols-outlined">outgoing_mail</span>
+                        </div>
+                        <div class="alb-info">
+                            <h4>Enviar Correo</h4>
+                            <p>Contactar al asegurado</p>
+                        </div>
+                    </a>
+
+                    <button class="action-list-btn">
+                        <div class="alb-icon" style="color:#d97706;">
+                            <span class="material-symbols-outlined">folder_open</span>
+                        </div>
+                        <div class="alb-info">
+                            <h4>Solicitar Documentos</h4>
+                            <p>Recordatorio pendientes</p>
+                        </div>
+                    </button>
+
+                    <button class="action-list-btn">
+                        <div class="alb-icon" style="color:#7e22ce;">
+                            <span class="material-symbols-outlined">fact_check</span>
+                        </div>
+                        <div class="alb-info">
+                            <h4>Validación Manual</h4>
+                            <p>Revisar detalle técnico</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

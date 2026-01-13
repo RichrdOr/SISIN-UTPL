@@ -23,4 +23,5 @@ urlpatterns = [
     path('', lambda request: redirect('inicio_asegurado')),
     path('admin/', admin.site.urls),
     path('', include('usuarios.urls')),
+    path('aseguradora/', include('aseguradora.urls')),
 ]
