@@ -1,3 +1,6 @@
+
+# solooo Siniestros y eventos
+
 from django.db import models
 from django_fsm import FSMField, transition
 from polizas.models import Poliza, BienAsegurado

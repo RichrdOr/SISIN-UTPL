@@ -1,0 +1,151 @@
+{% extends 'asegurado/base_asegurado.html' %}
+{% load static %}
+
+{% block title %}Crear Siniestro{% endblock %}
+
+{% block content %}
+
+<div class="flex justify-center py-8 px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col w-full max-w-6xl gap-8">
+
+        <!-- VOLVER -->
+        <nav class="flex items-center text-sm text-slate-500">
+            <a href="{% url 'inicio_asegurado' %}"
+               class="hover:text-primary transition flex items-center gap-1">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                Volver al Dashboard
+            </a>
+        </nav>
+
+        <!-- TITULO -->
+        <div class="flex flex-col gap-1">
+            <h1 class="text-3xl font-black tracking-tight">
+                Reportar Siniestro
+            </h1>
+            <p class="text-slate-500">
+                Complete el formulario para registrar un nuevo incidente.
+            </p>
+        </div>
+
+        <!-- CARD FORM -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+
+            <!-- HEADER CARD -->
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center gap-2">
+                <span class="flex items-center justify-center size-6 rounded-full bg-primary text-white text-xs font-bold">
+                    1
+                </span>
+                <span class="text-sm font-semibold">
+                    Datos del Siniestro
+                </span>
+            </div>
+
+            <!-- FORM -->
+            <form method="POST" class="p-8 md:p-10 space-y-12 text-lg">
+                {% csrf_token %}
+
+                <!-- DATOS EVENTO -->
+                <section class="space-y-6">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <span class="material-symbols-outlined text-primary">event_note</span>
+                        <h3 class="text-lg font-bold">Detalles del Evento</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <div>
+                            <label class="form-label">Fecha del siniestro *</label>
+                            <input type="date" class="form-input" required>
+                            <p class="form-hint">
+                                El reporte debe realizarse dentro de los 15 días hábiles.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Ubicación del bien *</label>
+                            <input type="text"
+                                   placeholder="Ej. Edificio de Ciencias, Aula 302"
+                                   class="form-input"
+                                   required>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- INFO BIEN -->
+                <section class="space-y-6">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <span class="material-symbols-outlined text-primary">devices</span>
+                        <h3 class="text-lg font-bold">Información del Bien</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <div>
+                            <label class="form-label">Tipo de bien *</label>
+                            <select class="form-input" required>
+                                <option value="" disabled selected>Seleccione...</option>
+                                <option>Equipo de Cómputo</option>
+                                <option>Equipo Audiovisual</option>
+                                <option>Equipo de Laboratorio</option>
+                                <option>Mobiliario</option>
+                                <option>Otro</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Número de serie *</label>
+                            <input type="text"
+                                   placeholder="Ej. SN-4923810"
+                                   class="form-input"
+                                   required>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Marca</label>
+                            <input type="text" class="form-input">
+                        </div>
+
+                        <div>
+                            <label class="form-label">Modelo</label>
+                            <input type="text" class="form-input">
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- DESCRIPCIÓN -->
+                <section class="space-y-6">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <span class="material-symbols-outlined text-primary">description</span>
+                        <h3 class="text-lg font-bold">Descripción del Siniestro</h3>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Descripción *</label>
+                        <textarea rows="4"
+                                  class="form-input"
+                                  placeholder="Describa qué sucedió..."
+                                  required></textarea>
+                    </div>
+                </section>
+
+                <!-- BOTONES -->
+                <div class="flex justify-end gap-3 pt-6 border-t">
+                    <a href="{% url 'inicio_asegurado' %}"
+                       class="btn-secondary">
+                        Cancelar
+                    </a>
+
+                    <button type="submit" class="btn-primary">
+                        <span>Enviar Reporte</span>
+                        <span class="material-symbols-outlined text-sm">send</span>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

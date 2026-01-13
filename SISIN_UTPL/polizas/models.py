@@ -1,3 +1,7 @@
+
+
+# Bienes, zonas, pólizas y responsables
+
 from django.db import models
 from django_fsm import FSMField, transition
 from usuarios.models import Usuario, PersonaResponsable
