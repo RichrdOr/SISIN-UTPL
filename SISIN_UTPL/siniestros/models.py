@@ -23,19 +23,41 @@ class Siniestro(models.Model):
 
     numero_siniestro = models.CharField(max_length=20, unique=True, verbose_name="Número de Siniestro")
     poliza = models.ForeignKey(Poliza, on_delete=models.CASCADE, related_name='siniestros', verbose_name="Póliza")
-    reclamante = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='siniestros', verbose_name="Reclamante")
+
+    # 🔹 RECLAMANTE (datos capturados por la asesora)
+    reclamante = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name='siniestros',
+        verbose_name="Reclamante"
+    )
+    reclamante_nombre = models.CharField(max_length=150)
+    reclamante_email = models.EmailField()
+    reclamante_telefono = models.CharField(max_length=20, blank=True)
+
     fecha_ocurrencia = models.DateField(verbose_name="Fecha de Ocurrencia")
     fecha_reporte = models.DateField(auto_now_add=True, verbose_name="Fecha de Reporte")
     descripcion = models.TextField(verbose_name="Descripción")
+
     monto_reclamado = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Monto Reclamado")
-    monto_aprobado = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Monto Aprobado")
+    monto_aprobado = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Monto Aprobado"
+    )
+
     estado = FSMField(default='reportado', choices=ESTADO_CHOICES, verbose_name="Estado")
-    cobertura_valida = models.IntegerField()
+
+    # 🔹 NUEVOS CAMPOS (los que pediste)
+    cobertura_valida = models.BooleanField(default=False)
+    tiempo_resolucion_dias = models.IntegerField(null=True, blank=True)
+
     fecha_apertura = models.DateField()
     fecha_cierre = models.DateField(null=True, blank=True)
-    tiempo = models.IntegerField()
 
-    # 🔥 BIEN (AÑADIDO AQUÍ)
+    # 🔹 BIEN
     tipo_bien = models.CharField(max_length=50)
     marca = models.CharField(max_length=100, blank=True)
     modelo = models.CharField(max_length=100, blank=True)
