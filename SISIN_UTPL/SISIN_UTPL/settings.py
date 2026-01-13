@@ -83,7 +83,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'sisis_utpl',
         'USER': 'postgres',
-        'PASSWORD': 'contraseña',
+        'PASSWORD': 'password',
         'HOST': 'localhost',
         'PORT': '5432',
     }

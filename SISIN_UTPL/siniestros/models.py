@@ -74,9 +74,10 @@ class Evento(models.Model):
     estado = models.IntegerField()
     fecha_ocurrencia = models.DateField()
     fecha_reporte = models.DateField()
-
+    ubicacion = models.CharField(max_length=255)
+    tipo_evento = models.CharField(max_length=50)
     siniestro = models.ForeignKey(Siniestro, on_delete=models.CASCADE)
-    bien = models.ForeignKey(BienAsegurado, on_delete=models.CASCADE)
+    bien = models.ForeignKey(BienAsegurado, on_delete=models.CASCADE, null=True, blank=True)
 
 
 class Danio(models.Model):
