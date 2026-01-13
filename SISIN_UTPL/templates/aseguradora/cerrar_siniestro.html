@@ -1,0 +1,168 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cerrar Siniestro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="header-left">
+            <div class="brand"><span class="material-symbols-outlined brand-icon" style="font-size:28px;">shield_person</span> Gestión Siniestros</div>
+            <nav class="nav-links">
+                <a href="{% url 'dashboard_aseguradora' %}" class="nav-link">Inicio</a>
+                <a href="{% url 'bandeja_siniestros' %}" class="nav-link active">Siniestros</a>
+                <a href="{% url 'gestion_polizas' %}" class="nav-link">Pólizas</a>
+            </nav>
+        </div>
+        <div class="header-right">
+            <input type="text" class="search-input" placeholder="Buscar...">
+            <img src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" class="user-avatar">
+        </div>
+    </header>
+
+    <main class="app-content" style="max-width:1200px;">
+        
+        <div class="breadcrumbs">
+            <a href="{% url 'dashboard_aseguradora' %}" class="bc-link">Inicio</a> / 
+            <a href="{% url 'bandeja_siniestros' %}" class="bc-link">Siniestros</a> / 
+            <span class="bc-current">Cerrar #ID-12345</span>
+        </div>
+
+        <div class="page-header" style="align-items:flex-end;">
+            <div>
+                <div style="display:flex; align-items:center; gap:1rem; margin-bottom:0.5rem;">
+                    <h1 style="margin:0;">Cerrar Siniestro #ID-12345</h1>
+                    <span class="status-badge" style="background:#e0f2fe; color:#0369a1;">En Proceso</span>
+                </div>
+                <p>Revise los detalles, complete el checklist y confirme el cierre.</p>
+            </div>
+            <div style="display:flex; gap:0.5rem;">
+                <button class="btn-outline"><span class="material-symbols-outlined">print</span> Imprimir</button>
+                <button class="btn-outline"><span class="material-symbols-outlined">edit</span> Editar</button>
+            </div>
+        </div>
+
+        <div class="close-grid">
+            
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                
+                <h3 class="section-title" style="font-size:1.1rem; margin-bottom:0.5rem;">Resumen del Expediente</h3>
+                
+                <div class="expediente-card">
+                    <div class="exp-header"><div>Campo</div><div>Valor</div></div>
+                    
+                    <div class="exp-row"><div class="exp-label">Cliente</div><div class="exp-val">Juan Pérez</div></div>
+                    <div class="exp-row"><div class="exp-label">Póliza</div><div class="exp-val" style="font-family:monospace;">AUT-2023-999</div></div>
+                    <div class="exp-row"><div class="exp-label">Vehículo</div><div class="exp-val">Toyota Corolla 2020</div></div>
+                    <div class="exp-row"><div class="exp-label">Fecha</div><div class="exp-val">12 de Octubre, 2023</div></div>
+                    <div class="exp-row"><div class="exp-label">Tipo</div><div class="exp-val">Colisión / Pérdida Parcial</div></div>
+                    <div class="exp-row"><div class="exp-label">Ajustador</div><div class="exp-val">Carlos Gómez</div></div>
+                    
+                    <div class="exp-row">
+                        <div class="exp-label">Monto Total</div>
+                        <div class="exp-val highlight">$1,500.00 USD</div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <div class="info-card">
+                        <div style="padding:1rem; border-bottom:1px solid var(--border); font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6b7280;">Archivos (3)</div>
+                        <div style="padding:1rem; display:flex; flex-direction:column; gap:0.5rem;">
+                            <div class="attach-mini">
+                                <span class="material-symbols-outlined am-icon">picture_as_pdf</span>
+                                <div><div style="font-weight:600; font-size:0.85rem;">Reporte.pdf</div><div style="font-size:0.75rem; color:#6b7280;">2.4 MB</div></div>
+                            </div>
+                            <div class="attach-mini">
+                                <span class="material-symbols-outlined am-icon img">image</span>
+                                <div><div style="font-weight:600; font-size:0.85rem;">Fotos.jpg</div><div style="font-size:0.75rem; color:#6b7280;">5.1 MB</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div style="padding:1rem; border-bottom:1px solid var(--border); font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6b7280;">Historial</div>
+                        <div style="padding:1rem;">
+                            <div class="history-list">
+                                <div class="hl-line"></div>
+                                <div class="hl-item">
+                                    <div class="hl-dot"></div>
+                                    <div class="hl-content"><h5>Pago autorizado</h5><p>Ayer, 14:30 PM</p></div>
+                                </div>
+                                <div class="hl-item">
+                                    <div class="hl-dot" style="box-shadow: 0 0 0 2px var(--primary);"></div>
+                                    <div class="hl-content"><h5>Validación taller</h5><p>10 Oct, 09:00 AM</p></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div>
+                <div class="checklist-card">
+                    <div class="chk-header">
+                        <h3 style="font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
+                            <span class="material-symbols-outlined" style="color:#16a34a;">playlist_add_check</span> Checklist de Cierre
+                        </h3>
+                        <p style="font-size:0.85rem; color:#6b7280;">Marque todos los items para finalizar.</p>
+                    </div>
+
+                    <div style="padding:1rem 0;">
+                        <label class="chk-item">
+                            <input type="checkbox" class="chk-input">
+                            <div>
+                                <div style="font-weight:600; font-size:0.9rem;">Facturas originales</div>
+                                <div style="font-size:0.75rem; color:#6b7280;">Verificadas por contabilidad</div>
+                            </div>
+                        </label>
+                        <label class="chk-item">
+                            <input type="checkbox" class="chk-input">
+                            <div>
+                                <div style="font-weight:600; font-size:0.9rem;">Deducible pagado</div>
+                                <div style="font-size:0.75rem; color:#6b7280;">Monto cubierto: $250.00</div>
+                            </div>
+                        </label>
+                        <label class="chk-item">
+                            <input type="checkbox" class="chk-input">
+                            <div>
+                                <div style="font-weight:600; font-size:0.9rem;">Finiquito firmado</div>
+                                <div style="font-size:0.75rem; color:#6b7280;">Firma digital o física</div>
+                            </div>
+                        </label>
+                        <label class="chk-item">
+                            <input type="checkbox" class="chk-input">
+                            <div>
+                                <div style="font-weight:600; font-size:0.9rem;">Notificación enviada</div>
+                                <div style="font-size:0.75rem; color:#6b7280;">Correo al cliente</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div style="padding:0 1.25rem 1.25rem;">
+                        <label style="font-size:0.8rem; font-weight:700; display:block; margin-bottom:0.5rem;">Conclusiones Finales</label>
+                        <textarea class="notes-area" placeholder="Notas internas sobre el cierre..."></textarea>
+                    </div>
+
+                    <div class="chk-footer">
+                        <button class="btn-close-case" onclick="window.location.href='{% url 'dashboard_aseguradora' %}'">
+                            <span class="material-symbols-outlined">check_circle</span> Cerrar Siniestro
+                        </button>
+                        
+                        <button class="btn-outline" style="width:100%; border:none; color:#6b7280; text-decoration:underline;" onclick="window.location.href='{% url 'liquidacion' %}'">
+                            Cancelar y volver
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>
