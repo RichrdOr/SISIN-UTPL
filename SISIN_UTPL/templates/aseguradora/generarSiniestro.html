@@ -1,0 +1,92 @@
+{% extends 'aseguradora/base_asesor.html' %}
+{% load static %}
+
+{% block title %}Crear Evento{% endblock %}
+
+{% block content %}
+<div class="flex justify-center py-8 px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col w-full max-w-6xl gap-8">
+
+        <!-- VOLVER -->
+        <nav class="flex items-center text-sm text-slate-500">
+            <a href="{% url 'aseguradora:dashboard_aseguradora' %}"
+               class="hover:text-primary transition flex items-center gap-1">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                Volver al Dashboard
+            </a>
+        </nav>
+
+        <!-- TITULO -->
+        <div class="flex flex-col gap-1">
+            <h1 class="text-3xl font-black tracking-tight">Reportar Evento</h1>
+            <p class="text-slate-500">Complete el formulario para registrar un nuevo evento.</p>
+        </div>
+
+        <!-- CARD FORM -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+
+            <form method="POST" action="" class="p-8 md:p-10 space-y-12 text-lg">
+                {% csrf_token %}
+
+                <!-- DETALLES DEL EVENTO -->
+                <section class="space-y-6">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <span class="material-symbols-outlined text-primary">event_note</span>
+                        <h3 class="text-lg font-bold">Detalles del Evento</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="form-label">Fecha del evento *</label>
+                            {{ evento_form.fecha_ocurrencia }}
+                        </div>
+
+                        <div>
+                            <label class="form-label">Ubicación del evento *</label>
+                            {{ evento_form.ubicacion }}
+                        </div>
+
+                        <div>
+                            <label class="form-label">Tipo de incidente *</label>
+                            {{ evento_form.tipo_evento }}
+                        </div>
+                    </div>
+                </section>
+
+                <!-- DESCRIPCIÓN -->
+                <section class="space-y-6">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <span class="material-symbols-outlined text-primary">description</span>
+                        <h3 class="text-lg font-bold">Descripción del Evento</h3>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Descripción *</label>
+                        {{ evento_form.descripcion }}
+                    </div>
+                </section>
+
+                <!-- CONFIRMACIÓN -->
+                <div class="flex items-start gap-3 pt-4">
+                    <input type="checkbox" required class="mt-1">
+                    <p class="text-sm text-slate-600">
+                        Declaro que la información proporcionada es verídica.
+                    </p>
+                </div>
+
+                <!-- BOTONES -->
+                <div class="flex justify-end gap-3 pt-6 border-t">
+                    <a href="{% url 'aseguradora:dashboard_aseguradora' %}" class="btn-secondary">
+                        Cancelar
+                    </a>
+
+                    <button type="submit" class="btn-primary">
+                        Enviar Evento
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

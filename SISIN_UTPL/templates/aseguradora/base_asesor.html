@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}SISIN - Asesor{% endblock %}</title>
+
+    <!-- Tailwind (para el header y utilidades rápidas) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#1179d4",
+                        "background-light": "#f6f7f8",
+                        "header-bg": "#ffffff",
+                        "header-text": "#1f2937",
+                        "header-hover": "#1179d4"
+                    },
+                    fontFamily: {
+                        display: ["Public Sans", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+
+    <!-- Tu CSS original para dashboard, tables, cards, etc -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="bg-background-light font-display text-slate-800">
+
+<!-- HEADER BONITO -->
+<header class="bg-header-bg shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+
+            <!-- IZQUIERDA -->
+            <div class="flex items-center gap-6">
+                <span class="material-symbols-outlined text-3xl text-primary">shield_person</span>
+                <h1 class="text-xl font-bold text-header-text">Gestión Asesora</h1>
+
+                <nav class="flex space-x-4 ml-10">
+                    <a href="{% url 'aseguradora:dashboard_aseguradora' %}" class="nav-link text-header-text font-semibold px-3 py-2 rounded-md bg-primary/10">Inicio</a>
+                    <a href="{% url 'aseguradora:bandeja_siniestros' %}" class="nav-link text-header-text font-semibold px-3 py-2 rounded-md hover:bg-primary/20">Siniestros</a>
+                    <a href="{% url 'aseguradora:gestion_polizas' %}" class="nav-link text-header-text font-semibold px-3 py-2 rounded-md hover:bg-primary/20">Pólizas</a>
+                    <a href="#" class="nav-link text-header-text font-semibold px-3 py-2 rounded-md hover:bg-primary/20">Reportes</a>
+                </nav>
+            </div>
+
+            <!-- DERECHA -->
+            <div class="flex items-center gap-4">
+                <!-- Buscador -->
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                    <input type="text" placeholder="Buscar póliza, cliente..."
+                           class="pl-10 pr-4 py-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm">
+                </div>
+
+                <!-- Notificaciones -->
+                <button class="relative text-slate-500 hover:text-header-hover transition">
+                    <span class="material-symbols-outlined text-3xl">notifications</span>
+                    <span class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+
+                <!-- Perfil -->
+                <div class="flex items-center gap-2 cursor-pointer">
+                    {% if request.user.perfil.foto %}
+                        <img src="{{ request.user.perfil.foto.url }}" alt="Foto de perfil" class="w-10 h-10 rounded-full object-cover border border-slate-300">
+                    {% else %}
+                        <span class="material-symbols-outlined w-10 h-10 text-3xl text-slate-400 rounded-full border border-slate-300 p-1">account_circle</span>
+                    {% endif %}
+                    <div class="flex flex-col text-sm">
+                        <span class="font-semibold">{{ request.user.get_full_name|default:request.user.username }}</span>
+                        <span class="text-slate-500 text-xs">Asesor</span>
+                    </div>
+                </div>
+
+                <!-- Logout -->
+                <a href="" class="text-slate-500 hover:text-header-hover transition">
+                    <span class="material-symbols-outlined text-3xl">logout</span>
+                </a>
+            </div>
+
+        </div>
+    </div>
+</header>
+
+<!-- CONTENIDO PRINCIPAL -->
+<main class="py-6 px-4 sm:px-6 lg:px-8">
+    {% block content %}
+    {% endblock %}
+</main>
+
+</body>
+</html>

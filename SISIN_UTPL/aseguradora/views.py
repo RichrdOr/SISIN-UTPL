@@ -44,4 +44,7 @@ def alertas(request):
 
 # Formulario Nuevo Siniestro
 def generar_siniestro(request):
-    return render(request, 'aseguradora/generar_siniestro.html')
+    return render(request, 'aseguradora/generarSiniestro.html')
+
+def bandeja_siniestros(request):
+    return render(request, 'aseguradora/bandeja_siniestros.html')
