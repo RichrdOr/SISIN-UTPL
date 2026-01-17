@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
+from django.views.generic import RedirectView
 
 
 urlpatterns = [
@@ -24,4 +25,5 @@ urlpatterns = [
     path('', include('usuarios.urls')),
     path("siniestros/", include("siniestros.urls")),
     path("aseguradora/", include("aseguradora.urls")),
+    path('', RedirectView.as_view(url='/aseguradora/dashboard/')),
 ]

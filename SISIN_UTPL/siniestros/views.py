@@ -12,67 +12,29 @@ from datetime import date, datetime
 from .models import Siniestro, Evento
 from django.contrib import messages
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import SiniestroForm, EventoForm
+from datetime import date
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import SiniestroForm, EventoForm
+from .models import Siniestro, Evento
+from datetime import date
+
 def crear_siniestro(request):
     if request.method == "POST":
-        # Tomar valores crudos del POST
-        fecha_ocurrencia_raw = request.POST.get('fecha_ocurrencia', '')
-        fecha_reporte_raw = request.POST.get('fecha_reporte', '')
-        fecha_apertura_raw = request.POST.get('fecha_apertura', '')
+        evento_form = EventoForm(request.POST)
+        if evento_form.is_valid():
+            evento_form.save()
+            return redirect('aseguradora:dashboard_aseguradora')
+    else:
+        evento_form = EventoForm()
 
-        ubicacion = request.POST.get('ubicacion', '')
-        tipo_evento = request.POST.get('tipo_evento', '')
-        causa_probable = request.POST.get('causa_probable', '')
-        tipo_bien = request.POST.get('tipo_bien', '')
-        numero_serie = request.POST.get('numero_serie', '')
-        marca = request.POST.get('marca', '')
-        modelo = request.POST.get('modelo', '')
-        descripcion = request.POST.get('descripcion', '')
-        tiempo = request.POST.get('tiempo', '0')
-
-        try:
-            # Convertir fechas, usar hoy si vienen vacías
-            fecha_ocurrencia = datetime.strptime(fecha_ocurrencia_raw, '%Y-%m-%d').date() \
-                if fecha_ocurrencia_raw else date.today()
-            fecha_reporte = datetime.strptime(fecha_reporte_raw, '%Y-%m-%d').date() \
-                if fecha_reporte_raw else date.today()
-            fecha_apertura = datetime.strptime(fecha_apertura_raw, '%Y-%m-%d').date() \
-                if fecha_apertura_raw else date.today()
-
-            siniestro = Siniestro.objects.create(
-                cobertura_valida=0,
-                estado=1,
-                fecha_apertura=fecha_apertura,
-                tiempo=int(tiempo),
-                tipo_bien=tipo_bien,
-                marca=marca,
-                modelo=modelo,
-                numero_serie=numero_serie,
-                poliza=None
-            )
-
-            evento = Evento.objects.create(
-                descripcion=descripcion,
-                descripcion_evento=descripcion,
-                dias_transcurridos=0,
-                estado=1,
-                fecha_ocurrencia=fecha_ocurrencia,
-                fecha_reporte=fecha_reporte,
-                ubicacion=ubicacion,
-                tipo_evento=tipo_evento,
-                siniestro=siniestro,
-                bien=None
-            )
-
-            messages.success(request, 'Reporte enviado exitosamente.')
-            return redirect("inicio_asegurado")
-
-        except Exception as e:
-            messages.error(request, f'Error al guardar el reporte: {str(e)}')
-            return redirect("inicio_asegurado")
-
-    return render(request, "asegurado/generarSiniestro.html", {
-        "polizas": Poliza.objects.all(),
-        "today": date.today().isoformat(),
+    return render(request, 'aseguradora/generarSiniestro.html', {  # puedes renombrar la plantilla si quieres
+        'evento_form': evento_form,
+        'today': date.today().isoformat(),
     })
 
 
