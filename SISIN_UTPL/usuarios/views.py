@@ -1,30 +1,31 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from siniestros.models import Siniestro, Evento
+from siniestros.models import Siniestro
 # Create your views here.
 
 
 def inicio_asegurado(request):
-    # Obtener siniestros (por ahora de poliza 1)
-    siniestros = Siniestro.objects.filter(poliza_id=1).select_related('poliza')
-    eventos = Evento.objects.filter(siniestro__in=siniestros)
+    # 🔹 Obtener siniestros (ejemplo: póliza 1)
+    siniestros = (
+        Siniestro.objects
+        .filter(poliza_id=1)
+        .select_related('poliza')
+    )
 
-    # Crear lista de siniestros con datos para el template
     siniestros_data = []
     for siniestro in siniestros:
-        evento = eventos.filter(siniestro=siniestro).first()
         siniestros_data.append({
-            'codigo': siniestro.id,
+            'codigo': siniestro.numero_siniestro,
             'bien_afectado': siniestro.tipo_bien,
-            'fecha_evento': evento.fecha_ocurrencia if evento else siniestro.fecha_apertura,
-            'estado': 'Abierto' if siniestro.estado == 1 else 'Cerrado',
+            'fecha_evento': siniestro.fecha_ocurrencia,
+            'estado': siniestro.get_estado_display(),
         })
 
-    # Calcular stats
-    total = len(siniestros_data)
-    creados = sum(1 for s in siniestros_data if s['estado'] == 'Abierto')
-    en_proceso = 0  # Por ahora 0
-    finalizados = sum(1 for s in siniestros_data if s['estado'] == 'Cerrado')
+    # 🔹 Estadísticas
+    total = siniestros.count()
+    creados = siniestros.filter(estado='reportado').count()
+    en_proceso = siniestros.filter(estado='en_revision').count()
+    finalizados = siniestros.filter(estado__in=['pagado', 'rechazado']).count()
 
     stats = {
         'total': total,
@@ -39,15 +40,3 @@ def inicio_asegurado(request):
     })
 
 
-def generarSiniestro(request):
-    if request.method == "POST":
-        return redirect("detalle_siniestro")
-
-    return render(request, 'asegurado/generarSiniestro.html')
-
-def detalleSiniestro(request):
-    return render(request, 'asegurado/detalle_siniestro.html')
-
-@login_required
-def dashboard_gerente(request):
-    return render(request, 'gerente/dashboard.html')

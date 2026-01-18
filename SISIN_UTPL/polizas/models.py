@@ -71,3 +71,24 @@ class ResponsableBien(models.Model):
 
     class Meta:
         unique_together = ('responsable', 'bien')
+
+
+class RamoPoliza(models.Model):
+    poliza = models.ForeignKey(Poliza, on_delete=models.CASCADE, related_name="ramos")
+
+    grupo = models.CharField(max_length=100)
+    subgrupo = models.CharField(max_length=100)
+    ramo = models.CharField(max_length=100)
+
+    suma_asegurada = models.DecimalField(max_digits=14, decimal_places=2)
+    prima = models.DecimalField(max_digits=12, decimal_places=2)
+
+    base_imponible = models.DecimalField(max_digits=12, decimal_places=2)
+    iva = models.DecimalField(max_digits=12, decimal_places=2)
+    total_facturado = models.DecimalField(max_digits=12, decimal_places=2)
+
+    deducible_minimo = models.DecimalField(max_digits=12, decimal_places=2)
+    deducible_porcentaje = models.DecimalField(max_digits=5, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.poliza.numero_poliza} - {self.ramo}"
