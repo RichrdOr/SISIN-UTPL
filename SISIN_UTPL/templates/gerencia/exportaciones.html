@@ -1,0 +1,101 @@
+{% extends 'gerencia/base_gerencia.html' %}
+
+{% block title %}Exportaciones{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto flex flex-col gap-8">
+    <h1 class="text-3xl font-black text-neutral-dark dark:text-white">Generar Exportaciones</h1>
+
+    <form method="POST" class="bg-white dark:bg-[#1a2230] rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+        {% csrf_token %}
+        <div class="p-6 bg-primary/5 border-b dark:border-gray-800">
+            <h3 class="font-bold text-lg dark:text-white">Configuración del Reporte</h3>
+        </div>
+        
+        <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2 space-y-2">
+                <label class="text-sm font-semibold text-text-main dark:text-gray-200" for="report-type">Tipo de Reporte</label>
+                <div class="relative">
+                    <select name="report_type" class="w-full h-12 rounded-lg border border-[#dbdfe6] dark:border-white/10 bg-white dark:bg-[#1A2230] text-text-main dark:text-white px-4 pr-10 appearance-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow" id="report-type" required>
+                        <option disabled selected value="">Seleccione una categoría de reporte...</option>
+                        
+                        {% for codigo, nombre in tipos_reporte %}
+                            <option value="{{ codigo }}">{{ nombre }}</option>
+                        {% endfor %}
+                        
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-text-secondary">
+                        <span class="material-symbols-outlined">expand_more</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <label class="font-semibold text-sm mb-2 block dark:text-gray-300">Fecha Inicio</label>
+                <input type="date" name="start_date" class="w-full rounded-lg border-gray-300 h-12 px-4">
+            </div>
+            <div>
+                <label class="font-semibold text-sm mb-2 block dark:text-gray-300">Fecha Fin</label>
+                <input type="date" name="end_date" class="w-full rounded-lg border-gray-300 h-12 px-4">
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="font-semibold text-sm mb-3 block dark:text-gray-300">Formato</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="format" value="excel" checked> Excel (.xlsx)
+                    </label>
+                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="format" value="pdf"> PDF
+                    </label>
+                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="format" value="csv"> CSV
+                    </label>
+                </div>
+            </div>
+
+            <div class="md:col-span-2 flex justify-end pt-4 border-t dark:border-gray-800">
+                <button type="submit" class="bg-primary hover:bg-blue-700 text-white font-bold h-12 px-8 rounded-lg shadow flex items-center gap-2">
+                    <span class="material-symbols-outlined">bolt</span> Generar Reporte
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div>
+        <h3 class="text-xl font-bold mb-4 dark:text-white">Historial de Archivos Generados</h3>
+        <div class="bg-white dark:bg-[#1a2230] rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 dark:bg-gray-900 border-b">
+                    <tr>
+                        <th class="px-6 py-4 text-xs uppercase text-gray-500">Título</th>
+                        <th class="px-6 py-4 text-xs uppercase text-gray-500">Fecha</th>
+                        <th class="px-6 py-4 text-xs uppercase text-gray-500">Tipo</th>
+                        <th class="px-6 py-4 text-right text-xs uppercase text-gray-500">Descargar</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    {% for r in reportes %}
+                    <tr>
+                        <td class="px-6 py-4 font-medium dark:text-white">{{ r.titulo }}</td>
+                        <td class="px-6 py-4 text-gray-500">{{ r.fecha_generacion|date:"d/m/Y H:i" }}</td>
+                        <td class="px-6 py-4">{{ r.tipo }}</td>
+                        <td class="px-6 py-4 text-right">
+                            {% if r.archivo %}
+                            <a href="{{ r.archivo.url }}" class="text-primary hover:underline font-medium" download>
+                                Descargar
+                            </a>
+                            {% else %}
+                            <span class="text-gray-400 text-sm">Procesando...</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">No hay reportes generados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -30,21 +30,17 @@
         <!-- CARD FORM -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
 
-            <!-- HEADER CARD -->
-            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center gap-2">
-                <span class="flex items-center justify-center size-6 rounded-full bg-primary text-white text-xs font-bold">
-                    1
-                </span>
-                <span class="text-sm font-semibold">
-                    Datos del Siniestro
-                </span>
-            </div>
-
-            <!-- FORM -->
-            <form method="POST" class="p-8 md:p-10 space-y-12 text-lg">
+            <!-- Form apuntando a la view -->
+            <form method="POST" action="{% url 'crear_siniestro' %}" class="p-8 md:p-10 space-y-12 text-lg">
                 {% csrf_token %}
 
-                <!-- DATOS EVENTO -->
+                <!-- CAMPOS OCULTOS -->
+                <input type="hidden" name="fecha_apertura" value="{{ today|date:'Y-m-d' }}">
+                <input type="hidden" name="tiempo" value="0">
+                <input type="hidden" name="poliza" value="1">
+                <input type="hidden" name="fecha_reporte" value="{{ today|date:'Y-m-d' }}">
+
+                <!-- DETALLES DEL EVENTO -->
                 <section class="space-y-6">
                     <div class="flex items-center gap-2 border-b pb-2">
                         <span class="material-symbols-outlined text-primary">event_note</span>
@@ -52,27 +48,42 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
                         <div>
                             <label class="form-label">Fecha del siniestro *</label>
-                            <input type="date" class="form-input" required>
-                            <p class="form-hint">
-                                El reporte debe realizarse dentro de los 15 días hábiles.
-                            </p>
+                            <input type="date"
+                                   name="fecha_ocurrencia"
+                                   class="form-input"
+                                   required>
                         </div>
 
                         <div>
                             <label class="form-label">Ubicación del bien *</label>
                             <input type="text"
-                                   placeholder="Ej. Edificio de Ciencias, Aula 302"
+                                   name="ubicacion"
                                    class="form-input"
                                    required>
                         </div>
 
+                        <div>
+                            <label class="form-label">Tipo de incidente *</label>
+                            <select name="tipo_evento" class="form-input" required>
+                                <option value="" disabled selected>Seleccione...</option>
+                                <option value="danio">Daño</option>
+                                <option value="robo">Robo</option>
+                                <option value="hurto">Hurto</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Causa probable</label>
+                            <input type="text"
+                                   name="causa_probable"
+                                   class="form-input">
+                        </div>
                     </div>
                 </section>
 
-                <!-- INFO BIEN -->
+                <!-- INFORMACIÓN DEL BIEN -->
                 <section class="space-y-6">
                     <div class="flex items-center gap-2 border-b pb-2">
                         <span class="material-symbols-outlined text-primary">devices</span>
@@ -80,37 +91,44 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
                         <div>
                             <label class="form-label">Tipo de bien *</label>
-                            <select class="form-input" required>
+                            <select name="tipo_bien" id="tipo_bien" class="form-input" required>
                                 <option value="" disabled selected>Seleccione...</option>
-                                <option>Equipo de Cómputo</option>
-                                <option>Equipo Audiovisual</option>
-                                <option>Equipo de Laboratorio</option>
-                                <option>Mobiliario</option>
-                                <option>Otro</option>
+                                <option value="computo">Equipo de Cómputo</option>
+                                <option value="audiovisual">Equipo Audiovisual</option>
+                                <option value="laboratorio">Equipo de Laboratorio</option>
+                                <option value="mobiliario">Mobiliario</option>
+                                <option value="otro">Otro</option>
                             </select>
+                        </div>
+
+                        <div id="otro_bien_container" class="hidden">
+                            <label class="form-label">Especifique el tipo de bien</label>
+                            <input type="text" class="form-input" name="otro_tipo_bien">
                         </div>
 
                         <div>
                             <label class="form-label">Número de serie *</label>
                             <input type="text"
-                                   placeholder="Ej. SN-4923810"
+                                   name="numero_serie"
                                    class="form-input"
                                    required>
                         </div>
 
                         <div>
                             <label class="form-label">Marca</label>
-                            <input type="text" class="form-input">
+                            <input type="text"
+                                   name="marca"
+                                   class="form-input">
                         </div>
 
                         <div>
                             <label class="form-label">Modelo</label>
-                            <input type="text" class="form-input">
+                            <input type="text"
+                                   name="modelo"
+                                   class="form-input">
                         </div>
-
                     </div>
                 </section>
 
@@ -124,22 +142,28 @@
                     <div>
                         <label class="form-label">Descripción *</label>
                         <textarea rows="4"
+                                  name="descripcion"
                                   class="form-input"
-                                  placeholder="Describa qué sucedió..."
                                   required></textarea>
                     </div>
                 </section>
 
+                <!-- CONFIRMACIÓN -->
+                <div class="flex items-start gap-3 pt-4">
+                    <input type="checkbox" required class="mt-1">
+                    <p class="text-sm text-slate-600">
+                        Declaro que la información proporcionada es verídica.
+                    </p>
+                </div>
+
                 <!-- BOTONES -->
                 <div class="flex justify-end gap-3 pt-6 border-t">
-                    <a href="{% url 'inicio_asegurado' %}"
-                       class="btn-secondary">
+                    <a href="{% url 'inicio_asegurado' %}" class="btn-secondary">
                         Cancelar
                     </a>
 
                     <button type="submit" class="btn-primary">
-                        <span>Enviar Reporte</span>
-                        <span class="material-symbols-outlined text-sm">send</span>
+                        Enviar Reporte
                     </button>
                 </div>
 
@@ -147,5 +171,7 @@
         </div>
     </div>
 </div>
+
+<script src="{% static 'js/asegurado.js' %}"></script>
 
 {% endblock %}

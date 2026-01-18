@@ -1,0 +1,102 @@
+{% extends 'gerencia/base_gerencia.html' %}
+
+{% block title %}Dashboard Gerencial{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-transparent dark:border-[#2a3441]">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-[#606e8a] dark:text-[#9aa2b1] text-[20px]">folder_open</span>
+            <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Total Siniestros</p>
+        </div>
+        <p class="text-[#111318] dark:text-white text-2xl font-bold">{{ kpis.total }}</p>
+    </div>
+    
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-l-4 border-l-amber-400 border-y-transparent border-r-transparent dark:border-y-[#2a3441] dark:border-r-[#2a3441]">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-amber-500 text-[20px]">warning</span>
+            <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Abiertos</p>
+        </div>
+        <p class="text-[#111318] dark:text-white text-2xl font-bold">{{ kpis.abiertos }}</p>
+    </div>
+
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-l-4 border-l-green-500 border-y-transparent border-r-transparent dark:border-y-[#2a3441] dark:border-r-[#2a3441]">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-green-600 text-[20px]">check_circle</span>
+            <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Cerrados</p>
+        </div>
+        <p class="text-[#111318] dark:text-white text-2xl font-bold">{{ kpis.cerrados }}</p>
+    </div>
+
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border 
+        {% if config.alerta_fuera_plazo and kpis.vencidos > 0 %}
+            border-l-4 border-l-red-600 animate-pulse bg-red-50 dark:bg-red-900/10
+        {% else %}
+            border-l-4 border-l-gray-300
+        {% endif %} 
+        border-y-transparent border-r-transparent dark:border-y-[#2a3441] dark:border-r-[#2a3441]">
+        
+        <div class="flex items-center justify-between mb-1">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined 
+                    {% if config.alerta_fuera_plazo and kpis.vencidos > 0 %}text-red-600{% else %}text-gray-400{% endif %} 
+                    text-[20px]">
+                    {% if config.alerta_fuera_plazo %}notifications_active{% else %}notifications_off{% endif %}
+                </span>
+                <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">
+                    {% if config.alerta_fuera_plazo %}
+                        Vencidos (> {{ config.dias_reporte_siniestro }} días)
+                    {% else %}
+                        Alerta Apagada
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <p class="text-[#111318] dark:text-white text-2xl font-bold">
+            {% if config.alerta_fuera_plazo %}
+                {{ kpis.vencidos }}
+            {% else %}
+                -
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-transparent dark:border-[#2a3441]">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-primary text-[20px]">attach_money</span>
+            <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Monto Siniestros</p>
+        </div>
+        <p class="text-[#111318] dark:text-white text-2xl font-bold">${{ kpis.monto_siniestros }}</p>
+    </div>
+
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-transparent dark:border-[#2a3441]">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-primary text-[20px]">savings</span>
+            <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Monto Pólizas</p>
+        </div>
+        <p class="text-[#111318] dark:text-white text-2xl font-bold">${{ kpis.monto_polizas }}</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="rounded-xl bg-white dark:bg-[#1e2430] p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-transparent dark:border-[#2a3441] flex flex-col">
+        <h3 class="text-[#111318] dark:text-white text-base font-bold mb-6">Estado General</h3>
+        <div class="flex flex-1 items-center justify-center relative min-h-[200px]">
+            <div class="relative size-40 rounded-full bg-[conic-gradient(var(--tw-gradient-stops))] from-green-500 via-amber-400 to-primary" style="--tw-gradient-stops: #22c55e 0% 70%, #fbbf24 70% 90%, #ef4444 90% 100%;">
+                <div class="absolute inset-4 rounded-full bg-white dark:bg-[#1e2430] flex items-center justify-center flex-col">
+                    <span class="text-3xl font-bold text-[#111318] dark:text-white">{{ kpis.total }}</span>
+                    <span class="text-xs text-[#606e8a] dark:text-[#9aa2b1]">Total</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="rounded-xl bg-white dark:bg-[#1e2430] p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-transparent dark:border-[#2a3441] flex flex-col lg:col-span-2">
+        <h3 class="text-[#111318] dark:text-white text-base font-bold mb-6">Comparativo Visual</h3>
+        <div class="flex items-center justify-center h-full text-gray-400 text-sm">
+            <p>Gráficos detallados disponibles en reporte completo.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
