@@ -2,6 +2,7 @@ from django.db import models
 from django_fsm import FSMField, transition
 from polizas.models import *
 from usuarios.models import *
+from datetime import date 
 
 class Broker(models.Model):
     nombre = models.CharField(max_length=100)
@@ -94,6 +95,34 @@ class Siniestro(models.Model):
     def pagar(self):
         pass
 
+    def validar_cobertura(self):
+        """
+        Retorna True si la póliza estaba activa y vigente al momento del siniestro.
+        """
+        # Seguridad: Si no tiene póliza asignada, no hay cobertura
+        if not self.poliza:
+            return False
+
+        # 1. Verificar estado de la póliza
+        if self.poliza.estado != 'activa':
+            return False
+
+        # 2. Verificar vigencia (Fecha Ocurrencia vs Fechas Póliza)
+        # Asumimos que fecha_ocurrencia es obligatorio
+        if self.poliza.fecha_inicio <= self.fecha_ocurrencia <= self.poliza.fecha_fin:
+            return True
+        
+        return False
+
+    # --- 2. CALCULAR TIEMPO DE RESOLUCIÓN (Métricas) ---
+    def calcular_tiempo_resolucion(self):
+        """
+        Calcula los días transcurridos desde la apertura hasta el cierre (o hasta hoy).
+        """
+        fecha_fin_calculo = self.fecha_cierre if self.fecha_cierre else date.today()
+        delta = fecha_fin_calculo - self.fecha_apertura
+        return delta.days
+
 
 class Evento(models.Model):
     descripcion = models.CharField(max_length=255)
@@ -122,3 +151,10 @@ class Robo(models.Model):
 class Hurto(models.Model):
     evento = models.OneToOneField(Evento, on_delete=models.CASCADE, primary_key=True)
     ubicacion_ultima_vista = models.CharField(max_length=255)
+
+
+# En siniestros/models.py
+
+# Asegúrate que esto esté importado arriba
+
+    
