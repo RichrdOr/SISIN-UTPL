@@ -24,44 +24,58 @@ from .models import ParametroSistema, ReglaDeducible
 
 # 1. DASHBOARD
 def dashboard_gerencial(request):
-    # 1. Obtener la Configuración
+    # 1. Configuración y KPIs (Lo que ya tenías)
     config, _ = ParametroSistema.objects.get_or_create(id=1)
     
-    # 2. Cálculos Básicos
     total_siniestros = Siniestro.objects.count()
     abiertos = Siniestro.objects.filter(estado__in=['reportado', 'en_revision']).count()
     cerrados = Siniestro.objects.filter(estado__in=['pagado', 'rechazado']).count()
     
-    # 3. Lógica Dinámica de "Vencidos" basada en tus Parámetros
-    # Usamos los días que tú configuraste en la pantalla de Parámetros (ej. 15)
     dias_limite = config.dias_reporte_siniestro 
     fecha_limite = timezone.now().date() - timedelta(days=dias_limite)
-    
-    # Contamos los reales
     cantidad_vencidos_real = Siniestro.objects.filter(
         fecha_reporte__lt=fecha_limite
     ).exclude(estado__in=['pagado', 'rechazado']).count()
-
-    # 4. ¿Debemos mostrar la alerta? (Aquí es donde sirven los Checkboxes)
-    # Solo mostramos el número si el checkbox está activado en la configuración.
-    # Si está desactivado, mandamos 0 o null para que no asuste.
     mostrar_vencidos = cantidad_vencidos_real if config.alerta_fuera_plazo else 0
 
-    # 5. Sumatorias
     raw_monto_siniestros = Siniestro.objects.aggregate(total=Sum('monto_aprobado'))['total'] or 0
     raw_monto_polizas = Poliza.objects.aggregate(total=Sum('prima'))['total'] or 0
+
+    # --- NUEVO: LÓGICA PARA LA GRÁFICA (Últimos 6 meses) ---
+    seis_meses_atras = timezone.now().date() - timedelta(days=180)
+    
+    # Agrupamos los siniestros por mes
+    grafica_query = Siniestro.objects.filter(fecha_reporte__gte=seis_meses_atras)\
+        .annotate(mes=TruncMonth('fecha_reporte'))\
+        .values('mes')\
+        .annotate(total=Count('id'))\
+        .order_by('mes')
+    
+    # Preparamos las listas para Chart.js
+    chart_labels = []
+    chart_data = []
+    
+    for item in grafica_query:
+        if item['mes']:
+            # Formato de etiqueta: "2026-01" (Año-Mes)
+            chart_labels.append(item['mes'].strftime("%Y-%m")) 
+            chart_data.append(item['total'])
+    # -------------------------------------------------------
 
     context = {
         'kpis': {
             'total': total_siniestros,
             'abiertos': abiertos,
             'cerrados': cerrados,
-            'vencidos': mostrar_vencidos, # Ahora depende del Checkbox
-            'hay_vencidos_reales': cantidad_vencidos_real > 0, # Para saber si hay problemas aunque la alerta esté apagada
+            'vencidos': mostrar_vencidos,
+            'hay_vencidos_reales': cantidad_vencidos_real > 0,
             'monto_siniestros': "{:,.0f}".format(raw_monto_siniestros),
             'monto_polizas': "{:,.0f}".format(raw_monto_polizas),
         },
-        'config': config # Pasamos la configuración para usarla en el HTML
+        'config': config,
+        # Enviamos los datos de la gráfica al template
+        'chart_labels': chart_labels, 
+        'chart_data': chart_data
     }
     return render(request, 'gerencia/dashboard.html', context)
 
