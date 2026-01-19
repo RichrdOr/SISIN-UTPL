@@ -1,0 +1,131 @@
+{% extends "asesora/base.html" %}
+
+{% block title %}Alertas{% endblock %}
+{% block header %}Alertas{% endblock %}
+
+{% block content %}
+
+<div class="space-y-6">
+
+  <!-- Título -->
+  <div>
+    <h2 class="text-xl font-semibold text-foreground mb-1">
+      Alertas y Notificaciones
+    </h2>
+    <p class="text-sm text-muted-foreground">
+      Centro de notificaciones del sistema
+    </p>
+  </div>
+
+  <!-- Lista de alertas -->
+  <div class="bg-card rounded-lg border overflow-hidden">
+
+    <div class="p-6 border-b flex items-center justify-between">
+      <h3 class="font-medium">Todas las alertas</h3>
+      <a href="{% url 'marcar_alertas_leidas' %}"
+         class="text-sm text-primary hover:underline">
+        Marcar todas como leídas
+      </a>
+    </div>
+
+    <div class="divide-y">
+
+      {% for alerta in alertas %}
+      <a
+        {% if alerta.siniestro_id %}
+          href="{% url 'detalle_siniestro' alerta.siniestro_id %}"
+        {% endif %}
+        class="block p-6 transition
+               {% if alerta.siniestro_id %} hover:bg-accent {% endif %}
+               {% if not alerta.leida %} bg-blue-50 {% endif %}"
+      >
+        <div class="flex gap-4">
+
+          <!-- Icono -->
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0
+            {% if alerta.tipo == 'nuevo_siniestro' %} bg-yellow-100 text-yellow-600
+            {% elif alerta.tipo == 'revision_pendiente' %} bg-blue-100 text-blue-600
+            {% elif alerta.tipo == 'aprobado' %} bg-green-100 text-green-600
+            {% elif alerta.tipo == 'documento_faltante' %} bg-red-100 text-red-600
+            {% else %} bg-gray-100 text-gray-600
+            {% endif %}">
+            <i data-lucide="bell" class="w-6 h-6"></i>
+          </div>
+
+          <!-- Contenido -->
+          <div class="flex-1">
+            <div class="flex justify-between items-start mb-1">
+              <h4 class="font-medium">
+                {{ alerta.titulo }}
+                {% if not alerta.leida %}
+                  <span class="ml-2 inline-block w-2 h-2 bg-primary rounded-full"></span>
+                {% endif %}
+              </h4>
+              <span class="text-sm text-muted-foreground">
+                {{ alerta.fecha }}
+              </span>
+            </div>
+
+            <p class="text-sm text-muted-foreground mb-2">
+              {{ alerta.mensaje }}
+            </p>
+
+            {% if alerta.siniestro_id %}
+              <span class="inline-block px-3 py-1 rounded-full text-xs bg-muted">
+                {{ alerta.siniestro_id }}
+              </span>
+            {% endif %}
+          </div>
+
+        </div>
+      </a>
+
+      {% empty %}
+      <div class="p-8 text-center text-muted-foreground">
+        No existen alertas registradas.
+      </div>
+      {% endfor %}
+
+    </div>
+  </div>
+
+  <!-- Resumen -->
+  <div class="grid grid-cols-4 gap-6">
+
+    <div class="bg-card p-6 rounded-lg border">
+      <div class="flex justify-between mb-2">
+        <i data-lucide="alert-circle" class="w-5 h-5 text-yellow-600"></i>
+        <span class="text-2xl font-semibold">{{ resumen.sin_leer }}</span>
+      </div>
+      <div class="text-sm text-muted-foreground">Sin leer</div>
+    </div>
+
+    <div class="bg-card p-6 rounded-lg border">
+      <div class="flex justify-between mb-2">
+        <i data-lucide="clock" class="w-5 h-5 text-blue-600"></i>
+        <span class="text-2xl font-semibold">{{ resumen.urgentes }}</span>
+      </div>
+      <div class="text-sm text-muted-foreground">Urgentes</div>
+    </div>
+
+    <div class="bg-card p-6 rounded-lg border">
+      <div class="flex justify-between mb-2">
+        <i data-lucide="check-circle" class="w-5 h-5 text-green-600"></i>
+        <span class="text-2xl font-semibold">{{ resumen.aprobados }}</span>
+      </div>
+      <div class="text-sm text-muted-foreground">Aprobados</div>
+    </div>
+
+    <div class="bg-card p-6 rounded-lg border">
+      <div class="flex justify-between mb-2">
+        <i data-lucide="bell" class="w-5 h-5 text-muted-foreground"></i>
+        <span class="text-2xl font-semibold">{{ resumen.total }}</span>
+      </div>
+      <div class="text-sm text-muted-foreground">Total</div>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

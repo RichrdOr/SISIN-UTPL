@@ -1,13 +1,42 @@
 from django import forms
-from .models import BienAsegurado
+from .models import Poliza, BienAsegurado, RamoPoliza, Deducible
 
-class BienAseguradoForm(forms.ModelForm):
+class PolizaForm(forms.ModelForm):
     class Meta:
-        model = BienAsegurado
+        model = Poliza
         fields = [
-            "descripcion",
-            "tipo_bien",
-            "estado",
-            "valor",
-            "zona",
+            'numero_poliza', 'titular', 'tipo_poliza', 'aseguradora', 
+            'fecha_emision', 'fecha_vencimiento', 'fecha_inicio', 'fecha_fin', 
+            'prima', 'cobertura', 'bien'
         ]
+        widgets = {
+            'fecha_emision': forms.DateInput(attrs={'type': 'date', 'class': 'input'}),
+            'fecha_vencimiento': forms.DateInput(attrs={'type': 'date', 'class': 'input'}),
+            'fecha_inicio': forms.DateInput(attrs={'type': 'date', 'class': 'input'}),
+            'fecha_fin': forms.DateInput(attrs={'type': 'date', 'class': 'input'}),
+            'cobertura': forms.Textarea(attrs={'rows': 2, 'class': 'input'}),
+        }
+
+class DeducibleForm(forms.ModelForm):
+    class Meta:
+        model = Deducible
+        fields = ['concepto', 'monto', 'porcentaje']
+        widgets = {
+            'concepto': forms.TextInput(attrs={'class': 'w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-primary', 'placeholder': 'Concepto'}),
+            'monto': forms.NumberInput(attrs={'class': 'w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-primary', 'step': '0.01', 'placeholder': 'Monto'}),
+            'porcentaje': forms.NumberInput(attrs={'class': 'w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-primary', 'step': '0.01', 'placeholder': '%'}),
+        }
+
+class RamoPolizaForm(forms.ModelForm):
+    class Meta:
+        model = RamoPoliza
+        # EXCLUIMOS 'poliza' porque el formset lo llena solo
+        exclude = ['poliza']
+        widgets = {
+            'grupo': forms.TextInput(attrs={'class': 'input', 'placeholder': 'Grupo'}),
+            'subgrupo': forms.TextInput(attrs={'class': 'input', 'placeholder': 'Subgrupo'}),
+            'ramo': forms.TextInput(attrs={'class': 'input', 'placeholder': 'Ramo'}),
+            'suma_asegurada': forms.NumberInput(attrs={'class': 'input', 'step': '0.01'}),
+            'deducible_porcentaje': forms.NumberInput(attrs={'class': 'input', 'step': '0.01'}),
+            # Añade widgets para los demás campos decimales si los vas a mostrar
+        }

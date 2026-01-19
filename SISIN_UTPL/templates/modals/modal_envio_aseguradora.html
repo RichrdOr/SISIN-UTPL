@@ -1,0 +1,143 @@
+{# templates/modals/modal_envio_aseguradora.html #}
+
+<div
+  id="modal-envio-aseguradora"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+>
+  <div class="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+
+    <!-- Header -->
+    <div class="sticky top-0 bg-[#0B3C5D] text-white p-6 rounded-t-lg flex items-center justify-between">
+      <h2 class="text-xl">Envío de Siniestro a Aseguradora</h2>
+      <button
+        onclick="cerrarModalEnvio()"
+        class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+      >
+        ✖
+      </button>
+    </div>
+
+    <!-- CONTENIDO -->
+    <div id="contenido-modal" class="p-6 space-y-6">
+
+      <!-- Para -->
+      <div>
+        <label class="block text-sm text-[#6E6E6E] mb-2">Para:</label>
+        <input
+          type="email"
+          value="aseguradora@seguros.com"
+          class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1F6FB2]"
+        />
+      </div>
+
+      <!-- Asunto -->
+      <div>
+        <label class="block text-sm text-[#6E6E6E] mb-2">Asunto:</label>
+        <input
+          type="text"
+          value="Siniestro {{ siniestro.id }} - {{ siniestro.tipo_evento }}"
+          class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1F6FB2]"
+        />
+      </div>
+
+      <!-- Mensaje -->
+      <div>
+        <label class="block text-sm text-[#6E6E6E] mb-2">Mensaje:</label>
+        <textarea
+          rows="10"
+          class="w-full px-4 py-2 border border-gray-200 rounded-lg font-mono text-sm focus:ring-2 focus:ring-[#1F6FB2]"
+        >Estimados señores,
+
+Por medio de la presente, remito la información completa del siniestro {{ siniestro.id }} para su evaluación.
+
+Detalles:
+- Póliza: {{ siniestro.poliza }}
+- Tipo de evento: {{ siniestro.tipo_evento }}
+- Fecha de ocurrencia: {{ siniestro.fecha_ocurrencia }}
+- Monto reclamado: {{ siniestro.monto_reclamado }}
+
+Adjunto la documentación correspondiente.
+
+Saludos cordiales.</textarea>
+      </div>
+
+      <!-- Checklist -->
+      <div class="border border-gray-200 rounded-lg p-4 space-y-2">
+        <label class="flex items-center gap-3">
+          <input type="checkbox" checked class="w-5 h-5 text-[#1F6FB2]" />
+          Datos del siniestro completos
+        </label>
+        <label class="flex items-center gap-3">
+          <input type="checkbox" checked class="w-5 h-5 text-[#1F6FB2]" />
+          Documentos adjuntos
+        </label>
+        <label class="flex items-center gap-3">
+          <input type="checkbox" checked class="w-5 h-5 text-[#1F6FB2]" />
+          Montos verificados
+        </label>
+      </div>
+
+      <!-- Documentos -->
+      <div class="bg-[#F4F6F8] rounded-lg p-4">
+        <h3 class="text-sm text-[#2C2C2C] mb-2">Documentos adjuntos:</h3>
+        <ul class="space-y-1">
+          {% for doc in siniestro.documentos %}
+          <li class="text-sm text-[#6E6E6E] flex items-center gap-2">
+            <span class="text-[#2E8B57]">✓</span>
+            {{ doc.nombre }} ({{ doc.archivo }})
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="sticky bottom-0 bg-gray-50 px-6 py-4 flex justify-end gap-4 border-t">
+      <button
+        onclick="cerrarModalEnvio()"
+        class="px-6 py-3 border border-gray-300 rounded-lg"
+      >
+        Cancelar
+      </button>
+
+      <button
+        onclick="enviarSiniestro()"
+        class="px-6 py-3 bg-[#1F6FB2] text-white rounded-lg hover:bg-[#0B3C5D]"
+      >
+        Enviar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- JS DEL MODAL -->
+<script>
+  function abrirModalEnvio() {
+    document
+      .getElementById("modal-envio-aseguradora")
+      .classList.remove("hidden");
+  }
+
+  function cerrarModalEnvio() {
+    document
+      .getElementById("modal-envio-aseguradora")
+      .classList.add("hidden");
+  }
+
+  function enviarSiniestro() {
+    const contenido = document.getElementById("contenido-modal");
+    contenido.innerHTML = `
+      <div class="p-12 text-center">
+        <div class="w-20 h-20 bg-[#E8F5E9] rounded-full flex items-center justify-center mx-auto mb-4">
+          ✔
+        </div>
+        <h3 class="text-xl mb-2">¡Enviado Exitosamente!</h3>
+        <p class="text-gray-600">
+          La información del siniestro fue enviada a la aseguradora.
+        </p>
+      </div>
+    `;
+
+    setTimeout(cerrarModalEnvio, 2000);
+  }
+</script>

@@ -1,0 +1,849 @@
+{% extends "asesora/base.html" %}
+
+{% block title %}Gestión de Pólizas{% endblock %}
+{% block header %}Gestión de Pólizas{% endblock %}
+
+{% block content %}
+
+<div class="container mx-auto px-6 py-8">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-foreground mb-2">
+        Pólizas
+      </h2>
+      <p class="text-sm text-muted-foreground">
+        Gestión de pólizas de seguros.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button onclick="exportToExcel()" 
+              class="flex items-center gap-2 px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition">
+        <i data-lucide="download" class="w-4 h-4"></i>
+        Exportar Excel
+      </button>
+      <button onclick="renewExpiredPolicies()" 
+              class="flex items-center gap-2 px-4 py-2 border border-orange-600 text-orange-600 rounded-lg hover:bg-orange-50 transition">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        Renovar Vencidas
+      </button>
+      <button onclick="openModal()" 
+              class="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition">
+        <i data-lucide="plus" class="w-5 h-5"></i>
+        Crear Póliza
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Section -->
+  <div class="mt-6 mb-8">
+    <!-- Section Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h3 class="text-xl font-bold text-foreground mb-1">
+          📊 Estadísticas
+        </h3>
+        <p class="text-sm text-muted-foreground">
+          Resumen de pólizas y métricas importantes
+        </p>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="bg-card rounded-lg border p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-muted-foreground">Total Pólizas</p>
+            <p class="text-2xl font-bold text-foreground">{{ total_polizas }}</p>
+          </div>
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <i data-lucide="file-text" class="w-6 h-6 text-blue-600"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-card rounded-lg border p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-muted-foreground">Pólizas Activas</p>
+            <p class="text-2xl font-bold text-green-600">{{ polizas_activas }}</p>
+          </div>
+          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+            <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-card rounded-lg border p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-muted-foreground">Por Vencer</p>
+            <p class="text-2xl font-bold text-yellow-600">{{ polizas_por_vencer }}</p>
+          </div>
+          <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+            <i data-lucide="alert-triangle" class="w-6 h-6 text-yellow-600"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-card rounded-lg border p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-muted-foreground">Prima Total</p>
+            <p class="text-2xl font-bold text-foreground">${{ prima_total|floatformat:2 }} USD</p>
+          </div>
+          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+            <i data-lucide="dollar-sign" class="w-6 h-6 text-purple-600"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="bg-card rounded-lg border p-4 border-red-200">
+    <div class="relative">
+      <input type="text" 
+             placeholder="Buscar por nº póliza, cliente o ramo"
+             class="w-full pl-4 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+      <i data-lucide="search" class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground cursor-pointer"></i>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="bg-card rounded-lg border overflow-hidden">
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-muted">
+          <tr>
+            <th class="px-6 py-3 text-left text-muted-foreground font-medium tracking-normal">Nº PÓLIZA</th>
+            <th class="px-6 py-3 text-left text-muted-foreground font-medium">RAMO</th>
+            <th class="px-6 py-3 text-left text-muted-foreground font-medium">VIGENCIA</th>
+            <th class="px-6 py-3 text-left text-muted-foreground font-medium">COSTO</th>
+            <th class="px-6 py-3 text-left text-muted-foreground font-medium">PDF</th>
+            <th class="px-6 py-3 text-left text-muted-foreground font-medium">ACCIONES</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y">
+
+          {% for poliza in polizas %}
+          <tr class="hover:bg-accent transition-colors">
+
+            <td class="px-6 py-4 font-medium tracking-normal">{{ poliza.numero_poliza }}</td>
+            
+            <!-- Ramo con icono -->
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                {% if 'automóvil' in poliza.tipo_poliza.lower %}
+                  <i data-lucide="car" class="w-4 h-4 text-blue-600"></i>
+                {% elif 'salud' in poliza.tipo_poliza.lower %}
+                  <i data-lucide="heart" class="w-4 h-4 text-red-600"></i>
+                {% elif 'hogar' in poliza.tipo_poliza.lower %}
+                  <i data-lucide="home" class="w-4 h-4 text-green-600"></i>
+                {% elif 'vida' in poliza.tipo_poliza.lower %}
+                  <i data-lucide="shield" class="w-4 h-4 text-purple-600"></i>
+                {% else %}
+                  <i data-lucide="file-text" class="w-4 h-4 text-gray-600"></i>
+                {% endif %}
+                <span>{{ poliza.tipo_poliza }}</span>
+              </div>
+            </td>
+
+            <!-- Vigencia -->
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                {% if poliza.estado == "activa" %}
+                  <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Vigente</span>
+                {% elif poliza.estado == "suspendida" %}
+                  <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">Por Vencer</span>
+                {% else %}
+                  <span class="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">Vencido</span>
+                {% endif %}
+              </div>
+            </td>
+
+            <!-- Costo -->
+            <td class="px-6 py-4 font-medium">
+              $ {{ poliza.prima|floatformat:2 }} USD
+            </td>
+
+            <!-- PDF -->
+            <td class="px-6 py-4">
+              <a href="{% url 'descargar_pdf' poliza.id %}" 
+                 class="p-2 hover:bg-accent rounded transition-colors inline-block"
+                 title="Descargar PDF">
+                <i data-lucide="file-text" class="w-4 h-4 text-muted-foreground"></i>
+              </a>
+            </td>
+
+            <!-- Acciones -->
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <button onclick="editPoliza('{{ poliza.id }}')" 
+                        class="p-2 hover:bg-accent rounded transition-colors">
+                  <i data-lucide="edit" class="w-4 h-4 text-muted-foreground"></i>
+                </button>
+                <button onclick="deletePoliza('{{ poliza.id }}')" 
+                        class="p-2 hover:bg-accent rounded transition-colors">
+                  <i data-lucide="trash-2" class="w-4 h-4 text-red-600"></i>
+                </button>
+              </div>
+            </td>
+
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-muted-foreground">
+              No existen pólizas registradas.
+            </td>
+          </tr>
+          {% endfor %}
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="px-6 py-4 border-t flex items-center justify-between">
+      <div class="text-sm text-muted-foreground">
+        Mostrando 1 a {{ polizas|length }} de {{ polizas|length }} resultados
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="px-3 py-1 border rounded hover:bg-accent transition-colors disabled:opacity-50" disabled>
+          Anterior
+        </button>
+        <button class="px-3 py-1 border rounded hover:bg-accent transition-colors disabled:opacity-50" disabled>
+          Siguiente
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal Crear/Editar Póliza -->
+<div id="polizaModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl">
+    <!-- Header Modal -->
+    <div class="flex items-center justify-between p-6 border-b bg-gray-50 rounded-t-xl">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+          <i data-lucide="file-text" class="w-5 h-5 text-primary-foreground"></i>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold text-foreground">Crear Nueva Póliza</h3>
+          <p class="text-sm text-muted-foreground">Complete la información de la póliza</p>
+        </div>
+      </div>
+      <button onclick="closeModal()" class="p-2 hover:bg-accent rounded-lg transition-colors">
+        <i data-lucide="x" class="w-5 h-5 text-muted-foreground"></i>
+      </button>
+    </div>
+
+    <!-- Form Content -->
+    <form id="polizaForm" class="space-y-6 p-6">
+      <!-- SECCIÓN 1: DATOS DE LA PÓLIZA -->
+      <div class="bg-card rounded-lg border p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+            <i data-lucide="file-text" class="w-4 h-4 text-blue-600"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-foreground">Datos de la Póliza</h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
+              <i data-lucide="hash" class="w-4 h-4 text-muted-foreground"></i>
+              Nro. Póliza
+            </label>
+            <input name="numero_poliza" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="POL-000123" required />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
+              <i data-lucide="building" class="w-4 h-4 text-muted-foreground"></i>
+              Aseguradora
+            </label>
+            <input name="aseguradora" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Nombre de la aseguradora" required />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
+              <i data-lucide="calendar" class="w-4 h-4 text-muted-foreground"></i>
+              Fecha de Emisión
+            </label>
+            <input type="date" name="fecha_emision" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
+              <i data-lucide="calendar-days" class="w-4 h-4 text-muted-foreground"></i>
+              Fecha Inicio
+            </label>
+            <input type="date" name="fecha_inicio" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
+              <i data-lucide="calendar-check" class="w-4 h-4 text-muted-foreground"></i>
+              Fecha Fin
+            </label>
+            <input type="date" name="fecha_fin" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
+              <i data-lucide="dollar-sign" class="w-4 h-4 text-muted-foreground"></i>
+              Total Prima
+            </label>
+            <input type="number" step="0.01" name="total_prima" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00" required />
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 2: BIEN ASEGURADO -->
+      <div class="bg-card rounded-lg border p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+            <i data-lucide="home" class="w-4 h-4 text-green-600"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-foreground">Bien Asegurado</h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="col-span-1 md:col-span-2">
+            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
+              <i data-lucide="file-text" class="w-4 h-4 text-muted-foreground"></i>
+              Descripción del Bien
+            </label>
+            <textarea name="descripcion_bien" rows="3" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Descripción detallada del bien asegurado..." required></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
+              <i data-lucide="building-2" class="w-4 h-4 text-muted-foreground"></i>
+              Tipo de Bien
+            </label>
+            <select name="tipo_bien" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required>
+              <option value="">Seleccione</option>
+              <option value="Residencial">Residencial</option>
+              <option value="Comercial">Comercial</option>
+              <option value="Industrial">Industrial</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
+              <i data-lucide="map-pin" class="w-4 h-4 text-muted-foreground"></i>
+              Zona / Ubicación
+            </label>
+            <input name="zona" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ciudad / Sector" required />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
+              <i data-lucide="trending-up" class="w-4 h-4 text-muted-foreground"></i>
+              Valor del Bien
+            </label>
+            <input type="number" step="0.01" name="valor_bien" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00" required />
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 3: RAMOS -->
+      <div class="bg-card rounded-lg border p-6">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+              <i data-lucide="layers" class="w-4 h-4 text-purple-600"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-foreground">Ramos de la Póliza</h3>
+          </div>
+          <button type="button" id="add-ramo-btn-modal" class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition flex items-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            Agregar Ramo
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full border-separate border-spacing-y-2">
+            <thead>
+              <tr class="bg-muted/30">
+                <th class="p-3 text-sm text-left">Grupo</th>
+                <th class="p-3 text-sm text-left">Subgrupo</th>
+                <th class="p-3 text-sm text-left">Ramo</th>
+                <th class="p-3 text-sm text-left">Suma Asegurada</th>
+                <th class="p-3 text-sm text-left">Deducible %</th>
+                <th class="p-3 text-sm text-center">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="ramos-container-modal">
+              <tr class="ramo-form bg-white">
+                <td class="p-1"><input name="ramos-0-grupo" class="w-full px-2 py-1 border rounded text-sm" required></td>
+                <td class="p-1"><input name="ramos-0-subgrupo" class="w-full px-2 py-1 border rounded text-sm"></td>
+                <td class="p-1"><input name="ramos-0-ramo" class="w-full px-2 py-1 border rounded text-sm" required></td>
+                <td class="p-1"><input type="number" step="0.01" name="ramos-0-suma_asegurada" class="w-full px-2 py-1 border rounded text-sm" required></td>
+                <td class="p-1"><input type="number" step="0.01" name="ramos-0-deducible" class="w-full px-2 py-1 border rounded text-sm"></td>
+                <td class="p-2 text-center">
+                  <button type="button" class="delete-ramo-btn-modal text-red-600 hover:bg-red-50 p-1 rounded">🗑️</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 4: PDF -->
+      <div class="bg-card rounded-lg border p-6">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+            <i data-lucide="paperclip" class="w-4 h-4 text-orange-600"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-foreground">Documentos</h3>
+        </div>
+        
+        <!-- PDF Upload -->
+        <div>
+          <label class="block text-sm font-medium mb-2 flex items-center gap-2">
+            <i data-lucide="upload" class="w-4 h-4 text-muted-foreground"></i>
+            PDF de la Póliza
+          </label>
+          <div class="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
+            <i data-lucide="upload" class="w-12 h-12 mx-auto mb-4 text-muted-foreground"></i>
+            <p class="text-sm text-muted-foreground mb-2">Arrastra y suelta el PDF aquí o haz clic para seleccionar</p>
+            <input type="file" name="pdf_file" accept=".pdf" class="hidden" id="pdfInput">
+            <button type="button" onclick="document.getElementById('pdfInput').click()"
+                    class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition">
+              Seleccionar Archivo
+            </button>
+            <div id="pdfFileName" class="mt-2 text-sm text-muted-foreground"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="flex items-center justify-end gap-4 pt-6 border-t">
+        <button type="button" onclick="closeModal()" 
+                class="px-6 py-3 border rounded-lg hover:bg-accent transition-colors flex items-center gap-2">
+          <i data-lucide="x" class="w-4 h-4"></i>
+          Cancelar
+        </button>
+        <button type="submit" 
+                class="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition flex items-center gap-2">
+          <i data-lucide="save" class="w-4 h-4"></i>
+          Guardar Póliza
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentEditingId = null;
+let ramosCountModal = 1;
+
+function openModal() {
+  currentEditingId = null;
+  document.getElementById('polizaModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  resetForm();
+  setTimeout(() => lucide.createIcons(), 100);
+}
+
+function closeModal() {
+  document.getElementById('polizaModal').classList.add('hidden');
+  document.body.style.overflow = 'auto';
+  currentEditingId = null;
+}
+
+function resetForm() {
+  document.getElementById('polizaForm').reset();
+  
+  // Reset ramos table to default
+  const ramosTbody = document.getElementById('ramos-container-modal');
+  ramosTbody.innerHTML = `
+    <tr class="ramo-form bg-white">
+      <td class="p-1"><input name="ramos-0-grupo" class="w-full px-2 py-1 border rounded text-sm" required></td>
+      <td class="p-1"><input name="ramos-0-subgrupo" class="w-full px-2 py-1 border rounded text-sm"></td>
+      <td class="p-1"><input name="ramos-0-ramo" class="w-full px-2 py-1 border rounded text-sm" required></td>
+      <td class="p-1"><input type="number" step="0.01" name="ramos-0-suma_asegurada" class="w-full px-2 py-1 border rounded text-sm" required></td>
+      <td class="p-1"><input type="number" step="0.01" name="ramos-0-deducible" class="w-full px-2 py-1 border rounded text-sm"></td>
+      <td class="p-2 text-center">
+        <button type="button" class="delete-ramo-btn-modal text-red-600 hover:bg-red-50 p-1 rounded">🗑️</button>
+      </td>
+    </tr>
+  `;
+  
+  ramosCountModal = 1;
+  setTimeout(() => lucide.createIcons(), 100);
+}
+
+// Agregar ramo en modal
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.id === 'add-ramo-btn-modal') {
+    const tbody = document.getElementById('ramos-container-modal');
+    const newRow = document.createElement('tr');
+    newRow.className = 'ramo-form bg-white';
+    newRow.innerHTML = `
+      <td class="p-1"><input name="ramos-${ramosCountModal}-grupo" class="w-full px-2 py-1 border rounded text-sm" required></td>
+      <td class="p-1"><input name="ramos-${ramosCountModal}-subgrupo" class="w-full px-2 py-1 border rounded text-sm"></td>
+      <td class="p-1"><input name="ramos-${ramosCountModal}-ramo" class="w-full px-2 py-1 border rounded text-sm" required></td>
+      <td class="p-1"><input type="number" step="0.01" name="ramos-${ramosCountModal}-suma_asegurada" class="w-full px-2 py-1 border rounded text-sm" required></td>
+      <td class="p-1"><input type="number" step="0.01" name="ramos-${ramosCountModal}-deducible" class="w-full px-2 py-1 border rounded text-sm"></td>
+      <td class="p-2 text-center">
+        <button type="button" class="delete-ramo-btn-modal text-red-600 hover:bg-red-50 p-1 rounded">🗑️</button>
+      </td>
+    `;
+    tbody.appendChild(newRow);
+    ramosCountModal++;
+    setTimeout(() => lucide.createIcons(), 50);
+  }
+  
+  if (e.target && e.target.classList.contains('delete-ramo-btn-modal')) {
+    e.target.closest('tr').remove();
+  }
+});
+
+async function editPoliza(id) {
+  console.log('Editando póliza:', id);
+  currentEditingId = id;
+  try {
+    const response = await fetch(`/polizas/obtener/${id}/`);
+    console.log('Response status:', response.status);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Data received:', data);
+    
+    // Load data into form
+    const numeroPoliza = document.querySelector('[name="numero_poliza"]');
+    if (numeroPoliza) {
+      numeroPoliza.value = data.numero_poliza || '';
+    }
+    
+    const aseguradora = document.querySelector('[name="aseguradora"]');
+    if (aseguradora) {
+      aseguradora.value = data.aseguradora || '';
+    }
+    
+    const fechaEmision = document.querySelector('[name="fecha_emision"]');
+    if (fechaEmision) {
+      fechaEmision.value = data.fecha_emision || '';
+    }
+    
+    const fechaInicio = document.querySelector('[name="fecha_inicio"]');
+    if (fechaInicio) {
+      fechaInicio.value = data.fecha_inicio || '';
+    }
+    
+    const fechaFin = document.querySelector('[name="fecha_fin"]');
+    if (fechaFin) {
+      fechaFin.value = data.fecha_fin || '';
+    }
+    
+    const totalPrima = document.querySelector('[name="total_prima"]');
+    if (totalPrima) {
+      totalPrima.value = data.total_prima || '';
+    }
+    
+    const descripcionBien = document.querySelector('[name="descripcion_bien"]');
+    if (descripcionBien) {
+      descripcionBien.value = data.descripcion_bien || '';
+    }
+    
+    const tipoBien = document.querySelector('[name="tipo_bien"]');
+    if (tipoBien) {
+      tipoBien.value = data.tipo_bien || '';
+    }
+    
+    const zona = document.querySelector('[name="zona"]');
+    if (zona) {
+      zona.value = data.zona || '';
+    }
+    
+    const valorBien = document.querySelector('[name="valor_bien"]');
+    if (valorBien) {
+      valorBien.value = data.valor_bien || '';
+    }
+    
+    openModal();
+    reinitializeIcons();
+  } catch (error) {
+    console.error('Error loading policy:', error);
+    alert('Error al cargar la póliza: ' + error.message);
+  }
+}
+
+async function deletePoliza(id) {
+  console.log('Eliminando póliza:', id);
+  if (confirm('¿Estás seguro de que quieres eliminar esta póliza?')) {
+    try {
+      const response = await fetch(`/polizas/eliminar/${id}/`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Delete response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('Delete result:', result);
+      
+      if (result.success) {
+        showToast('Póliza eliminada exitosamente', 'success');
+        location.reload();
+      } else {
+        showToast('Error al eliminar: ' + result.message, 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting policy:', error);
+      showToast('Error al eliminar la póliza', 'error');
+    }
+  }
+}
+
+// Toast notification system
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+  const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info';
+  
+  toast.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center gap-3 transform translate-x-full transition-transform duration-300`;
+  toast.innerHTML = `
+    <i data-lucide="${icon}" class="w-5 h-5"></i>
+    <span class="font-medium">${message}</span>
+  `;
+  
+  document.body.appendChild(toast);
+  lucide.createIcons();
+  
+  // Animate in
+  setTimeout(() => {
+    toast.classList.remove('translate-x-full');
+  }, 100);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    toast.classList.add('translate-x-full');
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 300);
+  }, 3000);
+}
+
+// Form submission
+async function submitForm(e) {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData();
+  
+  // Add basic policy data
+  formData.append('numero_poliza', form.numero_poliza?.value || '');
+  formData.append('aseguradora', form.aseguradora?.value || '');
+  formData.append('fecha_emision', form.fecha_emision?.value || '');
+  formData.append('fecha_inicio', form.fecha_inicio?.value || '');
+  formData.append('fecha_fin', form.fecha_fin?.value || '');
+  formData.append('total_prima', form.total_prima?.value || '');
+  formData.append('descripcion_bien', form.descripcion_bien?.value || '');
+  formData.append('tipo_bien', form.tipo_bien?.value || '');
+  formData.append('zona', form.zona?.value || '');
+  formData.append('valor_bien', form.valor_bien?.value || '');
+  
+  // Add ramos data
+  const ramos = [];
+  for (let i = 0; i < ramosCountModal; i++) {
+    const grupo = document.querySelector(`[name="ramos-${i}-grupo"]`);
+    const subgrupo = document.querySelector(`[name="ramos-${i}-subgrupo"]`);
+    const ramo = document.querySelector(`[name="ramos-${i}-ramo"]`);
+    const suma = document.querySelector(`[name="ramos-${i}-suma_asegurada"]`);
+    const deducible = document.querySelector(`[name="ramos-${i}-deducible"]`);
+    
+    if (grupo && ramo && suma && grupo.value && ramo.value && suma.value) {
+      ramos.push({
+        grupo: grupo.value,
+        subgrupo: subgrupo?.value || '',
+        ramo: ramo.value,
+        suma_asegurada: suma.value,
+        deducible: deducible?.value || ''
+      });
+    }
+  }
+  formData.append('ramos', JSON.stringify(ramos));
+  
+  // Add PDF file if selected
+  const pdfFile = form.pdf_file?.files[0];
+  if (pdfFile) {
+    formData.append('pdf_file', pdfFile);
+  }
+  
+  // Determine URL and method
+  const url = currentEditingId ? `/polizas/editar/${currentEditingId}/` : '/polizas/crear/';
+  const method = 'POST';
+  
+  try {
+    const response = await fetch(url, {
+      method: method,
+      body: formData,
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showToast(currentEditingId ? 'Póliza actualizada exitosamente' : 'Póliza creada exitosamente', 'success');
+      closeModal();
+      location.reload();
+    } else {
+      showToast('Error: ' + result.message, 'error');
+    }
+  } catch (error) {
+    console.error('Error submitting form:', error);
+    showToast('Error al guardar la póliza', 'error');
+  }
+}
+
+// File selection handler
+document.getElementById('pdfInput').addEventListener('change', function(e) {
+  const fileName = e.target.files[0]?.name || '';
+  document.getElementById('pdfFileName').textContent = fileName ? `Archivo seleccionado: ${fileName}` : '';
+});
+
+// Helper function to get CSRF token
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Form submission event
+document.getElementById('polizaForm').addEventListener('submit', submitForm);
+
+// Re-inicializar icons cuando se carga la página y después de cambios dinámicos
+document.addEventListener('DOMContentLoaded', function() {
+  lucide.createIcons();
+});
+
+// Función para re-inicializar icons (útil después de añadir/eliminar elementos)
+function reinitializeIcons() {
+  setTimeout(() => lucide.createIcons(), 50);
+}
+
+// Exportar a Excel
+function exportToExcel() {
+  console.log('Exportando a Excel...');
+  
+  // Mostrar indicador de carga
+  const button = event.target;
+  const originalText = button.innerHTML;
+  button.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Exportando...';
+  button.disabled = true;
+  
+  // Llamar al backend
+  fetch('/polizas/exportar-excel/', {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      return response.blob();
+    }
+    throw new Error('Error en la exportación');
+  })
+  .then(blob => {
+    // Descargar archivo
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'polizas_export.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    showToast('Exportación a Excel completada exitosamente', 'success');
+  })
+  .catch(error => {
+    console.error('Error exportando Excel:', error);
+    showToast('Error al exportar a Excel. Por favor, inténtelo de nuevo', 'error');
+  })
+  .finally(() => {
+    // Restaurar botón
+    button.innerHTML = originalText;
+    button.disabled = false;
+    reinitializeIcons();
+  });
+}
+
+// Renovar pólizas vencidas
+function renewExpiredPolicies() {
+  console.log('Renovando pólizas vencidas...');
+  
+  if (confirm('¿Estás seguro de que quieres renovar todas las pólizas vencidas?')) {
+    // Mostrar indicador de carga
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Renovando...';
+    button.disabled = true;
+    
+    fetch('/polizas/renovar-vencidas/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showToast(`Se renovaron ${data.renewed_count} pólizas exitosamente`, 'success');
+        location.reload();
+      } else {
+        showToast('Error al renovar pólizas: ' + data.message, 'error');
+      }
+    })
+    .catch(error => {
+      console.error('Error renovando pólizas:', error);
+      showToast('Error al renovar las pólizas vencidas', 'error');
+    })
+    .finally(() => {
+      // Restaurar botón
+      button.innerHTML = originalText;
+      button.disabled = false;
+      reinitializeIcons();
+    });
+  }
+}
+</script>
+{% endblock %}

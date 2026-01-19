@@ -1,0 +1,308 @@
+{% extends "asesora/base.html" %}
+{% load static %}
+
+{% block title %}Crear Siniestro{% endblock %}
+{% block header %}Crear Nuevo Siniestro{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto pb-12">
+    <div class="flex items-center gap-4 mb-6">
+        <a href="{% url 'siniestros_asesora' %}" class="p-2 hover:bg-accent rounded-lg transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+        </a>
+        <div>
+            <h2 class="text-2xl font-bold">Registrar Nuevo Siniestro</h2>
+            <p class="text-muted-foreground text-sm">Complete la información para reportar el siniestro a la aseguradora</p>
+        </div>
+    </div>
+
+    <form id="formSiniestro" method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        <div class="bg-card rounded-lg border p-6 shadow-sm">
+            <h3 class="mb-4 pb-3 border-b font-medium flex items-center gap-2">
+                <span class="bg-primary/10 text-primary w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                📋 Póliza y Ramo Asociado
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Póliza Activa *</label>
+                    <select name="poliza" id="select_poliza" class="input" required>
+                        <option value="">Seleccione una póliza...</option>
+                        {% for poliza in polizas %}
+                        <option value="{{ poliza.id }}" 
+                                data-titular="{{ poliza.titular }}"
+                                data-aseguradora="{{ poliza.aseguradora }}"
+                                data-vencimiento="{{ poliza.fecha_vencimiento }}">
+                            {{ poliza.numero_poliza }} - {{ poliza.titular }} ({{ poliza.tipo_poliza }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Ramo Específico *</label>
+                    <select name="ramo" id="select_ramo" class="input" required disabled>
+                        <option value="">Primero seleccione una póliza</option>
+                    </select>
+                </div>
+            </div>
+            <div id="info_poliza" class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4 hidden">
+                <div class="grid grid-cols-3 gap-4 text-sm text-blue-800">
+                    <div><span class="font-bold block text-xs uppercase">Titular:</span><p id="poliza_titular">-</p></div>
+                    <div><span class="font-bold block text-xs uppercase">Aseguradora:</span><p id="poliza_aseguradora">-</p></div>
+                    <div><span class="font-bold block text-xs uppercase">Vencimiento:</span><p id="poliza_vencimiento">-</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-lg border p-6 shadow-sm">
+            <h3 class="mb-4 pb-3 border-b font-medium flex items-center gap-2">
+                <span class="bg-primary/10 text-primary w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                👤 Datos del Reclamante
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Nombre Completo *</label>
+                    <input type="text" name="reclamante_nombre" class="input" placeholder="Nombre de quien reporta" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Correo Electrónico *</label>
+                    <input type="email" name="reclamante_email" class="input" placeholder="ejemplo@correo.com" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Teléfono</label>
+                    <input type="tel" name="reclamante_telefono" class="input" placeholder="0987654321">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-lg border p-6 shadow-sm">
+            <h3 class="mb-4 pb-3 border-b font-medium flex items-center gap-2">
+                <span class="bg-primary/10 text-primary w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                ⚡ Detalles del Evento
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Tipo de Evento *</label>
+                    <select name="tipo_evento" id="tipo_evento" class="input" required>
+                        <option value="">Seleccione tipo</option>
+                        <option value="danio">Daño</option>
+                        <option value="robo">Robo</option>
+                        <option value="hurto">Hurto</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Fecha de Ocurrencia *</label>
+                    <input type="date" name="fecha_ocurrencia" id="fecha_ocurrencia" class="input" required max="{% now 'Y-m-d' %}">
+                    <p id="alerta_plazo" class="text-xs text-red-600 mt-1 hidden">⚠️ Han pasado más de 15 días.</p>
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-sm font-medium mb-2">Ubicación Exacta *</label>
+                    <input type="text" name="ubicacion" class="input" placeholder="Lugar donde ocurrió el siniestro" required>
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-sm font-medium mb-2">Causa Probable *</label>
+                    <input type="text" name="causa_probable" class="input" placeholder="Causa probable del siniestro" required>
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-sm font-medium mb-2">Descripción Detallada *</label>
+                    <textarea rows="3" name="descripcion" class="input" placeholder="Describa los hechos..." required></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Monto Reclamado (USD) *</label>
+                    <input type="number" name="monto_reclamado" class="input" step="0.01" required>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-6 border-t">
+                <h4 class="text-sm font-semibold text-primary mb-4">📦 Especificaciones del Bien Afectado</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" name="tipo_bien" class="input" placeholder="Tipo (Ej: Laptop)" required>
+                    <input type="text" name="numero_serie" class="input" placeholder="Serie / Placa" required>
+                    <input type="text" name="marca" class="input" placeholder="Marca">
+                    <input type="text" name="modelo" class="input" placeholder="Modelo">
+                </div>
+            </div>
+
+            <div id="campos_robo" class="mt-6 pt-6 border-t hidden bg-red-50/50 p-4 rounded-lg">
+                <h4 class="text-sm font-semibold text-red-600 mb-4">🚨 Datos de Denuncia</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" name="denuncia_policial" class="input" placeholder="Nro. Denuncia">
+                    <input type="text" name="fiscalia" class="input" placeholder="Fiscalía">
+                    <input type="date" name="fecha_denuncia" class="input">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-lg border p-6 shadow-sm">
+            <h3 class="mb-4 pb-3 border-b font-medium flex items-center gap-2">
+                <span class="bg-primary/10 text-primary w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold">4</span>
+                📁 Documentación de Soporte
+            </h3>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-primary transition-colors">
+                    <div class="text-2xl mb-1">📄</div>
+                    <div class="text-xs font-bold mb-2 uppercase">Carta Formal *</div>
+                    <input type="file" name="doc_carta" id="file_carta" class="hidden" accept=".pdf,application/pdf" required onchange="updateLabel('carta')">
+                    <label for="file_carta" id="label_carta" class="cursor-pointer block px-2 py-1.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold hover:bg-primary/20 transition-all">SELECCIONAR PDF</label>
+                    <p id="name_carta" class="text-[9px] text-muted-foreground mt-1 truncate"></p>
+                </div>
+
+                <div id="wrapper_doc_dinamico" class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-primary transition-colors">
+                    <div id="icon_dinamico" class="text-2xl mb-1">🔧</div>
+                    <div id="title_dinamico" class="text-xs font-bold mb-2 uppercase">Informe Técnico *</div>
+                    <input type="file" name="doc_informe" id="file_dinamico" class="hidden" accept=".pdf,application/pdf" required onchange="updateLabel('dinamico')">
+                    <label for="file_dinamico" id="label_dinamico" class="cursor-pointer block px-2 py-1.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold hover:bg-primary/20 transition-all">
+                        SELECCIONAR PDF
+                    </label>
+                    <p id="name_dinamico" class="text-[9px] text-muted-foreground mt-1 truncate"></p>
+                </div>
+
+                <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-primary transition-colors">
+                    <div class="text-2xl mb-1">🧾</div>
+                    <div class="text-xs font-bold mb-2 uppercase">Proforma *</div>
+                    <input type="file" name="doc_proforma" id="file_proforma" class="hidden" accept=".pdf,application/pdf" required onchange="updateLabel('proforma')">
+                    <label for="file_proforma" id="label_proforma" class="cursor-pointer block px-2 py-1.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold hover:bg-primary/20 transition-all">SELECCIONAR PDF</label>
+                    <p id="name_proforma" class="text-[9px] text-muted-foreground mt-1 truncate"></p>
+                </div>
+
+                <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-primary transition-colors">
+                    <div class="text-2xl mb-1">✅</div>
+                    <div class="text-xs font-bold mb-2 uppercase">Preexistencia *</div>
+                    <input type="file" name="doc_preexistencia" id="file_preexistencia" class="hidden" accept=".pdf,application/pdf" required onchange="updateLabel('preexistencia')">
+                    <label for="file_preexistencia" id="label_preexistencia" class="cursor-pointer block px-2 py-1.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold hover:bg-primary/20 transition-all">SELECCIONAR PDF</label>
+                    <p id="name_preexistencia" class="text-[9px] text-muted-foreground mt-1 truncate"></p>
+                </div>
+            </div>
+
+            <div class="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-lg flex gap-2 items-center">
+                <span class="text-amber-600">⚠️</span>
+                <p class="text-[11px] text-amber-800">Los 4 documentos son obligatorios y deben ser archivos PDF.</p>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-4 pt-6">
+            <a href="{% url 'siniestros_asesora' %}" class="px-6 py-3 text-sm font-medium text-gray-600">Cancelar</a>
+            <button type="submit" id="btnSubmit" class="px-10 py-3 bg-primary text-primary-foreground rounded-lg shadow-lg font-bold uppercase text-sm">
+                Registrar Siniestro
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // 1. Cargar Ramos vía AJAX
+    document.getElementById('select_poliza').addEventListener('change', async function() {
+        const polizaId = this.value;
+        const selectRamo = document.getElementById('select_ramo');
+        const infoPoliza = document.getElementById('info_poliza');
+        
+        if (!polizaId) {
+            selectRamo.disabled = true;
+            infoPoliza.classList.add('hidden');
+            return;
+        }
+
+        const option = this.options[this.selectedIndex];
+        document.getElementById('poliza_titular').textContent = option.dataset.titular;
+        document.getElementById('poliza_aseguradora').textContent = option.dataset.aseguradora;
+        document.getElementById('poliza_vencimiento').textContent = option.dataset.vencimiento;
+        infoPoliza.classList.remove('hidden');
+
+        try {
+            const response = await fetch(`/siniestros/api/ramos/${polizaId}/`);
+            const data = await response.json();
+            selectRamo.innerHTML = '<option value="">Seleccione un ramo...</option>';
+            data.ramos.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.id;
+                opt.textContent = r.ramo;
+                selectRamo.appendChild(opt);
+            });
+            selectRamo.disabled = false;
+        } catch (e) { console.error("Error cargando ramos"); }
+    });
+
+    // 2. Lógica dinámica para tipo de evento (Robo vs Otros)
+    document.getElementById('tipo_evento').addEventListener('change', function() {
+        const esRobo = this.value === 'robo';
+        
+        // Mostrar/Ocultar campos de texto de Robo
+        const camposRobo = document.getElementById('campos_robo');
+        camposRobo.classList.toggle('hidden', !esRobo);
+
+        // Cambiar dinámicamente el requerimiento de los campos de texto
+        const inputsRobo = camposRobo.querySelectorAll('input');
+        inputsRobo.forEach(input => {
+            input.required = esRobo;
+        });
+
+        // --- CAMBIO DE DOCUMENTO SOPORTE DINÁMICO ---
+        const icon = document.getElementById('icon_dinamico');
+        const title = document.getElementById('title_dinamico');
+        const fileInput = document.getElementById('file_dinamico');
+        const wrapper = document.getElementById('wrapper_doc_dinamico');
+
+        if (esRobo) {
+            icon.textContent = "🚨";
+            title.textContent = "Denuncia Fiscalía *";
+            fileInput.name = "doc_denuncia"; // Cambio clave para el backend
+            wrapper.classList.add('border-red-200', 'bg-red-50/30');
+        } else {
+            icon.textContent = "🔧";
+            title.textContent = "Informe Técnico *";
+            fileInput.name = "doc_informe"; // Vuelve a la normalidad
+            wrapper.classList.remove('border-red-200', 'bg-red-50/30');
+        }
+
+        // Resetear el archivo seleccionado si cambia el tipo para evitar confusiones
+        fileInput.value = "";
+        document.getElementById('name_dinamico').textContent = "";
+        document.getElementById('label_dinamico').textContent = "SELECCIONAR PDF";
+        document.getElementById('label_dinamico').className = "cursor-pointer block px-2 py-1.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold hover:bg-primary/20 transition-all";
+    });
+
+    // 3. Labels de archivos con validación PDF
+    function updateLabel(tipo) {
+        const input = document.getElementById('file_' + tipo);
+        const label = document.getElementById('label_' + tipo);
+        const nameDisplay = document.getElementById('name_' + tipo);
+        
+        if (input.files.length > 0) {
+            const file = input.files[0];
+            const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+            
+            if (!isPDF) {
+                // Mostrar error si no es PDF
+                alert('Solo se permiten archivos PDF. Por favor seleccione un archivo PDF válido.');
+                input.value = ''; // Limpiar el input
+                label.textContent = "SELECCIONAR PDF";
+                label.className = "cursor-pointer block px-2 py-1.5 bg-red-100 text-red-600 text-[10px] rounded-full font-bold hover:bg-red-200 transition-all";
+                nameDisplay.textContent = "❌ Archivo no válido";
+                return;
+            }
+            
+            // Archivo PDF válido
+            label.textContent = "✓ PDF CARGADO";
+            label.className = "cursor-pointer block px-2 py-1.5 bg-green-600 text-white text-[10px] rounded-full font-bold";
+            nameDisplay.textContent = file.name;
+        }
+    }
+
+    // Habilitar ramo antes de enviar para que el POST lo reciba
+    document.getElementById('formSiniestro').addEventListener('submit', function() {
+        document.getElementById('select_ramo').disabled = false;
+    });
+
+    // 4. Validación de fecha
+    document.getElementById('fecha_ocurrencia').addEventListener('change', function() {
+        const diff = Math.floor((new Date() - new Date(this.value)) / (1000 * 60 * 60 * 24));
+        document.getElementById('alerta_plazo').classList.toggle('hidden', diff <= 15);
+    });
+</script>
+{% endblock %}

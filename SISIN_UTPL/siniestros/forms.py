@@ -1,79 +1,148 @@
 from django import forms
-from .models import Siniestro, Evento, Danio, Robo, Hurto
+from .models import Siniestro, DocumentoSiniestro, RoboSiniestro, DanioSiniestro
+from polizas.models import Poliza, RamoPoliza
 
 class SiniestroForm(forms.ModelForm):
+    """Formulario principal para crear siniestro"""
+    
     class Meta:
         model = Siniestro
         fields = [
-            "poliza",
-            "reclamante",
-            "reclamante_nombre",
-            "reclamante_email",
-            "reclamante_telefono",
-            "fecha_ocurrencia",
-            "descripcion",
-            "monto_reclamado",
-            "tipo_bien",
-            "marca",
-            "modelo",
-            "numero_serie",
-            "broker",
-            "asesor_asignado",
+            'poliza',
+            'ramo',
+            'reclamante_nombre',
+            'reclamante_email',
+            'reclamante_telefono',
+            'tipo_evento',
+            'fecha_ocurrencia',
+            'ubicacion',
+            'causa_probable',
+            'descripcion',
+            'monto_reclamado',
+            'tipo_bien',
+            'marca',
+            'modelo',
+            'numero_serie',
         ]
+        
         widgets = {
-            "fecha_ocurrencia": forms.DateInput(attrs={"type": "date", "class": "form-input"}),
-            "descripcion": forms.Textarea(attrs={"class": "form-input", "rows": 3, "placeholder": "Describa lo ocurrido..."}),
-            "tipo_bien": forms.Select(attrs={"class": "form-input"}),
-            "marca": forms.TextInput(attrs={"class": "form-input"}),
-            "modelo": forms.TextInput(attrs={"class": "form-input"}),
-            "numero_serie": forms.TextInput(attrs={"class": "form-input"}),
-            "reclamante": forms.Select(attrs={"class": "form-input"}),
-            "reclamante_nombre": forms.TextInput(attrs={"class": "form-input"}),
-            "reclamante_email": forms.EmailInput(attrs={"class": "form-input"}),
-            "reclamante_telefono": forms.TextInput(attrs={"class": "form-input"}),
-            "monto_reclamado": forms.NumberInput(attrs={"class": "form-input"}),
-            "broker": forms.Select(attrs={"class": "form-input"}),
-            "asesor_asignado": forms.Select(attrs={"class": "form-input"}),
-            "poliza": forms.Select(attrs={"class": "form-input"}),
+            'poliza': forms.Select(attrs={
+                'class': 'input',
+                'required': True
+            }),
+            'ramo': forms.Select(attrs={
+                'class': 'input',
+                'required': True
+            }),
+            'reclamante_nombre': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'Nombre completo del reclamante'
+            }),
+            'reclamante_email': forms.EmailInput(attrs={
+                'class': 'input',
+                'placeholder': 'correo@ejemplo.com'
+            }),
+            'reclamante_telefono': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': '0987654321'
+            }),
+            'tipo_evento': forms.Select(attrs={
+                'class': 'input'
+            }),
+            'fecha_ocurrencia': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'input'
+            }),
+            'ubicacion': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'Ubicación exacta del evento'
+            }),
+            'causa_probable': forms.Textarea(attrs={
+                'class': 'input',
+                'placeholder': 'Breve descripción de la causa'
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'input',
+                'rows': 4,
+                'placeholder': 'Descripción detallada del siniestro...'
+            }),
+            'monto_reclamado': forms.NumberInput(attrs={
+                'class': 'input',
+                'step': '0.01',
+                'placeholder': '0.00'
+            }),
+            'tipo_bien': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'Ej: Computadora, Vehículo'
+            }),
+            'marca': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'Marca del bien'
+            }),
+            'modelo': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'Modelo'
+            }),
+            'numero_serie': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'Serie o placa'
+            }),
         }
 
-class EventoForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Hacer que el campo ramo dependa de la póliza seleccionada
+        if 'poliza' in self.data:
+            try:
+                poliza_id = int(self.data.get('poliza'))
+                self.fields['ramo'].queryset = RamoPoliza.objects.filter(poliza_id=poliza_id)
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk and self.instance.poliza:
+            self.fields['ramo'].queryset = self.instance.poliza.ramos.all()
+        else:
+            self.fields['ramo'].queryset = RamoPoliza.objects.none()
+
+
+class DocumentoSiniestroForm(forms.ModelForm):
+    """Formulario para subir documentos"""
+    
     class Meta:
-        model = Evento
-        fields = [
-            "descripcion",
-            "fecha_ocurrencia",
-            "ubicacion",
-            "tipo_evento",
-        ]
+        model = DocumentoSiniestro
+        fields = ['tipo', 'archivo', 'descripcion']
+        
         widgets = {
-            "fecha_ocurrencia": forms.DateInput(attrs={"type": "date", "class": "form-input w-full rounded border px-3 py-2"}),
-            "descripcion": forms.Textarea(attrs={"rows": 2, "class": "form-input w-full rounded border px-3 py-2"}),
-            "ubicacion": forms.TextInput(attrs={"class": "form-input w-full rounded border px-3 py-2"}),
-            "tipo_evento": forms.Select(attrs={"class": "form-input w-full rounded border px-3 py-2"}),
+            'tipo': forms.Select(attrs={'class': 'input'}),
+            'archivo': forms.FileInput(attrs={
+                'class': 'input',
+                'accept': '.pdf,.jpg,.jpeg,.png'
+            }),
+            'descripcion': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'Descripción opcional'
+            }),
         }
 
-class DanioForm(forms.ModelForm):
-    class Meta:
-        model = Danio
-        fields = ["area_asignada", "tecnico_asignado"]
-        widgets = {
-            "area_asignada": forms.TextInput(attrs={"class": "form-input"}),
-            "tecnico_asignado": forms.TextInput(attrs={"class": "form-input"}),
-        }
 
-class RoboForm(forms.ModelForm):
+class RoboSiniestroForm(forms.ModelForm):
+    """Formulario adicional para casos de robo"""
+    
     class Meta:
-        model = Robo
-        fields = ["valor_perdido"]
+        model = RoboSiniestro
+        fields = ['denuncia_policial', 'fiscalia', 'fecha_denuncia']
+        
         widgets = {
-            "valor_perdido": forms.NumberInput(attrs={"class": "form-input"}),
-        }
-
-class HurtoForm(forms.ModelForm):
-    class Meta:
-        model = Hurto
-        fields = ["ubicacion_ultima_vista"]
-        widgets = {
-            "ubicacion_ultima_vista": forms.TextInput(attrs={"class": "form-input"}),
+            'denuncia_policial': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'Número de denuncia'
+            }),
+            'fiscalia': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'Nombre de la fiscalía'
+            }),
+            'fecha_denuncia': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'input'
+            }),
         }
