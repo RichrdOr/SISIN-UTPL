@@ -11,6 +11,7 @@ from siniestros.models import Siniestro
 from django.contrib.auth.models import User, Group
 from polizas.models import Poliza
 from .models import ParametroSistema
+from django.db.models.functions import TruncMonth
 
 # Librerías para PDF
 from reportlab.pdfgen import canvas
