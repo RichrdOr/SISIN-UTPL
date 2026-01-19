@@ -1,76 +1,255 @@
 {% extends "asesora/base.html" %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard Principal{% endblock %}
 {% block header %}Dashboard Principal{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js desde CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
 
 {% block content %}
 
 <div class="space-y-6">
 
-  <!-- Header interno -->
+  <!-- ============================================== -->
+  <!-- HEADER -->
+  <!-- ============================================== -->
   <div>
     <h2 class="mb-1 text-xl font-semibold text-foreground">
       Dashboard Principal
     </h2>
     <p class="text-muted-foreground text-sm">
-      Vista general del sistema de siniestros
+      Vista general del sistema de gestión de seguros institucionales
     </p>
   </div>
 
-  <!-- KPIs -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+  <!-- ============================================== -->
+  <!-- SECCIÓN 1: MÉTRICAS PRINCIPALES -->
+  <!-- ============================================== -->
+  <div>
+    <h3 class="mb-4 text-lg font-semibold text-foreground">
+      Métricas Principales
+    </h3>
 
-    <!-- Total -->
-    <div class="bg-card p-6 rounded-lg border">
-      <div class="flex items-center justify-between mb-4">
-        <div class="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
-          <i data-lucide="alert-circle" class="w-6 h-6 text-primary"></i>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <!-- Total Siniestros -->
+      <div class="bg-card p-6 rounded-lg border hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
+            <i data-lucide="alert-circle" class="w-6 h-6 text-blue-600"></i>
+          </div>
+          <span class="text-3xl font-bold text-foreground">{{ stats.total }}</span>
         </div>
-        <span class="text-3xl font-medium">{{ stats.total }}</span>
+        <p class="text-muted-foreground text-sm font-medium">Total Siniestros</p>
+        <p class="text-xs text-muted-foreground mt-1">
+          En revisión: {{ stats.en_revision }}
+        </p>
       </div>
-      <p class="text-muted-foreground text-sm">Total Siniestros</p>
+
+      <!-- Pólizas Activas -->
+      <div class="bg-card p-6 rounded-lg border hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
+            <i data-lucide="shield-check" class="w-6 h-6 text-green-600"></i>
+          </div>
+          <span class="text-3xl font-bold text-foreground">{{ stats.polizas_activas }}</span>
+        </div>
+        <p class="text-muted-foreground text-sm font-medium">Pólizas Activas</p>
+        <p class="text-xs text-muted-foreground mt-1">
+          Por vencer: {{ stats.polizas_por_vencer }}
+        </p>
+      </div>
+
+      <!-- Tiempo Promedio Resolución -->
+      <div class="bg-card p-6 rounded-lg border hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
+            <i data-lucide="clock" class="w-6 h-6 text-orange-500"></i>
+          </div>
+          <span class="text-3xl font-bold text-foreground">{{ stats.tiempo_promedio }}</span>
+        </div>
+        <p class="text-muted-foreground text-sm font-medium">Días Promedio</p>
+        <p class="text-xs text-muted-foreground mt-1">
+          Tiempo de resolución
+        </p>
+      </div>
+
+      <!-- Tasa de Aprobación -->
+      <div class="bg-card p-6 rounded-lg border hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
+            <i data-lucide="trending-up" class="w-6 h-6 text-emerald-600"></i>
+          </div>
+          <span class="text-3xl font-bold text-foreground">{{ stats.tasa_aprobacion }}%</span>
+        </div>
+        <p class="text-muted-foreground text-sm font-medium">Tasa de Aprobación</p>
+        <p class="text-xs text-muted-foreground mt-1">
+          Aprobados/Procesados
+        </p>
+      </div>
+
     </div>
 
-    <!-- Nuevos -->
-    <div class="bg-card p-6 rounded-lg border">
-      <div class="flex items-center justify-between mb-4">
-        <div class="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
-          <i data-lucide="clock" class="w-6 h-6 text-yellow-500"></i>
+    <!-- Desglose de Estados -->
+    <div class="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+      
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+          <span class="text-sm font-medium text-amber-900">Reportados</span>
         </div>
-        <span class="text-3xl font-medium">{{ stats.nuevos }}</span>
+        <p class="text-2xl font-bold text-amber-700 mt-1">{{ stats.reportados }}</p>
       </div>
-      <p class="text-muted-foreground text-sm">Nuevos</p>
-    </div>
 
-    <!-- En revisión -->
-    <div class="bg-card p-6 rounded-lg border">
-      <div class="flex items-center justify-between mb-4">
-        <div class="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
-          <i data-lucide="clock" class="w-6 h-6 text-primary"></i>
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+          <span class="text-sm font-medium text-blue-900">En Revisión</span>
         </div>
-        <span class="text-3xl font-medium">{{ stats.en_revision }}</span>
+        <p class="text-2xl font-bold text-blue-700 mt-1">{{ stats.en_revision }}</p>
       </div>
-      <p class="text-muted-foreground text-sm">En Revisión</p>
-    </div>
 
-    <!-- Cerrados -->
-    <div class="bg-card p-6 rounded-lg border">
-      <div class="flex items-center justify-between mb-4">
-        <div class="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
-          <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+      <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+          <span class="text-sm font-medium text-emerald-900">Aprobados</span>
         </div>
-        <span class="text-3xl font-medium">{{ stats.cerrados }}</span>
+        <p class="text-2xl font-bold text-emerald-700 mt-1">{{ stats.aprobados }}</p>
       </div>
-      <p class="text-muted-foreground text-sm">Cerrados</p>
-    </div>
 
+      <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-green-600"></div>
+          <span class="text-sm font-medium text-green-900">Pagados</span>
+        </div>
+        <p class="text-2xl font-bold text-green-700 mt-1">{{ stats.pagados }}</p>
+      </div>
+
+      <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-red-500"></div>
+          <span class="text-sm font-medium text-red-900">Rechazados</span>
+        </div>
+        <p class="text-2xl font-bold text-red-700 mt-1">{{ stats.rechazados }}</p>
+      </div>
+
+    </div>
   </div>
 
-  <!-- Tabla -->
+  <!-- ============================================== -->
+  <!-- SECCIÓN 2: ALERTAS CRÍTICAS -->
+  <!-- ============================================== -->
+  {% if alertas %}
+  <div>
+    <h3 class="mb-4 text-lg font-semibold text-foreground flex items-center gap-2">
+      <i data-lucide="bell" class="w-5 h-5"></i>
+      Alertas Críticas
+      <span class="ml-2 px-2 py-1 text-xs font-bold bg-red-500 text-white rounded-full">
+        {{ alertas|length }}
+      </span>
+    </h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for alerta in alertas %}
+      <div class="bg-card rounded-lg border-l-4 p-4 hover:shadow-md transition-shadow
+                  {% if alerta.tipo == 'critica' %}border-red-500 bg-red-50{% elif alerta.tipo == 'alerta' %}border-yellow-500 bg-yellow-50{% else %}border-blue-500 bg-blue-50{% endif %}">
+        
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center
+                      {% if alerta.tipo == 'critica' %}bg-red-100{% elif alerta.tipo == 'alerta' %}bg-yellow-100{% else %}bg-blue-100{% endif %}">
+            <i data-lucide="{{ alerta.icono }}" class="w-5 h-5
+                      {% if alerta.tipo == 'critica' %}text-red-600{% elif alerta.tipo == 'alerta' %}text-yellow-600{% else %}text-blue-600{% endif %}"></i>
+          </div>
+          
+          <div class="flex-1">
+            <h4 class="font-semibold text-sm
+                       {% if alerta.tipo == 'critica' %}text-red-900{% elif alerta.tipo == 'alerta' %}text-yellow-900{% else %}text-blue-900{% endif %}">
+              {{ alerta.titulo }}
+            </h4>
+            <p class="text-xs mt-1
+                      {% if alerta.tipo == 'critica' %}text-red-700{% elif alerta.tipo == 'alerta' %}text-yellow-700{% else %}text-blue-700{% endif %}">
+              {{ alerta.mensaje }}
+            </p>
+            
+            {% if alerta.url %}
+            <a href="{{ alerta.url }}" class="inline-flex items-center gap-1 text-xs font-medium mt-2 hover:underline
+                      {% if alerta.tipo == 'critica' %}text-red-600{% elif alerta.tipo == 'alerta' %}text-yellow-600{% else %}text-blue-600{% endif %}">
+              Ver detalles
+              <i data-lucide="arrow-right" class="w-3 h-3"></i>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ============================================== -->
+  <!-- SECCIÓN 3: GRÁFICOS -->
+  <!-- ============================================== -->
+  <div>
+    <h3 class="mb-4 text-lg font-semibold text-foreground">
+      Análisis Visual
+    </h3>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Gráfico 1: Distribución por Estados -->
+      <div class="bg-card p-6 rounded-lg border">
+        <h4 class="font-semibold text-foreground mb-4">
+          Distribución de Siniestros por Estado
+        </h4>
+        <div class="h-64 flex items-center justify-center">
+          <canvas id="chartEstados"></canvas>
+        </div>
+      </div>
+
+      <!-- Gráfico 2: Evolución Mensual -->
+      <div class="bg-card p-6 rounded-lg border">
+        <h4 class="font-semibold text-foreground mb-4">
+          Evolución Mensual de Siniestros
+        </h4>
+        <div class="h-64">
+          <canvas id="chartEvolucion"></canvas>
+        </div>
+      </div>
+
+      <!-- Gráfico 3: Tipos de Evento -->
+      <div class="bg-card p-6 rounded-lg border">
+        <h4 class="font-semibold text-foreground mb-4">
+          Siniestros por Tipo de Evento
+        </h4>
+        <div class="h-64">
+          <canvas id="chartTipos"></canvas>
+        </div>
+      </div>
+
+      <!-- Gráfico 4: Montos -->
+      <div class="bg-card p-6 rounded-lg border">
+        <h4 class="font-semibold text-foreground mb-4">
+          Comparativa de Montos
+        </h4>
+        <div class="h-64">
+          <canvas id="chartMontos"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- SECCIÓN 4: TABLAS Y LISTADOS -->
+  <!-- ============================================== -->
+
+  <!-- Últimos Siniestros Reportados -->
   <div class="bg-card rounded-lg border">
     <div class="p-6 border-b">
       <h3 class="font-semibold text-foreground">
-        Resumen de Siniestros
+        Últimos Siniestros Reportados
       </h3>
     </div>
 
@@ -78,46 +257,325 @@
       <table class="w-full text-sm">
         <thead class="bg-muted">
           <tr>
-            <th class="px-6 py-3 text-left text-muted-foreground">Nº Siniestro</th>
-            <th class="px-6 py-3 text-left text-muted-foreground">Póliza</th>
-            <th class="px-6 py-3 text-left text-muted-foreground">Tipo Evento</th>
-            <th class="px-6 py-3 text-left text-muted-foreground">Fecha</th>
-            <th class="px-6 py-3 text-left text-muted-foreground">Estado</th>
-            <th class="px-6 py-3 text-left text-muted-foreground">Acciones</th>
+            <th class="px-6 py-3 text-left text-muted-foreground font-medium">Nº Siniestro</th>
+            <th class="px-6 py-3 text-left text-muted-foreground font-medium">Póliza</th>
+            <th class="px-6 py-3 text-left text-muted-foreground font-medium">Tipo Evento</th>
+            <th class="px-6 py-3 text-left text-muted-foreground font-medium">Fecha Reporte</th>
+            <th class="px-6 py-3 text-left text-muted-foreground font-medium">Estado</th>
+            <th class="px-6 py-3 text-left text-muted-foreground font-medium">Acciones</th>
           </tr>
         </thead>
 
         <tbody class="divide-y">
-          {% for siniestro in siniestros %}
+          {% for siniestro in ultimos_siniestros %}
           <tr class="hover:bg-accent transition-colors">
-            <td class="px-6 py-4">{{ siniestro.id }}</td>
+            <td class="px-6 py-4 font-medium">{{ siniestro.numero_siniestro }}</td>
             <td class="px-6 py-4">{{ siniestro.poliza }}</td>
             <td class="px-6 py-4">{{ siniestro.tipo_evento }}</td>
-            <td class="px-6 py-4">{{ siniestro.fecha }}</td>
+            <td class="px-6 py-4">{{ siniestro.fecha_reporte|date:"d/m/Y" }}</td>
 
             <td class="px-6 py-4">
               <span class="px-3 py-1 rounded-full text-xs font-medium"
-                    style="background: {{ siniestro.estado_bg }};
-                           color: {{ siniestro.estado_color }};">
+                    style="background: {{ siniestro.estado_bg }}; color: {{ siniestro.estado_color }};">
                 {{ siniestro.estado_label }}
               </span>
             </td>
 
             <td class="px-6 py-4">
               <a href="{% url 'detalle_siniestro' siniestro.id %}"
-                 class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90">
-                <i data-lucide="eye" class="w-4 h-4"></i>
-                Ver detalle
+                 class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs hover:opacity-90 transition-opacity">
+                <i data-lucide="eye" class="w-3 h-3"></i>
+                Ver
               </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-muted-foreground">
+              No hay siniestros reportados
             </td>
           </tr>
           {% endfor %}
         </tbody>
-
       </table>
     </div>
   </div>
 
+  <!-- Grid con 3 tablas adicionales -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Siniestros Pendientes de Acción -->
+    <div class="bg-card rounded-lg border">
+      <div class="p-4 border-b">
+        <h3 class="font-semibold text-foreground text-sm flex items-center gap-2">
+          <i data-lucide="clock" class="w-4 h-4 text-orange-500"></i>
+          Pendientes de Acción
+        </h3>
+      </div>
+
+      <div class="p-4 space-y-3 max-h-80 overflow-y-auto">
+        {% for item in pendientes %}
+        <div class="p-3 rounded-lg bg-accent hover:bg-accent/70 transition-colors border">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <p class="font-semibold text-sm text-foreground">{{ item.numero_siniestro }}</p>
+              <p class="text-xs text-muted-foreground mt-1">{{ item.tipo_evento }}</p>
+              <p class="text-xs text-muted-foreground">
+                Reportado: {{ item.fecha_reporte|date:"d/m/Y" }}
+              </p>
+            </div>
+            <span class="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+              {{ item.dias_transcurridos }}d
+            </span>
+          </div>
+          <div class="mt-2">
+            <a href="{% url 'detalle_siniestro' item.id %}" 
+               class="text-xs text-primary hover:underline">
+              Revisar →
+            </a>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-sm text-muted-foreground text-center py-4">
+          No hay siniestros pendientes
+        </p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Pólizas Próximas a Vencer -->
+    <div class="bg-card rounded-lg border">
+      <div class="p-4 border-b">
+        <h3 class="font-semibold text-foreground text-sm flex items-center gap-2">
+          <i data-lucide="calendar" class="w-4 h-4 text-amber-500"></i>
+          Pólizas por Vencer
+        </h3>
+      </div>
+
+      <div class="p-4 space-y-3 max-h-80 overflow-y-auto">
+        {% for poliza in proximas_vencer %}
+        <div class="p-3 rounded-lg bg-accent hover:bg-accent/70 transition-colors border">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <p class="font-semibold text-sm text-foreground">{{ poliza.numero_poliza }}</p>
+              <p class="text-xs text-muted-foreground mt-1">{{ poliza.aseguradora }}</p>
+              <p class="text-xs text-muted-foreground">
+                Vence: {{ poliza.fecha_vencimiento|date:"d/m/Y" }}
+              </p>
+            </div>
+            <span class="px-2 py-1 rounded-full text-xs font-medium"
+                  style="background: {{ poliza.urgencia_color }}20; color: {{ poliza.urgencia_color }};">
+              {{ poliza.dias_para_vencer }}d
+            </span>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-sm text-muted-foreground text-center py-4">
+          No hay pólizas próximas a vencer
+        </p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Notificaciones Recientes -->
+    <div class="bg-card rounded-lg border">
+      <div class="p-4 border-b">
+        <h3 class="font-semibold text-foreground text-sm flex items-center gap-2">
+          <i data-lucide="bell" class="w-4 h-4 text-blue-500"></i>
+          Notificaciones
+        </h3>
+      </div>
+
+      <div class="p-4 space-y-3 max-h-80 overflow-y-auto">
+        {% for notif in notificaciones %}
+        <div class="p-3 rounded-lg bg-accent hover:bg-accent/70 transition-colors border">
+          <div class="flex items-start gap-2">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                 style="background: {{ notif.color }}20;">
+              <i data-lucide="{{ notif.icono }}" class="w-4 h-4" style="color: {{ notif.color }};"></i>
+            </div>
+            <div class="flex-1">
+              <p class="font-semibold text-sm text-foreground">{{ notif.titulo }}</p>
+              <p class="text-xs text-muted-foreground mt-1">{{ notif.mensaje|truncatewords:10 }}</p>
+              <p class="text-xs text-muted-foreground mt-1">
+                {{ notif.fecha|timesince }} atrás
+              </p>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-sm text-muted-foreground text-center py-4">
+          No hay notificaciones nuevas
+        </p>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
 </div>
+
+<!-- ============================================== -->
+<!-- SCRIPTS PARA GRÁFICOS -->
+<!-- ============================================== -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  
+  // Configuración global de Chart.js
+  Chart.defaults.font.family = 'system-ui, -apple-system, sans-serif';
+  Chart.defaults.color = '#64748b';
+  
+  // Datos desde Django
+  const chartEstadosData = {{ chart_estados|safe }};
+  const chartEvolucionData = {{ chart_evolucion|safe }};
+  const chartTiposData = {{ chart_tipos|safe }};
+  const chartMontosData = {{ chart_montos|safe }};
+  
+  // Gráfico 1: Donut de Estados
+  new Chart(document.getElementById('chartEstados'), {
+    type: 'doughnut',
+    data: {
+      labels: chartEstadosData.labels,
+      datasets: [{
+        data: chartEstadosData.data,
+        backgroundColor: chartEstadosData.colors,
+        borderWidth: 2,
+        borderColor: '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 15,
+            usePointStyle: true
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((context.parsed / total) * 100).toFixed(1);
+              return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+  
+  // Gráfico 2: Línea de Evolución
+  new Chart(document.getElementById('chartEvolucion'), {
+    type: 'line',
+    data: {
+      labels: chartEvolucionData.labels,
+      datasets: [{
+        label: 'Siniestros Reportados',
+        data: chartEvolucionData.data,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: '#3b82f6'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      }
+    }
+  });
+  
+  // Gráfico 3: Barras Horizontales por Tipo
+  new Chart(document.getElementById('chartTipos'), {
+    type: 'bar',
+    data: {
+      labels: chartTiposData.labels,
+      datasets: [{
+        label: 'Cantidad',
+        data: chartTiposData.data,
+        backgroundColor: chartTiposData.colors,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      }
+    }
+  });
+  
+  // Gráfico 4: Barras Comparativas de Montos
+  new Chart(document.getElementById('chartMontos'), {
+    type: 'bar',
+    data: {
+      labels: chartMontosData.labels,
+      datasets: [{
+        label: 'Monto (USD)',
+        data: chartMontosData.data,
+        backgroundColor: chartMontosData.colors,
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.label + ': $' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2});
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '$' + value.toLocaleString('en-US');
+            }
+          }
+        }
+      }
+    }
+  });
+  
+});
+</script>
 
 {% endblock %}
