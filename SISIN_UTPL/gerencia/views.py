@@ -1,7 +1,8 @@
 import csv
+import io
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, Count
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import timedelta
@@ -11,8 +12,9 @@ from siniestros.models import Siniestro
 from django.contrib.auth.models import User, Group
 from polizas.models import Poliza
 from .models import ParametroSistema
-from django.db.models.functions import TruncMonth
+from datetime import date
 
+from django.db.models.functions import TruncMonth
 # Librerías para PDF
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -25,48 +27,73 @@ from .models import ParametroSistema, ReglaDeducible
 
 # 1. DASHBOARD
 def dashboard_gerencial(request):
-    # 1. Configuración y KPIs (Lo que ya tenías)
+    # 1. Configuración y KPIs
     config, _ = ParametroSistema.objects.get_or_create(id=1)
     
     total_siniestros = Siniestro.objects.count()
-    abiertos = Siniestro.objects.filter(estado__in=['reportado', 'en_revision']).count()
+    
+    # Conteos básicos
+    # Abiertos incluye TODO lo que no está cerrado (tanto al día como vencidos)
+    abiertos_total = Siniestro.objects.filter(estado__in=['reportado', 'en_revision']).count()
     cerrados = Siniestro.objects.filter(estado__in=['pagado', 'rechazado']).count()
     
+    # Cálculo de Vencidos Reales
     dias_limite = config.dias_reporte_siniestro 
     fecha_limite = timezone.now().date() - timedelta(days=dias_limite)
     cantidad_vencidos_real = Siniestro.objects.filter(
         fecha_reporte__lt=fecha_limite
     ).exclude(estado__in=['pagado', 'rechazado']).count()
+    
+    # KPI para la tarjeta de alerta (depende del checkbox)
     mostrar_vencidos = cantidad_vencidos_real if config.alerta_fuera_plazo else 0
+
+    # --- LÓGICA PARA GRÁFICO CIRCULAR (ESTADO GENERAL) ---
+    # Desglosamos "Abiertos" en "Al día" vs "Vencidos" para que el gráfico sume 100% perfecto
+    # Abiertos (Al día) = Total Abiertos - Vencidos
+    abiertos_al_dia = abiertos_total - cantidad_vencidos_real
+    if abiertos_al_dia < 0: abiertos_al_dia = 0 # Seguridad
+    
+    # Lista de datos para el gráfico: [Verdes, Amarillos, Rojos]
+    data_estado_general = [cerrados, abiertos_al_dia, cantidad_vencidos_real]
+    # -----------------------------------------------------
 
     raw_monto_siniestros = Siniestro.objects.aggregate(total=Sum('monto_aprobado'))['total'] or 0
     raw_monto_polizas = Poliza.objects.aggregate(total=Sum('prima'))['total'] or 0
 
-    # --- NUEVO: LÓGICA PARA LA GRÁFICA (Últimos 6 meses) ---
-    seis_meses_atras = timezone.now().date() - timedelta(days=180)
-    
-    # Agrupamos los siniestros por mes
-    grafica_query = Siniestro.objects.filter(fecha_reporte__gte=seis_meses_atras)\
-        .annotate(mes=TruncMonth('fecha_reporte'))\
-        .values('mes')\
-        .annotate(total=Count('id'))\
-        .order_by('mes')
-    
-    # Preparamos las listas para Chart.js
-    chart_labels = []
-    chart_data = []
-    
-    for item in grafica_query:
+    # --- LÓGICA PARA GRÁFICA DE BARRAS (Siniestros vs Pólizas - 6 meses) ---
+    hoy = timezone.now().date()
+    fecha_inicio_grafica = hoy - timedelta(days=180)
+
+    siniestros_por_mes = Siniestro.objects.filter(fecha_reporte__gte=fecha_inicio_grafica)\
+        .annotate(mes=TruncMonth('fecha_reporte')).values('mes').annotate(total=Count('id')).order_by('mes')
+
+    polizas_por_mes = Poliza.objects.filter(fecha_inicio__gte=fecha_inicio_grafica)\
+        .annotate(mes=TruncMonth('fecha_inicio')).values('mes').annotate(total=Count('id')).order_by('mes')
+
+    datos_consolidados = {}
+    for i in range(5, -1, -1):
+        mes_ref = (hoy.replace(day=1) - timedelta(days=30 * i))
+        clave_mes = mes_ref.strftime("%Y-%m")
+        datos_consolidados[clave_mes] = {'siniestros': 0, 'polizas': 0}
+
+    for item in siniestros_por_mes:
         if item['mes']:
-            # Formato de etiqueta: "2026-01" (Año-Mes)
-            chart_labels.append(item['mes'].strftime("%Y-%m")) 
-            chart_data.append(item['total'])
-    # -------------------------------------------------------
+            clave = item['mes'].strftime("%Y-%m")
+            if clave in datos_consolidados: datos_consolidados[clave]['siniestros'] = item['total']
+
+    for item in polizas_por_mes:
+        if item['mes']:
+            clave = item['mes'].strftime("%Y-%m")
+            if clave in datos_consolidados: datos_consolidados[clave]['polizas'] = item['total']
+
+    chart_labels = sorted(datos_consolidados.keys())
+    data_siniestros = [datos_consolidados[k]['siniestros'] for k in chart_labels]
+    data_polizas = [datos_consolidados[k]['polizas'] for k in chart_labels]
 
     context = {
         'kpis': {
             'total': total_siniestros,
-            'abiertos': abiertos,
+            'abiertos': abiertos_total,
             'cerrados': cerrados,
             'vencidos': mostrar_vencidos,
             'hay_vencidos_reales': cantidad_vencidos_real > 0,
@@ -74,22 +101,21 @@ def dashboard_gerencial(request):
             'monto_polizas': "{:,.0f}".format(raw_monto_polizas),
         },
         'config': config,
-        # Enviamos los datos de la gráfica al template
         'chart_labels': chart_labels, 
-        'chart_data': chart_data
+        'data_siniestros': data_siniestros,
+        'data_polizas': data_polizas,
+        'data_estado_general': data_estado_general # <--- ENVIAMOS LOS DATOS NUEVOS
     }
     return render(request, 'gerencia/dashboard.html', context)
 
 # 2. REPORTES (Con Exportación Directa)
+# En gerencia/views.py
+
 def reportes_gerencial(request):
     siniestros_list = Siniestro.objects.select_related('poliza', 'reclamante').all().order_by('-fecha_reporte')
 
     # --- 1. DATOS PARA LOS FILTROS (DINÁMICOS) ---
-    # Obtener lista única de tipos de bienes registrados en siniestros
-    # values_list saca solo el campo 'tipo_bien', flat=True lo hace lista plana, distinct() elimina duplicados
     lista_tipos = Siniestro.objects.values_list('tipo_bien', flat=True).distinct().order_by('tipo_bien')
-    
-    # Obtener los estados definidos en el Modelo (Tuplas: ('reportado', 'Reportado'))
     lista_estados = Siniestro.ESTADO_CHOICES 
 
     # --- 2. APLICAR FILTROS ---
@@ -106,14 +132,68 @@ def reportes_gerencial(request):
     if f_fecha:
         siniestros_list = siniestros_list.filter(fecha_reporte__gte=f_fecha)
 
-    # --- 3. EXPORTACIÓN (Se mantiene igual, la omito para ahorrar espacio visual) ---
-    # ... (Tu código de exportación CSV/PDF va aquí igual que antes) ...
+    # --- 3. EXPORTACIÓN (ESTO ES LO QUE FALTABA) ---
+    export_format = request.GET.get('export') # Detectamos si el botón pulsado envió ?export=csv o pdf
+    
+    if export_format == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="reporte_siniestros_{timezone.now().date()}.csv"'
+        
+        writer = csv.writer(response)
+        # Encabezados del CSV
+        writer.writerow(['N Caso', 'Estado', 'Bien', 'Poliza', 'Fecha', 'Reclamado', 'Aprobado'])
+        # Datos filtrados
+        for s in siniestros_list:
+            writer.writerow([
+                s.numero_siniestro, 
+                s.estado, 
+                s.tipo_bien, 
+                s.poliza.numero_poliza, 
+                s.fecha_reporte, 
+                s.monto_reclamado, 
+                s.monto_aprobado or 0
+            ])
+        return response # Retornamos el archivo DIRECTAMENTE, deteniendo la carga de la página
 
+    elif export_format == 'pdf':
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="reporte_siniestros_{timezone.now().date()}.pdf"'
+        
+        p = canvas.Canvas(response, pagesize=letter)
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(30, 750, "Reporte de Siniestralidad")
+        p.setFont("Helvetica", 10)
+        p.drawString(30, 735, f"Generado: {timezone.now().strftime('%Y-%m-%d %H:%M')}")
+        
+        y = 700
+        # Encabezados PDF
+        p.drawString(30, y, "N Caso")
+        p.drawString(100, y, "Estado")
+        p.drawString(200, y, "Bien")
+        p.drawString(350, y, "Monto Reclamado")
+        p.line(30, y-5, 500, y-5)
+        y -= 20
+        
+        for s in siniestros_list:
+            if y < 50: # Nueva página si se acaba el espacio
+                p.showPage()
+                y = 750
+            p.drawString(30, y, str(s.numero_siniestro))
+            p.drawString(100, y, s.estado)
+            p.drawString(200, y, str(s.tipo_bien)[:25]) # Recortamos texto largo
+            p.drawString(350, y, f"${s.monto_reclamado}")
+            y -= 15
+            
+        p.showPage()
+        p.save()
+        return response # Retornamos el archivo DIRECTAMENTE
+
+    # --- 4. RENDERIZADO NORMAL (Solo si no se exporta) ---
     context = {
         'siniestros': siniestros_list,
         'filtros': request.GET,
-        'lista_tipos': lista_tipos,   # <--- Enviamos los tipos reales
-        'lista_estados': lista_estados # <--- Enviamos los estados reales
+        'lista_tipos': lista_tipos,
+        'lista_estados': lista_estados
     }
     return render(request, 'gerencia/reportes.html', context)
 
@@ -226,13 +306,8 @@ def usuarios_gerencial(request):
     }
     return render(request, 'gerencia/usuarios.html', context)
 
-# 5. EXPORTACIONES (Historial)
-# ... (asegúrate de tener las importaciones arriba) ...
-
 # 5. EXPORTACIONES (Con Tipos Dinámicos)
 def exportaciones_gerencial(request):
-    # 1. Obtener las opciones de tipos directamente del Modelo
-    # Esto devuelve la tupla: [('polizas', 'Pólizas'), ('siniestros', 'Siniestros')...]
     tipos_reporte = Reporte.TIPO_CHOICES
 
     if request.method == 'POST':
@@ -243,32 +318,105 @@ def exportaciones_gerencial(request):
         if not usuario_responsable:
             usuario_responsable = User.objects.create_user('admin_sistema', 'admin@sys.com', 'admin')
 
-        # Generación del archivo (Simulación)
         archivo_final = None
         nombre_archivo = ""
         
-        # Lógica PDF
+        # --- 1. OBTENER LOS DATOS REALES DE LA BD (Igual que antes) ---
+        headers = []
+        data_rows = []
+        
+        if tipo_reporte == 'siniestros':
+            headers = ['N°', 'Estado', 'Bien', 'Póliza', 'Fecha', 'Reclamado', 'Aprobado']
+            objetos = Siniestro.objects.select_related('poliza').all().order_by('-fecha_reporte')
+            for obj in objetos:
+                data_rows.append([str(obj.numero_siniestro), obj.estado, obj.tipo_bien[:15], obj.poliza.numero_poliza, str(obj.fecha_reporte), f"${obj.monto_reclamado}", f"${obj.monto_aprobado or 0}"])
+                
+        elif tipo_reporte == 'polizas':
+            headers = ['N° Póliza', 'Tipo', 'Asegurado', 'Inicio', 'Fin', 'Prima', 'Estado']
+            objetos = Poliza.objects.select_related('asegurado').all().order_by('-fecha_inicio')
+            for obj in objetos:
+                nombre = f"{obj.asegurado.first_name} {obj.asegurado.last_name}" if obj.asegurado else "N/A"
+                data_rows.append([obj.numero_poliza, obj.tipo_poliza, nombre[:20], str(obj.fecha_inicio), str(obj.fecha_fin), f"${obj.prima}", obj.estado])
+
+        elif tipo_reporte == 'usuarios':
+             headers = ['Usuario', 'Email', 'Nombre', 'Staff', 'Activo', 'Registro']
+             objetos = User.objects.all().order_by('-date_joined')
+             for obj in objetos:
+                 data_rows.append([obj.username, obj.email, obj.first_name, "SI" if obj.is_staff else "NO", "SI" if obj.is_active else "NO", str(obj.date_joined.date())])
+
+        # --- 2. GENERAR PDF (Igual que antes) ---
         if formato == 'pdf':
             buffer = io.BytesIO()
             p = canvas.Canvas(buffer, pagesize=letter)
+            p.setFont("Helvetica-Bold", 14)
             p.drawString(30, 750, f"REPORTE: {tipo_reporte.upper()}")
-            p.drawString(30, 730, f"Generado por: {usuario_responsable.username}")
+            p.setFont("Helvetica", 10)
+            p.drawString(30, 735, f"Generado por: {usuario_responsable.username}")
+            
+            y = 700
+            p.setFont("Helvetica-Bold", 8)
+            ancho_columna = 550 / (len(headers) or 1)
+            x_offset = 30
+            for h in headers:
+                p.drawString(x_offset, y, h)
+                x_offset += ancho_columna
+            p.line(30, y-5, 580, y-5)
+            y -= 20
+            
+            p.setFont("Helvetica", 8)
+            for row in data_rows:
+                if y < 50:
+                    p.showPage()
+                    y = 750
+                    p.setFont("Helvetica", 8)
+                x_offset = 30
+                for cell in row:
+                    p.drawString(x_offset, y, str(cell))
+                    x_offset += ancho_columna
+                y -= 15
+            
             p.save()
             buffer.seek(0)
             archivo_final = ContentFile(buffer.getvalue())
             nombre_archivo = f"{tipo_reporte}_{timezone.now().strftime('%H%M%S')}.pdf"
-        
-        # Lógica Excel/CSV
+
+        # --- 3. GENERAR EXCEL REAL (.xlsx) ---
+        elif formato == 'excel':
+            import openpyxl # Importamos aquí para no fallar si no lo usas en otro lado
+            
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = tipo_reporte.capitalize()
+            
+            # Encabezados de reporte
+            ws.append(['REPORTE DEL SISTEMA', tipo_reporte.upper()])
+            ws.append(['GENERADO POR', usuario_responsable.username])
+            ws.append(['FECHA', str(timezone.now().date())])
+            ws.append([]) # Fila vacía
+            
+            # Tabla de datos
+            ws.append(headers) # Cabeceras de columna
+            for row in data_rows:
+                ws.append(row) # Filas
+            
+            # Guardar en binario
+            buffer = io.BytesIO()
+            wb.save(buffer)
+            buffer.seek(0)
+            archivo_final = ContentFile(buffer.getvalue())
+            nombre_archivo = f"{tipo_reporte}_{timezone.now().strftime('%H%M%S')}.xlsx"
+
+        # --- 4. GENERAR CSV (Respaldo) ---
         else:
             buffer = io.StringIO()
             writer = csv.writer(buffer)
             writer.writerow(['REPORTE', tipo_reporte.upper()])
-            writer.writerow(['FECHA', timezone.now()])
+            writer.writerow(headers)
+            writer.writerows(data_rows)
             archivo_final = ContentFile(buffer.getvalue().encode('utf-8'))
-            ext = 'csv' if formato == 'csv' else 'xlsx'
-            nombre_archivo = f"{tipo_reporte}_{timezone.now().strftime('%H%M%S')}.{ext}"
+            nombre_archivo = f"{tipo_reporte}_{timezone.now().strftime('%H%M%S')}.csv"
 
-        # Guardar en BD
+        # Guardar y Redirigir
         nuevo_reporte = Reporte(
             titulo=f"Reporte {tipo_reporte.capitalize()}",
             tipo=tipo_reporte,
@@ -277,13 +425,13 @@ def exportaciones_gerencial(request):
         nuevo_reporte.archivo.save(nombre_archivo, archivo_final)
         nuevo_reporte.save()
         
-        messages.success(request, "Reporte generado correctamente.")
+        messages.success(request, f"Reporte generado exitosamente.")
         return redirect('gerencia:exportaciones_gerencial')
 
     reportes = Reporte.objects.select_related('generado_por').all().order_by('-fecha_generacion')
     
     context = {
         'reportes': reportes,
-        'tipos_reporte': tipos_reporte # <--- ¡Esto es lo nuevo! Enviamos la lista al template
+        'tipos_reporte': tipos_reporte
     }
     return render(request, 'gerencia/exportaciones.html', context)
