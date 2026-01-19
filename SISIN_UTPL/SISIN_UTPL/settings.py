@@ -85,7 +85,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'sisis_utpl',
         'USER': 'postgres',
-        'PASSWORD': 'PIZZA3',
+        'PASSWORD': 'password',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -136,3 +136,16 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Configuración de Envío de Correos (Gmail SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+# Tus credenciales que me pasaste
+EMAIL_HOST_USER = 'cris235g.1@gmail.com'
+EMAIL_HOST_PASSWORD = 'gchm fnsj jzad urim'  # Las 16 letras de Google
+
+# Remitente por defecto
+DEFAULT_FROM_EMAIL = 'SISIN UTPL <cris235g.1@gmail.com>'

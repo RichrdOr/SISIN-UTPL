@@ -1,5 +1,5 @@
 from django import forms
-from .models import Poliza, BienAsegurado, RamoPoliza
+from .models import Poliza, BienAsegurado, RamoPoliza, Deducible
 
 class PolizaForm(forms.ModelForm):
     class Meta:
@@ -15,6 +15,16 @@ class PolizaForm(forms.ModelForm):
             'fecha_inicio': forms.DateInput(attrs={'type': 'date', 'class': 'input'}),
             'fecha_fin': forms.DateInput(attrs={'type': 'date', 'class': 'input'}),
             'cobertura': forms.Textarea(attrs={'rows': 2, 'class': 'input'}),
+        }
+
+class DeducibleForm(forms.ModelForm):
+    class Meta:
+        model = Deducible
+        fields = ['concepto', 'monto', 'porcentaje']
+        widgets = {
+            'concepto': forms.TextInput(attrs={'class': 'w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-primary', 'placeholder': 'Concepto'}),
+            'monto': forms.NumberInput(attrs={'class': 'w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-primary', 'step': '0.01', 'placeholder': 'Monto'}),
+            'porcentaje': forms.NumberInput(attrs={'class': 'w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-primary', 'step': '0.01', 'placeholder': '%'}),
         }
 
 class RamoPolizaForm(forms.ModelForm):

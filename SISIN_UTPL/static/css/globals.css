@@ -1,14 +1,20 @@
+@import "tailwindcss";
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* --- TUS CONFIGURACIONES DE FUENTE Y COLORES --- */
   --font-size: 16px;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+
   --background: #ffffff;
   --foreground: oklch(0.145 0 0);
   --card: #ffffff;
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  
+
+  /* MANTENIENDO TU AZUL CORPORATIVO */
   --primary: #0B3C5D;
   --primary-foreground: #FFFFFF;
 
@@ -20,25 +26,29 @@
   --accent-foreground: #030213;
   --destructive: #d4183d;
   --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
   
-  --input: #ffffff; 
+  --border: rgba(0, 0, 0, 0.1);
+  --input: #ffffff; /* Manteniendo tu blanco explícito */
+  --ring: oklch(0.708 0 0);
+  
+  /* TUS VARIABLES PERSONALIZADAS EXTRA */
   --input-background: #f3f3f5;
   --switch-background: #cbced4;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
+
+  /* RADIUS */
   --radius: 0.625rem;
 
-  --sidebar: #0B3C5D; 
+  /* MANTENIENDO TU SIDEBAR AZUL */
+  --sidebar: #0B3C5D;
   --sidebar-foreground: #FFFFFF;
   --sidebar-primary: #1F6FB2;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #1F6FB2; 
+  --sidebar-accent: #1F6FB2;
   --sidebar-accent-foreground: #FFFFFF;
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: oklch(0.708 0 0);
 
+  /* AGREGADO DEL NUEVO: CHARTS */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -51,6 +61,8 @@
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.145 0 0);
   --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.985 0 0);
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
@@ -64,6 +76,14 @@
   --border: oklch(0.269 0 0);
   --input: oklch(0.269 0 0);
   --ring: oklch(0.439 0 0);
+  
+  /* AGREGADO DEL NUEVO: CHARTS DARK */
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -93,10 +113,26 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
+  
+  /* TUS VARIABLES EXTRA EN EL THEME */
   --color-input-background: var(--input-background);
   --color-switch-background: var(--switch-background);
+  
   --color-ring: var(--ring);
+  
+  /* AGREGADO DEL NUEVO: CHARTS MAPEO */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* AGREGADO DEL NUEVO: RADIUS VARIANTS */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -108,10 +144,30 @@
 }
 
 @layer base {
-  * { border-color: var(--border); }
-  body { @apply bg-background text-foreground; }
+  * {
+    border-color: var(--border);
+    outline-color: hsl(var(--ring) / 0.5); /* Ajuste para compatibilidad */
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* AGREGADO DEL NUEVO: TIPOGRAFÍA BASE CONSISTENTE */
+  :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
+    h1 { font-size: var(--text-2xl); font-weight: var(--font-weight-medium); line-height: 1.5; }
+    h2 { font-size: var(--text-xl); font-weight: var(--font-weight-medium); line-height: 1.5; }
+    h3 { font-size: var(--text-lg); font-weight: var(--font-weight-medium); line-height: 1.5; }
+    h4 { font-size: var(--text-base); font-weight: var(--font-weight-medium); line-height: 1.5; }
+    label { font-size: var(--text-base); font-weight: var(--font-weight-medium); line-height: 1.5; }
+    button { font-size: var(--text-base); font-weight: var(--font-weight-medium); line-height: 1.5; }
+    input { font-size: var(--text-base); font-weight: var(--font-weight-normal); line-height: 1.5; }
+  }
 }
 
+/* --- TUS COMPONENTES PERSONALIZADOS (CRÍTICO: NO BORRAR) --- */
 @layer components {
   /* Estilo general para inputs manuales corregido */
   .input {
@@ -131,7 +187,6 @@
 
   /* FORZAR ESTILOS EN TABLA DE RAMOS (SOLUCIÓN FINAL) */
   #ramos-container input {
-    /* Quitamos el @apply conflictivo y usamos CSS puro para asegurar visibilidad */
     display: block !important;
     width: 100% !important;
     background-color: white !important;
@@ -152,4 +207,6 @@
   }
 }
 
-html { font-size: var(--font-size); }
+html {
+  font-size: var(--font-size);
+}

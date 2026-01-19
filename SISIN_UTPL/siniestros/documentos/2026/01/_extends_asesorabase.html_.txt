@@ -6,31 +6,6 @@
 {% block content %}
 
 <div class="container mx-auto px-6 py-8">
-  <!-- Mensajes de Django -->
-  {% if messages %}
-  <div id="django-messages" class="mb-6">
-    {% for message in messages %}
-    <div class="{% if message.tags == 'success' %}bg-green-100 border-green-500 text-green-700{% elif message.tags == 'error' %}bg-red-100 border-red-500 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 border-yellow-500 text-yellow-700{% else %}bg-blue-100 border-blue-500 text-blue-700{% endif %} border-l-4 p-4 rounded-lg flex items-center justify-between" role="alert">
-      <div class="flex items-center gap-3">
-        {% if message.tags == 'success' %}
-        <i data-lucide="check-circle" class="w-5 h-5"></i>
-        {% elif message.tags == 'error' %}
-        <i data-lucide="x-circle" class="w-5 h-5"></i>
-        {% elif message.tags == 'warning' %}
-        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-        {% else %}
-        <i data-lucide="info" class="w-5 h-5"></i>
-        {% endif %}
-        <span class="font-medium">{{ message }}</span>
-      </div>
-      <button onclick="this.parentElement.remove()" class="p-1 hover:bg-opacity-20 hover:bg-black rounded">
-        <i data-lucide="x" class="w-4 h-4"></i>
-      </button>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-
   <!-- Header -->
   <div class="flex items-center justify-between">
     <div>
@@ -692,25 +667,26 @@ async function submitForm(e) {
   formData.append('zona', form.zona?.value || '');
   formData.append('valor_bien', form.valor_bien?.value || '');
   
-  // Add ramos data - collect from all visible rows in the modal
+  // Add ramos data
   const ramos = [];
-  document.querySelectorAll('#ramos-container-modal tr').forEach(row => {
-    const grupo = row.querySelector('input[name*="-grupo"]')?.value;
-    const ramo = row.querySelector('input[name*="-ramo"]')?.value;
-    if (grupo && ramo) {
+  for (let i = 0; i < ramosCountModal; i++) {
+    const grupo = document.querySelector(`[name="ramos-${i}-grupo"]`);
+    const subgrupo = document.querySelector(`[name="ramos-${i}-subgrupo"]`);
+    const ramo = document.querySelector(`[name="ramos-${i}-ramo"]`);
+    const suma = document.querySelector(`[name="ramos-${i}-suma_asegurada"]`);
+    const deducible = document.querySelector(`[name="ramos-${i}-deducible"]`);
+    
+    if (grupo && ramo && suma && grupo.value && ramo.value && suma.value) {
       ramos.push({
-        grupo: grupo,
-        subgrupo: row.querySelector('input[name*="-subgrupo"]')?.value || '',
-        ramo: ramo,
-        suma_asegurada: row.querySelector('input[name*="-suma_asegurada"]')?.value || 0,
-        deducible_porcentaje: row.querySelector('input[name*="-deducible"]')?.value || 0
+        grupo: grupo.value,
+        subgrupo: subgrupo?.value || '',
+        ramo: ramo.value,
+        suma_asegurada: suma.value,
+        deducible: deducible?.value || ''
       });
     }
-  });
-  formData.append('ramos_json', JSON.stringify(ramos));
-  
-  // Add deducibles data (empty array for now since modal doesn't have deducibles section)
-  formData.append('deducibles_json', JSON.stringify([]));
+  }
+  formData.append('ramos', JSON.stringify(ramos));
   
   // Add PDF file if selected
   const pdfFile = form.pdf_file?.files[0];
@@ -722,12 +698,6 @@ async function submitForm(e) {
   const url = currentEditingId ? `/polizas/editar/${currentEditingId}/` : '/polizas/crear/';
   const method = 'POST';
   
-  console.log('Enviando datos al servidor:', {
-    numero_poliza: form.numero_poliza?.value,
-    aseguradora: form.aseguradora?.value,
-    ramos: ramos
-  });
-  
   try {
     const response = await fetch(url, {
       method: method,
@@ -738,7 +708,6 @@ async function submitForm(e) {
     });
     
     const result = await response.json();
-    console.log('Respuesta del servidor:', result);
     
     if (result.success) {
       showToast(currentEditingId ? 'Póliza actualizada exitosamente' : 'Póliza creada exitosamente', 'success');
@@ -781,18 +750,6 @@ document.getElementById('polizaForm').addEventListener('submit', submitForm);
 // Re-inicializar icons cuando se carga la página y después de cambios dinámicos
 document.addEventListener('DOMContentLoaded', function() {
   lucide.createIcons();
-  
-  // Auto-ocultar mensajes de Django después de 5 segundos
-  const djangoMessages = document.getElementById('django-messages');
-  if (djangoMessages) {
-    setTimeout(() => {
-      djangoMessages.querySelectorAll('[role="alert"]').forEach(alert => {
-        alert.style.transition = 'opacity 0.5s ease-out';
-        alert.style.opacity = '0';
-        setTimeout(() => alert.remove(), 500);
-      });
-    }, 5000);
-  }
 });
 
 // Función para re-inicializar icons (útil después de añadir/eliminar elementos)

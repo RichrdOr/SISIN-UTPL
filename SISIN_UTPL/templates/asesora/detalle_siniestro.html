@@ -6,59 +6,58 @@
 
 {% block content %}
 
-<div class="space-y-6">
-
-  <!-- HEADER -->
-  <div class="flex items-center justify-between">
+<div class="space-y-6 pb-24"> <div class="flex items-center justify-between">
     <div class="flex items-center gap-4">
-      <a href="{% url 'siniestros' %}"
-         class="p-2 hover:bg-accent rounded-lg">
-        ←
+      <a href="{% url 'siniestros_asesora' %}" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
       </a>
       <div>
-        <h2 class="text-xl font-semibold">Detalle del Siniestro</h2>
-        <p class="text-muted-foreground text-sm">
-          {{ siniestro.id }}
+        <h2 class="text-xl font-semibold text-gray-800">Detalle del Siniestro</h2>
+        <p class="text-gray-500 text-sm">
+          {{ siniestro.numero_siniestro }}
         </p>
       </div>
     </div>
 
-    <button
-      class="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-lg">
-      📧 Enviar información a aseguradora
-    </button>
+    <div class="px-4 py-2 rounded-lg font-medium text-sm
+        {% if siniestro.estado == 'reportado' %}bg-yellow-100 text-yellow-800
+        {% elif siniestro.estado == 'documentos_incompletos' %}bg-orange-100 text-orange-800
+        {% elif siniestro.estado == 'documentos_completos' or siniestro.estado == 'enviado_aseguradora' or siniestro.estado == 'en_revision' %}bg-blue-100 text-blue-800
+        {% elif siniestro.estado == 'rechazado' %}bg-red-100 text-red-800
+        {% elif siniestro.estado == 'fuera_plazo' %}bg-red-100 text-red-800
+        {% elif siniestro.estado == 'aprobado' or siniestro.estado == 'liquidado' %}bg-emerald-100 text-emerald-800
+        {% elif siniestro.estado == 'pagado' or siniestro.estado == 'cerrado' %}bg-green-100 text-green-800
+        {% else %}bg-gray-100 text-gray-800{% endif %}">
+        {{ siniestro.get_estado_display }}
+    </div>
   </div>
 
-  <!-- TIMELINE ESTADOS -->
-  <div class="bg-card rounded-lg border p-8">
+  <div class="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
     <div class="relative flex items-center justify-between">
 
-      <!-- Línea base -->
-      <div class="absolute top-6 left-0 right-0 h-1 bg-muted -z-10"></div>
+      <div class="absolute top-6 left-0 right-0 h-1 bg-gray-200 -z-10"></div>
 
-      <!-- Línea progreso -->
-      <div class="absolute top-6 left-0 h-1 bg-green-600 -z-10"
+      <div class="absolute top-6 left-0 h-1 bg-green-600 -z-10 transition-all duration-500"
            style="width: {{ progreso_estado }}%;">
       </div>
 
       {% for estado in estados %}
       <div class="flex flex-col items-center">
-        <div
-          class="w-12 h-12 rounded-full flex items-center justify-center
-                 {% if estado.activo %}
-                   bg-green-600 text-white scale-110
-                 {% else %}
-                   bg-muted text-muted-foreground
-                 {% endif %}">
-          {{ estado.icono }}
+        <div class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300
+                  {% if estado.activo %}
+                    bg-green-600 text-white scale-110 shadow-md
+                  {% else %}
+                    bg-gray-200 text-gray-400
+                  {% endif %}">
+          {{ estado.icono|safe }} 
         </div>
 
-        <div class="mt-3 text-sm">
+        <div class="mt-3 text-xs font-medium text-gray-600">
           {{ estado.nombre }}
         </div>
 
         {% if estado.actual %}
-        <div class="mt-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+        <div class="mt-1 px-2 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded border border-blue-100">
           Actual
         </div>
         {% endif %}
@@ -67,122 +66,216 @@
 
     </div>
   </div>
+  
+  {% if siniestro.estado == 'cerrado' %}
+  <div class="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+    <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-800 mb-2">Siniestro Cerrado</h3>
+    <p class="text-sm text-gray-600">Este siniestro ha completado todo el proceso y ha sido cerrado exitosamente.</p>
+    {% if siniestro.notas_cierre %}
+    <p class="text-sm text-gray-500 mt-2 italic">"{{ siniestro.notas_cierre }}"</p>
+    {% endif %}
+  </div>
+  {% elif siniestro.estado == 'rechazado' %}
+  <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+    <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
+      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-800 mb-2">Siniestro Rechazado</h3>
+    <p class="text-sm text-gray-600">Este siniestro ha sido rechazado.</p>
+    {% if siniestro.razon_rechazo %}
+    <p class="text-sm text-red-600 mt-2"><strong>Razón:</strong> {{ siniestro.razon_rechazo }}</p>
+    {% endif %}
+  </div>
+  {% elif siniestro.estado == 'fuera_plazo' %}
+  <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+    <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
+      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-800 mb-2">Siniestro Fuera de Plazo</h3>
+    <p class="text-sm text-gray-600">Este siniestro fue reportado después del plazo de 15 días y no puede ser procesado.</p>
+    <p class="text-sm text-red-600 mt-2">Días transcurridos: {{ siniestro.dias_transcurridos_reporte }}</p>
+  </div>
+  {% elif siniestro.estado == 'documentos_incompletos' %}
+  <div class="bg-orange-50 border border-orange-200 rounded-lg p-6">
+    <div class="flex items-start gap-4">
+      <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Documentos Incompletos</h3>
+        <p class="text-sm text-gray-600 mb-2">Faltan documentos para procesar este siniestro.</p>
+        {% if siniestro.documentos_faltantes %}
+        <p class="text-sm text-orange-700"><strong>Documentos faltantes:</strong> {{ siniestro.documentos_faltantes }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
-  <!-- INFO GENERAL + RECLAMANTE -->
-  <div class="grid grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-    <!-- INFO GENERAL -->
-    <div class="bg-card rounded-lg border p-6">
-      <h3 class="mb-4 pb-3 border-b">📋 Información General</h3>
+    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <h3 class="mb-4 pb-3 border-b border-gray-100 font-semibold text-gray-800">📋 Información General</h3>
 
       <div class="space-y-3 text-sm">
-        <div>
-          <span class="text-muted-foreground">Nº Siniestro</span>
-          <p>{{ siniestro.id }}</p>
+        <div class="flex justify-between">
+          <span class="text-gray-500">Nº Siniestro</span>
+          <p class="font-medium text-gray-900">{{ siniestro.numero_siniestro }}</p>
         </div>
-        <div>
-          <span class="text-muted-foreground">Póliza</span>
-          <p>{{ siniestro.poliza }}</p>
+        <div class="flex justify-between">
+          <span class="text-gray-500">Póliza</span>
+          <p class="font-medium text-gray-900">{{ siniestro.poliza.numero_poliza }}</p>
         </div>
-        <div>
-          <span class="text-muted-foreground">Bien Asegurado</span>
-          <p>{{ siniestro.bien }}</p>
+        <div class="flex justify-between">
+          <span class="text-gray-500">Ramo</span>
+          <p class="font-medium text-gray-900">{{ siniestro.ramo.nombre }}</p>
         </div>
-        <div>
-          <span class="text-muted-foreground">Tipo de Evento</span>
-          <p>{{ siniestro.tipo_evento }}</p>
+        <div class="flex justify-between">
+          <span class="text-gray-500">Tipo de Evento</span>
+          <p class="font-medium text-gray-900 capitalize">{{ siniestro.get_tipo_evento_display }}</p>
         </div>
-        <div>
-          <span class="text-muted-foreground">Ubicación</span>
-          <p>{{ siniestro.ubicacion }}</p>
+        <div class="flex justify-between">
+          <span class="text-gray-500">Ubicación</span>
+          <p class="font-medium text-gray-900 text-right">{{ siniestro.ubicacion }}</p>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        
+        <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-50">
           <div>
-            <span class="text-muted-foreground">Fecha Ocurrencia</span>
-            <p>{{ siniestro.fecha_ocurrencia }}</p>
+            <span class="text-gray-500 block mb-1">Fecha Ocurrencia</span>
+            <p class="font-medium text-gray-900">{{ siniestro.fecha_ocurrencia|date:"d/m/Y" }}</p>
           </div>
           <div>
-            <span class="text-muted-foreground">Fecha Reporte</span>
-            <p>{{ siniestro.fecha_reporte }}</p>
+            <span class="text-gray-500 block mb-1">Fecha Reporte</span>
+            <p class="font-medium text-gray-900">{{ siniestro.fecha_reporte|date:"d/m/Y" }}</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- RECLAMANTE -->
-    <div class="bg-card rounded-lg border p-6">
-      <h3 class="mb-4 pb-3 border-b">👤 Reclamante</h3>
+    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <h3 class="mb-4 pb-3 border-b border-gray-100 font-semibold text-gray-800">👤 Reclamante</h3>
 
-      <div class="space-y-3 text-sm">
-        <div>
-          <span class="text-muted-foreground">Nombre</span>
-          <p>{{ siniestro.reclamante.nombre }}</p>
+      <div class="space-y-4 text-sm">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <div>
+            <span class="text-gray-500 text-xs">Nombre Completo</span>
+            <p class="font-medium text-gray-900">{{ siniestro.reclamante_nombre }}</p>
+          </div>
         </div>
-        <div>
-          <span class="text-muted-foreground">Email</span>
-          <p>{{ siniestro.reclamante.email }}</p>
+        
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          </div>
+          <div>
+            <span class="text-gray-500 text-xs">Email</span>
+            <p class="font-medium text-gray-900">{{ siniestro.reclamante_email }}</p>
+          </div>
         </div>
-        <div>
-          <span class="text-muted-foreground">Teléfono</span>
-          <p>{{ siniestro.reclamante.telefono }}</p>
+
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          </div>
+          <div>
+            <span class="text-gray-500 text-xs">Teléfono</span>
+            <p class="font-medium text-gray-900">{{ siniestro.reclamante_telefono|default:"No especificado" }}</p>
+          </div>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- DESCRIPCIÓN -->
-  <div class="bg-card rounded-lg border p-6">
-    <h3 class="mb-4 pb-3 border-b">📝 Descripción del Evento</h3>
-    <p class="leading-relaxed">
+  <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+    <h3 class="mb-4 pb-3 border-b border-gray-100 font-semibold text-gray-800">📝 Descripción del Evento</h3>
+    <p class="leading-relaxed text-gray-700">
       {{ siniestro.descripcion }}
     </p>
   </div>
 
-  <!-- MONTOS + DOCUMENTOS -->
-  <div class="grid grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-    <!-- MONTOS -->
-    <div class="bg-card rounded-lg border p-6">
-      <h3 class="mb-4 pb-3 border-b">💰 Montos</h3>
+    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <h3 class="mb-4 pb-3 border-b border-gray-100 font-semibold text-gray-800">💰 Montos</h3>
 
       <div class="space-y-4 text-sm">
-        <div class="flex justify-between p-3 bg-muted rounded-lg">
-          <span>Monto Reclamado</span>
-          <span>{{ siniestro.monto_reclamado }}</span>
+        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+          <span class="text-gray-600">Monto Reclamado</span>
+          <span class="font-medium text-gray-900">${{ siniestro.monto_reclamado|default:"0.00" }} USD</span>
         </div>
-        <div class="flex justify-between p-3 bg-red-50 text-red-700 rounded-lg">
-          <span>Deducible</span>
-          <span>- {{ siniestro.deducible }}</span>
+
+        {% if siniestro.deducible %}
+        <div class="flex justify-between items-center p-3 bg-red-50 text-red-700 rounded-lg border border-red-100">
+          <span>Deducible Aplicado</span>
+          <span class="font-medium">- ${{ siniestro.deducible|default:"0.00" }} USD</span>
         </div>
-        <div class="flex justify-between p-3 bg-green-50 text-green-700 rounded-lg">
+        {% endif %}
+
+        {% if siniestro.monto_aprobado %}
+        <div class="flex justify-between items-center p-3 bg-green-50 text-green-700 rounded-lg border border-green-100">
           <span>Monto Aprobado</span>
-          <span>{{ siniestro.monto_aprobado }}</span>
+          <span class="font-medium">${{ siniestro.monto_aprobado|default:"0.00" }} USD</span>
         </div>
+        {% endif %}
+
+        {% if siniestro.monto_aprobado and siniestro.deducible %}
+        <div class="flex justify-between items-center p-3 bg-blue-50 text-blue-800 rounded-lg border border-blue-100 mt-2">
+          <span class="font-bold">Total a Pagar</span>
+          <span class="font-bold text-lg">${{ siniestro.monto_liquidado_aseguradora|default:"0.00" }} USD</span>
+        </div>
+        {% endif %}
       </div>
     </div>
 
-    <!-- DOCUMENTOS -->
-    <div class="bg-card rounded-lg border p-6">
-      <h3 class="mb-4 pb-3 border-b">📁 Documentos</h3>
+    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <h3 class="mb-4 pb-3 border-b border-gray-100 font-semibold text-gray-800 flex items-center gap-2">
+        <span class="text-red-500">📁</span>
+        Documentos PDF ({{ documentos.count }})
+      </h3>
 
-      <div class="space-y-2">
-        {% for doc in siniestro.documentos %}
-        <div class="flex items-center justify-between p-3 hover:bg-muted rounded-lg">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              📄
+      <div class="space-y-3">
+        {% for doc in documentos %}
+        <div class="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-transparent hover:border-gray-200 transition-all group">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M10.92,12.31C10.68,11.54 10.15,9.08 11.55,9.04C12.95,9 12.03,12.16 12.03,12.16C12.42,13.65 14.05,14.72 14.05,14.72C14.55,14.57 17.4,14.24 17,15.72C16.57,17.2 13.5,15.81 13.5,15.81C11.55,15.95 10.09,16.47 10.09,16.47C8.96,18.58 7.64,19.5 7.1,18.61C6.43,17.5 9.23,16.07 9.23,16.07C10.68,13.72 10.9,12.35 10.92,12.31Z"/>
+              </svg>
             </div>
-            <div>
-              <div class="text-sm">{{ doc.nombre }}</div>
-              <div class="text-xs text-muted-foreground">{{ doc.archivo }}</div>
+            <div class="overflow-hidden">
+              <div class="text-sm font-medium text-gray-800 truncate">{{ doc.tipo }}</div>
+              <div class="text-xs text-gray-500">{{ doc.fecha_carga|date:"d/m/Y H:i" }}</div>
+              {% if doc.archivo.name %}
+              <div class="text-[10px] text-blue-600 truncate max-w-[150px] opacity-0 group-hover:opacity-100 transition-opacity">{{ doc.archivo.name }}</div>
+              {% endif %}
             </div>
           </div>
 
-          <a href="{{ doc.url }}"
-             class="p-2 hover:bg-primary hover:text-primary-foreground rounded-lg">
-            ⬇
+          <a href="{{ doc.archivo.url }}"
+             download
+             class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+             title="Descargar PDF"
+             target="_blank">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
           </a>
+        </div>
+        {% empty %}
+        <div class="text-center py-8">
+          <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <p class="text-gray-500 text-sm">No hay documentos PDF adjuntos</p>
         </div>
         {% endfor %}
       </div>
@@ -191,5 +284,119 @@
   </div>
 
 </div>
+
+{% if siniestro.estado != 'cerrado' and siniestro.estado != 'rechazado' and siniestro.estado != 'fuera_plazo' %}
+<div class="fixed bottom-0 left-0 lg:left-64 right-0 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40 flex items-center justify-between">
+    <div class="text-sm text-gray-500 hidden sm:block">
+        Acciones disponibles para estado: <span class="font-bold text-gray-800">{{ siniestro.get_estado_display }}</span>
+    </div>
+    <div class="flex gap-3 w-full sm:w-auto justify-end">
+        
+        {% if siniestro.estado == 'reportado' %}
+            <button onclick="abrirModal('modal-docs-incompletos')" class="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 font-medium transition-colors text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Docs Incompletos
+            </button>
+            <button onclick="abrirModal('modal-docs-completos')" class="flex items-center gap-2 px-6 py-2 bg-[#1F6FB2] text-white rounded-lg hover:bg-blue-700 font-medium shadow-md transition-all hover:scale-105">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                Validar Documentación
+            </button>
+        
+        {% elif siniestro.estado == 'documentos_completos' %}
+            <button onclick="abrirModal('modal-enviar-aseguradora')" class="flex items-center gap-2 px-6 py-2 bg-[#0B3C5D] text-white rounded-lg hover:bg-[#082A42] font-medium shadow-md transition-all hover:scale-105">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+                Enviar a Aseguradora
+            </button>
+
+        {% elif siniestro.estado == 'documentos_incompletos' %}
+             <button onclick="abrirModal('modal-docs-completos')" class="flex items-center gap-2 px-6 py-2 bg-[#1F6FB2] text-white rounded-lg hover:bg-blue-700 font-medium shadow-md transition-all hover:scale-105">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                Revisar Nuevamente
+            </button>
+
+        {% elif siniestro.estado == 'enviado_aseguradora' %}
+            <button onclick="abrirModal('modal-revision')" class="flex items-center gap-2 px-6 py-2 bg-[#1F6FB2] text-white rounded-lg hover:bg-blue-700 font-medium shadow-md transition-all hover:scale-105">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                Marcar En Revisión
+            </button>
+
+        {% elif siniestro.estado == 'en_revision' %}
+            <button onclick="abrirModal('modal-rechazar')" class="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 font-medium transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                Rechazar
+            </button>
+            <button onclick="abrirModal('modal-aprobar')" class="flex items-center gap-2 px-6 py-2 bg-[#2E8B57] text-white rounded-lg hover:bg-green-700 font-medium shadow-md transition-all hover:scale-105">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                Aprobar Siniestro
+            </button>
+
+        {% elif siniestro.estado == 'aprobado' %}
+            <button onclick="abrirModal('modal-liquidar')" class="flex items-center gap-2 px-6 py-2 bg-[#1F6FB2] text-white rounded-lg hover:bg-blue-700 font-medium shadow-md transition-all hover:scale-105">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                Procesar Liquidación
+            </button>
+
+        {% elif siniestro.estado == 'liquidado' %}
+            <button onclick="abrirModal('modal-pago')" class="flex items-center gap-2 px-6 py-2 bg-[#2E8B57] text-white rounded-lg hover:bg-green-700 font-medium shadow-md transition-all hover:scale-105">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                Registrar Pago
+            </button>
+
+        {% elif siniestro.estado == 'pagado' %}
+            <button onclick="abrirModal('modal-cerrar')" class="flex items-center gap-2 px-6 py-2 bg-[#0B3C5D] text-white rounded-lg hover:bg-slate-800 font-medium shadow-md transition-all hover:scale-105">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Cerrar Caso
+            </button>
+        {% endif %}
+
+    </div>
+</div>
+{% endif %}
+
+<!-- Sección para siniestros rechazados que pueden cerrarse -->
+{% if siniestro.estado == 'rechazado' %}
+<div class="fixed bottom-0 left-0 lg:left-64 right-0 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40 flex items-center justify-between">
+    <div class="text-sm text-gray-500 hidden sm:block">
+        El siniestro fue rechazado. Puede cerrarlo para finalizar el proceso.
+    </div>
+    <div class="flex gap-3 w-full sm:w-auto justify-end">
+        <button onclick="abrirModal('modal-cerrar')" class="flex items-center gap-2 px-6 py-2 bg-[#0B3C5D] text-white rounded-lg hover:bg-slate-800 font-medium shadow-md transition-all hover:scale-105">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Cerrar Caso
+        </button>
+    </div>
+</div>
+{% endif %}
+
+{% include 'asesora/includes/modals_siniestros.html' %}
+
+<script>
+    function abrirModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('hidden');
+            // Recalcular si es el modal de aprobar
+            if (modalId === 'modal-aprobar' && typeof calcularMontoFinal === 'function') {
+                calcularMontoFinal();
+            }
+        } else {
+            console.error('Modal no encontrado:', modalId);
+        }
+    }
+
+    function cerrarModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    // Cerrar al hacer clic fuera
+    window.onclick = function(event) {
+        if (event.target.classList.contains('fixed') && event.target.id.startsWith('modal-')) {
+            event.target.classList.add('hidden');
+        }
+    }
+</script>
 
 {% endblock %}
