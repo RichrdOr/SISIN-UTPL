@@ -44,6 +44,7 @@ class Poliza(models.Model):
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
     bien = models.ForeignKey(BienAsegurado, on_delete=models.CASCADE)
+    pdf_file = models.FileField(upload_to='polizas_pdf/', blank=True, null=True)
 
     class Meta:
         verbose_name = "Póliza"
@@ -63,6 +64,20 @@ class Poliza(models.Model):
     @transition(field=estado, source='activa', target='expirada')
     def expirar(self):
         pass
+
+
+class Deducible(models.Model):
+    poliza = models.ForeignKey(Poliza, on_delete=models.CASCADE, related_name='deducibles')
+    concepto = models.CharField(max_length=200)
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    porcentaje = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    
+    class Meta:
+        verbose_name = "Deducible"
+        verbose_name_plural = "Deducibles"
+    
+    def __str__(self):
+        return f"{self.concepto} - {self.poliza.numero_poliza}"
 
 
 class ResponsableBien(models.Model):
