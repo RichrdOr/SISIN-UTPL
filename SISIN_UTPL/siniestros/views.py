@@ -1,41 +1,29 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from polizas.models import Poliza
-from datetime import date
-from .models import Siniestro, Evento
 from django.contrib import messages
 from datetime import date
 
-# Create your views here.
-from django.shortcuts import render, redirect
-from polizas.models import Poliza
-from datetime import date, datetime
-from .models import Siniestro, Evento
-from django.contrib import messages
+from .models import Siniestro
+from .forms import SiniestroForm
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .forms import SiniestroForm, EventoForm
-from datetime import date
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .forms import SiniestroForm, EventoForm
-from .models import Siniestro, Evento
-from datetime import date
 
 def crear_siniestro(request):
     if request.method == "POST":
-        evento_form = EventoForm(request.POST)
-        if evento_form.is_valid():
-            evento_form.save()
-            return redirect('aseguradora:dashboard_aseguradora')
-    else:
-        evento_form = EventoForm()
+        form = SiniestroForm(request.POST, request.FILES)
+        if form.is_valid():
+            siniestro = form.save(commit=False)
+            siniestro.fecha_apertura = date.today()
+            siniestro.save()
 
-    return render(request, 'aseguradora/generarSiniestro.html', {  # puedes renombrar la plantilla si quieres
-        'evento_form': evento_form,
+            messages.success(request, "Siniestro creado correctamente.")
+            return redirect('dashboard_siniestros')
+    else:
+        form = SiniestroForm()
+
+    return render(request, 'asesora/crear_siniestro.html', {
+        'form': form,
         'today': date.today().isoformat(),
     })
+
 
 
 
@@ -44,22 +32,21 @@ def dashboard_siniestros(request):
 
     siniestros_data = []
     for s in siniestros:
-        evento = s.evento_set.first()  # si hay evento, lo toma
         siniestros_data.append({
             "id": s.id,
             "tipo_bien": s.tipo_bien,
-            "fecha": evento.fecha_ocurrencia if evento else s.fecha_apertura,
-            "estado": "Creados" if s.estado == 1 else "En Proceso" if s.estado == 2 else "Finalizado",
+            "fecha": s.fecha_ocurrencia,
+            "estado": s.get_estado_display(),
         })
 
     stats = {
-        "total": len(siniestros_data),
-        "creados": sum(1 for x in siniestros_data if x["estado"] == "Creados"),
-        "en_proceso": sum(1 for x in siniestros_data if x["estado"] == "En Proceso"),
-        "finalizados": sum(1 for x in siniestros_data if x["estado"] == "Finalizado"),
+        "total": siniestros.count(),
+        "creados": siniestros.filter(estado='reportado').count(),
+        "en_proceso": siniestros.filter(estado='en_revision').count(),
+        "finalizados": siniestros.filter(estado__in=['aprobado', 'pagado']).count(),
     }
 
-    return render(request, "asegurado/pantallaInicioAsegurado.html", {
+    return render(request, "siniestros/dashboard.html", {
         "siniestros": siniestros_data,
         "stats": stats,
     })
@@ -68,9 +55,47 @@ def dashboard_siniestros(request):
 
 def detalle_siniestro(request, siniestro_id):
     siniestro = get_object_or_404(Siniestro, id=siniestro_id)
-    evento = Evento.objects.filter(siniestro=siniestro).first()
-    return render(request, "asegurado/detalle_siniestro.html", {
-        "siniestro": siniestro,
-        "evento": evento,
+
+    return render(request, 'siniestros/detalle_siniestro.html', {
+        'siniestro': siniestro,
+        'documentos': siniestro.documentos.all(),
+        'pagare': getattr(siniestro, 'pagare', None)
     })
 
+
+from django.contrib import messages
+
+def enviar_a_revision(request, siniestro_id):
+    siniestro = get_object_or_404(Siniestro, id=siniestro_id)
+
+    try:
+        siniestro.revisar()
+        siniestro.save()
+        messages.info(request, "Siniestro enviado a revisión.")
+    except:
+        messages.error(request, "No se pudo cambiar el estado.")
+
+    return redirect('detalle_siniestro', siniestro_id=siniestro.id)
+
+
+def aprobar_siniestro(request, siniestro_id):
+    siniestro = get_object_or_404(Siniestro, id=siniestro_id)
+
+    try:
+        siniestro.aprobar()
+        siniestro.cobertura_valida = True
+        siniestro.fecha_respuesta_aseguradora = date.today()
+        siniestro.save()
+        messages.success(request, "Siniestro aprobado.")
+    except:
+        messages.error(request, "No se pudo aprobar el siniestro.")
+
+    return redirect('detalle_siniestro', siniestro_id=siniestro.id)
+
+
+def dashboard_asesora(request):
+    return render(request, "asesora/dashboard.html")
+
+def siniestros_asesora(request):
+    return render(request, "asesora/siniestros.html")
+    

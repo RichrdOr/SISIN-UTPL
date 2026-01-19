@@ -1,0 +1,104 @@
+{% extends "asesora/base.html" %}
+
+{% block title %}Siniestros{% endblock %}
+{% block header %}Siniestros{% endblock %}
+
+{% block content %}
+
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-xl font-semibold text-foreground mb-1">
+        Siniestros
+      </h2>
+      <p class="text-sm text-muted-foreground">
+        Gestión de siniestros y reclamaciones
+      </p>
+    </div>
+
+    <a href="{% url 'crear_siniestro' %}"
+       class="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition">
+      <i data-lucide="plus" class="w-5 h-5"></i>
+      Nuevo Siniestro
+    </a>
+  </div>
+
+  <!-- Tabla -->
+  <div class="bg-card rounded-lg border overflow-hidden">
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-muted">
+          <tr>
+            <th class="px-6 py-3 text-left text-muted-foreground">Nº Siniestro</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Póliza</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Tipo Evento</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Fecha</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Estado</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y">
+
+          {% for siniestro in siniestros %}
+          <tr class="hover:bg-accent transition-colors">
+
+            <td class="px-6 py-4">{{ siniestro.id }}</td>
+            <td class="px-6 py-4">{{ siniestro.poliza }}</td>
+            <td class="px-6 py-4">{{ siniestro.tipo_evento }}</td>
+            <td class="px-6 py-4">{{ siniestro.fecha }}</td>
+
+            <!-- Estado -->
+            <td class="px-6 py-4">
+              {% if siniestro.estado == "reportado" %}
+                <span class="px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-700">
+                  Reportado
+                </span>
+              {% elif siniestro.estado == "en_revision" %}
+                <span class="px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-700">
+                  En revisión
+                </span>
+              {% elif siniestro.estado == "aprobado" %}
+                <span class="px-3 py-1 rounded-full text-sm bg-green-100 text-green-700">
+                  Aprobado
+                </span>
+              {% elif siniestro.estado == "pagado" %}
+                <span class="px-3 py-1 rounded-full text-sm bg-green-100 text-green-700">
+                  Pagado
+                </span>
+              {% else %}
+                <span class="px-3 py-1 rounded-full text-sm bg-red-100 text-red-700">
+                  Rechazado
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Acciones -->
+            <td class="px-6 py-4">
+              <a href="{% url 'detalle_siniestro' siniestro.id %}"
+                 class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+                Ver detalle
+              </a>
+            </td>
+
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-muted-foreground">
+              No existen siniestros registrados.
+            </td>
+          </tr>
+          {% endfor %}
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

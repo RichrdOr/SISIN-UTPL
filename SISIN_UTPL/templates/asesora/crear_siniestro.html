@@ -1,0 +1,167 @@
+{% extends "asesora/base.html" %}
+{% load static %}
+
+{% block title %}Crear Siniestro{% endblock %}
+{% block header %}Crear Nuevo Siniestro{% endblock %}
+
+{% block content %}
+
+<form method="post" enctype="multipart/form-data" class="space-y-6">
+  {% csrf_token %}
+
+  <!-- HEADER -->
+  <div class="flex items-center gap-4">
+    <a href="{% url 'siniestros_asesora' %}" class="p-2 hover:bg-accent rounded-lg">
+      ←
+    </a>
+    <div>
+      <h2 class="text-xl font-semibold">Crear Nuevo Siniestro</h2>
+      <p class="text-muted-foreground text-sm">
+        Complete la información del siniestro
+      </p>
+    </div>
+  </div>
+
+  <!-- PASO 1: SELECCIONAR PÓLIZA -->
+  <div class="bg-card rounded-lg border p-6">
+    <h3 class="mb-4 pb-3 border-b">📋 Paso 1: Seleccionar Póliza</h3>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm mb-2">Póliza</label>
+        <select name="poliza" class="input">
+          <option value="">Buscar y seleccionar póliza...</option>
+          {% for poliza in polizas %}
+            <option value="{{ poliza.id }}">
+              {{ poliza.numero }} - {{ poliza.titular }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {% if bien %}
+      <div class="bg-blue-50 border border-blue-500 rounded-lg p-4">
+        <h4 class="text-sm font-medium text-blue-900 mb-2">
+          Información del Bien Asegurado
+        </h4>
+        <div class="grid grid-cols-3 gap-4 text-sm">
+          <div>
+            <span class="text-muted-foreground">Descripción:</span>
+            <p>{{ bien.descripcion }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Titular:</span>
+            <p>{{ bien.titular }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Valor Asegurado:</span>
+            <p>{{ bien.valor }}</p>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- PASO 2: DATOS DEL RECLAMANTE -->
+  <div class="bg-card rounded-lg border p-6">
+    <h3 class="mb-4 pb-3 border-b">👤 Paso 2: Datos del Reclamante</h3>
+
+    <div class="grid grid-cols-3 gap-6">
+      <div>
+        <label class="block text-sm mb-2">Nombre Completo</label>
+        <input name="reclamante_nombre" class="input">
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Email</label>
+        <input type="email" name="reclamante_email" class="input">
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Teléfono</label>
+        <input name="reclamante_telefono" class="input">
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 3: DATOS DEL EVENTO -->
+  <div class="bg-card rounded-lg border p-6">
+    <h3 class="mb-4 pb-3 border-b">⚡ Paso 3: Datos del Evento</h3>
+
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <label class="block text-sm mb-2">Tipo de Evento</label>
+        <select name="tipo_evento" class="input">
+          <option value="">Seleccione tipo</option>
+          <option value="danio">Daño</option>
+          <option value="robo">Robo</option>
+          <option value="hurto">Hurto</option>
+          <option value="incendio">Incendio</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Fecha de Ocurrencia</label>
+        <input type="date" name="fecha_evento" class="input">
+      </div>
+
+      <div class="col-span-2">
+        <label class="block text-sm mb-2">Ubicación</label>
+        <input name="ubicacion" class="input">
+      </div>
+
+      <div class="col-span-2">
+        <label class="block text-sm mb-2">Causa Probable</label>
+        <input name="causa_probable" class="input">
+      </div>
+
+      <div class="col-span-2">
+        <label class="block text-sm mb-2">Descripción Detallada</label>
+        <textarea rows="5" name="descripcion" class="input"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 4: DOCUMENTOS -->
+  <div class="bg-card rounded-lg border p-6">
+    <h3 class="mb-4 pb-3 border-b">📁 Paso 4: Documentos Requeridos</h3>
+
+    <div class="grid grid-cols-3 gap-6">
+
+      {% for doc in documentos %}
+      <div class="border-2 border-dashed rounded-lg p-6 text-center">
+        <div class="text-4xl mb-3">{{ doc.icono }}</div>
+        <div class="text-sm mb-2">{{ doc.nombre }}</div>
+
+        <input type="file" name="documento_{{ forloop.counter }}"
+               class="block w-full text-sm">
+      </div>
+      {% endfor %}
+
+    </div>
+
+    <div class="mt-4 p-4 bg-yellow-50 border border-yellow-400 rounded-lg">
+      <p class="text-sm">
+        <strong>Nota:</strong> Los primeros documentos son obligatorios.
+        El documento adicional es opcional.
+      </p>
+    </div>
+  </div>
+
+  <!-- BOTONES -->
+  <div class="flex justify-end gap-4">
+    <a href="{% url 'siniestros_asesora' %}"
+       class="px-6 py-3 border rounded-lg hover:bg-accent">
+      Cancelar
+    </a>
+
+    <button type="submit"
+            class="flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-lg shadow-lg">
+      Guardar Siniestro
+    </button>
+  </div>
+
+</form>
+
+{% endblock %}
