@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "./globals.css";
+
+/* Forzamos el escaneo de tus carpetas de Django */
+@source "../../templates/**/*.html";
+@source "../../**/templates/**/*.html";

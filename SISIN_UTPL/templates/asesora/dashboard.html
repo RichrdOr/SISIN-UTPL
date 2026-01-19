@@ -1,0 +1,123 @@
+{% extends "asesora/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block header %}Dashboard Principal{% endblock %}
+
+{% block content %}
+
+<div class="space-y-6">
+
+  <!-- Header interno -->
+  <div>
+    <h2 class="mb-1 text-xl font-semibold text-foreground">
+      Dashboard Principal
+    </h2>
+    <p class="text-muted-foreground text-sm">
+      Vista general del sistema de siniestros
+    </p>
+  </div>
+
+  <!-- KPIs -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+    <!-- Total -->
+    <div class="bg-card p-6 rounded-lg border">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
+          <i data-lucide="alert-circle" class="w-6 h-6 text-primary"></i>
+        </div>
+        <span class="text-3xl font-medium">{{ stats.total }}</span>
+      </div>
+      <p class="text-muted-foreground text-sm">Total Siniestros</p>
+    </div>
+
+    <!-- Nuevos -->
+    <div class="bg-card p-6 rounded-lg border">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
+          <i data-lucide="clock" class="w-6 h-6 text-yellow-500"></i>
+        </div>
+        <span class="text-3xl font-medium">{{ stats.nuevos }}</span>
+      </div>
+      <p class="text-muted-foreground text-sm">Nuevos</p>
+    </div>
+
+    <!-- En revisión -->
+    <div class="bg-card p-6 rounded-lg border">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
+          <i data-lucide="clock" class="w-6 h-6 text-primary"></i>
+        </div>
+        <span class="text-3xl font-medium">{{ stats.en_revision }}</span>
+      </div>
+      <p class="text-muted-foreground text-sm">En Revisión</p>
+    </div>
+
+    <!-- Cerrados -->
+    <div class="bg-card p-6 rounded-lg border">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
+          <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+        </div>
+        <span class="text-3xl font-medium">{{ stats.cerrados }}</span>
+      </div>
+      <p class="text-muted-foreground text-sm">Cerrados</p>
+    </div>
+
+  </div>
+
+  <!-- Tabla -->
+  <div class="bg-card rounded-lg border">
+    <div class="p-6 border-b">
+      <h3 class="font-semibold text-foreground">
+        Resumen de Siniestros
+      </h3>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-muted">
+          <tr>
+            <th class="px-6 py-3 text-left text-muted-foreground">Nº Siniestro</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Póliza</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Tipo Evento</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Fecha</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Estado</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y">
+          {% for siniestro in siniestros %}
+          <tr class="hover:bg-accent transition-colors">
+            <td class="px-6 py-4">{{ siniestro.id }}</td>
+            <td class="px-6 py-4">{{ siniestro.poliza }}</td>
+            <td class="px-6 py-4">{{ siniestro.tipo_evento }}</td>
+            <td class="px-6 py-4">{{ siniestro.fecha }}</td>
+
+            <td class="px-6 py-4">
+              <span class="px-3 py-1 rounded-full text-xs font-medium"
+                    style="background: {{ siniestro.estado_bg }};
+                           color: {{ siniestro.estado_color }};">
+                {{ siniestro.estado_label }}
+              </span>
+            </td>
+
+            <td class="px-6 py-4">
+              <a href="{% url 'detalle_siniestro' siniestro.id %}"
+                 class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+                Ver detalle
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

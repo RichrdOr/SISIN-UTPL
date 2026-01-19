@@ -1,0 +1,96 @@
+{% extends "asesora/base.html" %}
+
+{% block title %}Pólizas{% endblock %}
+{% block header %}Pólizas{% endblock %}
+
+{% block content %}
+
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-xl font-semibold text-foreground mb-1">
+        Pólizas
+      </h2>
+      <p class="text-sm text-muted-foreground">
+        Gestión de pólizas de seguros
+      </p>
+    </div>
+
+    <a href="{% url 'crear_poliza' %}"
+       class="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition">
+      <i data-lucide="plus" class="w-5 h-5"></i>
+      Nueva Póliza
+    </a>
+  </div>
+
+  <!-- Tabla -->
+  <div class="bg-card rounded-lg border overflow-hidden">
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-muted">
+          <tr>
+            <th class="px-6 py-3 text-left text-muted-foreground">Número</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Titular</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Bien Asegurado</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Vigencia</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Estado</th>
+            <th class="px-6 py-3 text-left text-muted-foreground">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y">
+
+          {% for poliza in polizas %}
+          <tr class="hover:bg-accent transition-colors">
+
+            <td class="px-6 py-4">{{ poliza.numero }}</td>
+            <td class="px-6 py-4">{{ poliza.titular }}</td>
+            <td class="px-6 py-4">{{ poliza.bien }}</td>
+            <td class="px-6 py-4">{{ poliza.vigencia }}</td>
+
+            <!-- Estado -->
+            <td class="px-6 py-4">
+              {% if poliza.estado == "activa" %}
+                <span class="px-3 py-1 rounded-full text-sm bg-green-100 text-green-700">
+                  Activa
+                </span>
+              {% elif poliza.estado == "suspendida" %}
+                <span class="px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-700">
+                  Suspendida
+                </span>
+              {% else %}
+                <span class="px-3 py-1 rounded-full text-sm bg-red-100 text-red-700">
+                  Cancelada
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Acciones -->
+            <td class="px-6 py-4">
+              <a href="{% url 'detalle_poliza' poliza.numero %}"
+                 class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+                Ver póliza
+              </a>
+            </td>
+
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-muted-foreground">
+              No existen pólizas registradas.
+            </td>
+          </tr>
+          {% endfor %}
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

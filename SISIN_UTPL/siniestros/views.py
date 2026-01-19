@@ -19,7 +19,7 @@ def crear_siniestro(request):
     else:
         form = SiniestroForm()
 
-    return render(request, 'siniestros/crear_siniestro.html', {
+    return render(request, 'asesora/crear_siniestro.html', {
         'form': form,
         'today': date.today().isoformat(),
     })
@@ -93,3 +93,9 @@ def aprobar_siniestro(request, siniestro_id):
     return redirect('detalle_siniestro', siniestro_id=siniestro.id)
 
 
+def dashboard_asesora(request):
+    return render(request, "asesora/dashboard.html")
+
+def siniestros_asesora(request):
+    return render(request, "asesora/siniestros.html")
+    
