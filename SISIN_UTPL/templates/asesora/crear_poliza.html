@@ -8,92 +8,92 @@
 <form method="post" class="space-y-6" id="poliza-form">
   {% csrf_token %}
 
+  <!-- Encabezado -->
   <div class="flex items-center gap-4">
-    <a href="{% url 'crear_poliza' %}" class="p-2 hover:bg-accent rounded-lg">
-      ←
-    </a>
+    <a href="{% url 'crear_poliza' %}" class="p-2 hover:bg-accent rounded-lg">←</a>
     <div>
       <h2 class="text-xl font-semibold">Crear Nueva Póliza</h2>
       <p class="text-muted-foreground text-sm">
-        Complete la información de la póliza
+        Ingrese la información general de la póliza
       </p>
     </div>
   </div>
 
+  <!-- 🟦 SECCIÓN 1: DATOS DE LA PÓLIZA -->
   <div class="bg-card rounded-lg border p-6">
-    <h3 class="mb-4 pb-3 border-b font-medium">📄 Datos Generales</h3>
+    <h3 class="mb-4 pb-3 border-b font-medium">📄 Datos de la Póliza</h3>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
-        <label class="block text-sm mb-2">Número de Póliza</label>
-        <input name="numero_poliza" class="input" placeholder="POL-XXXXX" />
+        <label class="block text-sm mb-2">Nro. Póliza</label>
+        <input name="numero_poliza" class="input" placeholder="POL-000123" required />
       </div>
-      <div>
-        <label class="block text-sm mb-2">Titular</label>
-        <select name="titular" class="input">
-          <option value="">Seleccione un cliente</option>
-          {% for cliente in clientes %}
-          <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm mb-2">Tipo de Póliza</label>
-        <select name="tipo_poliza" class="input">
-          <option>Hogar</option>
-          <option>Comercial</option>
-          <option>Industrial</option>
-        </select>
-      </div>
+
       <div>
         <label class="block text-sm mb-2">Aseguradora</label>
-        <input name="aseguradora" class="input" placeholder="Nombre de la aseguradora" />
+        <input name="aseguradora" class="input" placeholder="Nombre de la aseguradora" required />
       </div>
+
+      <div>
+        <label class="block text-sm mb-2">Fecha de Emisión</label>
+        <input type="date" name="fecha_emision" class="input" required />
+      </div>
+
       <div>
         <label class="block text-sm mb-2">Fecha Inicio</label>
-        <input type="date" name="fecha_inicio" class="input" />
+        <input type="date" name="fecha_inicio" class="input" required />
       </div>
+
       <div>
         <label class="block text-sm mb-2">Fecha Fin</label>
-        <input type="date" name="fecha_fin" class="input" />
+        <input type="date" name="fecha_fin" class="input" required />
       </div>
-      <div class="col-span-1 md:col-span-2">
-        <label class="block text-sm mb-2">Prima</label>
-        <input name="prima" class="input" placeholder="0.00" />
+
+      <div>
+        <label class="block text-sm mb-2">Total Prima</label>
+        <input type="number" step="0.01" name="total_prima" class="input" placeholder="0.00" required />
       </div>
     </div>
   </div>
 
+  <!-- 🟦 SECCIÓN 2: BIEN ASEGURADO -->
   <div class="bg-card rounded-lg border p-6">
     <h3 class="mb-4 pb-3 border-b font-medium">🏠 Bien Asegurado</h3>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="col-span-1 md:col-span-2">
-        <label class="block text-sm mb-2">Descripción</label>
-        <textarea name="descripcion_bien" rows="3" class="input" placeholder="Descripción detallada..."></textarea>
+        <label class="block text-sm mb-2">Descripción del Bien</label>
+        <textarea name="descripcion_bien" rows="3" class="input" placeholder="Descripción detallada del bien asegurado..." required></textarea>
       </div>
+
       <div>
-        <label class="block text-sm mb-2">Zona</label>
-        <input name="zona" class="input" placeholder="Ubicación" />
-      </div>
-      <div>
-        <label class="block text-sm mb-2">Valor</label>
-        <input name="valor" class="input" placeholder="0.00" />
-      </div>
-      <div class="col-span-1 md:col-span-2">
         <label class="block text-sm mb-2">Tipo de Bien</label>
-        <select name="tipo_bien" class="input">
-          <option>Residencial</option>
-          <option>Comercial</option>
-          <option>Industrial</option>
+        <select name="tipo_bien" class="input" required>
+          <option value="">Seleccione</option>
+          <option value="Residencial">Residencial</option>
+          <option value="Comercial">Comercial</option>
+          <option value="Industrial">Industrial</option>
         </select>
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Zona / Ubicación</label>
+        <input name="zona" class="input" placeholder="Ciudad / Sector" required />
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Valor del Bien</label>
+        <input type="number" step="0.01" name="valor_bien" class="input" placeholder="0.00" required />
       </div>
     </div>
   </div>
 
+  <!-- 🟦 SECCIÓN 3: RAMOS -->
   <div class="bg-card rounded-lg border p-6">
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-2">
         <span class="text-xl">📊</span>
-        <h3 class="font-semibold text-lg">Ramos</h3>
+        <h3 class="font-semibold text-lg">Ramos de la Póliza</h3>
       </div>
       <button type="button" id="add-ramo-btn" class="btn-add">
         <span>+</span> Agregar Ramo
@@ -106,40 +106,24 @@
       <table class="w-full border-separate border-spacing-y-2">
         <thead>
           <tr class="bg-muted/30">
-            <th class="p-3 text-left text-sm font-semibold text-muted-foreground first:rounded-l-lg">Grupo</th>
-            <th class="p-3 text-left text-sm font-semibold text-muted-foreground">Subgrupo</th>
-            <th class="p-3 text-left text-sm font-semibold text-muted-foreground">Ramo</th>
-            <th class="p-3 text-left text-sm font-semibold text-muted-foreground">Suma Asegurada</th>
-            <th class="p-3 text-left text-sm font-semibold text-muted-foreground">Deducible %</th>
-            <th class="p-3 text-center text-sm font-semibold text-muted-foreground last:rounded-r-lg">Acción</th>
+            <th class="p-3 text-sm text-left">Grupo</th>
+            <th class="p-3 text-sm text-left">Subgrupo</th>
+            <th class="p-3 text-sm text-left">Ramo</th>
+            <th class="p-3 text-sm text-left">Suma Asegurada</th>
+            <th class="p-3 text-sm text-left">Deducible %</th>
+            <th class="p-3 text-sm text-center">Acción</th>
           </tr>
         </thead>
         <tbody id="ramos-container">
           {% for form in formset %}
-          <tr class="ramo-form group bg-white">
-            <td class="hidden">
-              {{ form.id }}
-            </td>
-            
-            <td class="p-1">
-              <input type="text" name="ramos-{{ forloop.counter0 }}-grupo" id="id_ramos-{{ forloop.counter0 }}-grupo" class="input text-sm" placeholder="Ej. Incendio">
-            </td>
-            <td class="p-1">
-              <input type="text" name="ramos-{{ forloop.counter0 }}-subgrupo" id="id_ramos-{{ forloop.counter0 }}-subgrupo" class="input text-sm" placeholder="Subgrupo">
-            </td>
-            <td class="p-1">
-              <input type="text" name="ramos-{{ forloop.counter0 }}-ramo" id="id_ramos-{{ forloop.counter0 }}-ramo" class="input text-sm" placeholder="Ramo">
-            </td>
-            <td class="p-1">
-              <input type="number" step="0.01" name="ramos-{{ forloop.counter0 }}-suma_asegurada" id="id_ramos-{{ forloop.counter0 }}-suma_asegurada" class="input text-sm" placeholder="0.00">
-            </td>
-            <td class="p-1">
-              <input type="number" step="0.01" name="ramos-{{ forloop.counter0 }}-deducible" id="id_ramos-{{ forloop.counter0 }}-deducible" class="input text-sm" placeholder="0%">
-            </td>
+          <tr class="ramo-form bg-white">
+            <td class="p-1"><input name="ramos-{{ forloop.counter0 }}-grupo" class="input text-sm" required></td>
+            <td class="p-1"><input name="ramos-{{ forloop.counter0 }}-subgrupo" class="input text-sm"></td>
+            <td class="p-1"><input name="ramos-{{ forloop.counter0 }}-ramo" class="input text-sm" required></td>
+            <td class="p-1"><input type="number" step="0.01" name="ramos-{{ forloop.counter0 }}-suma_asegurada" class="input text-sm" required></td>
+            <td class="p-1"><input type="number" step="0.01" name="ramos-{{ forloop.counter0 }}-deducible" class="input text-sm"></td>
             <td class="p-2 text-center">
-              <button type="button" class="delete-ramo-btn p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors">
-                <span class="text-lg">🗑️</span>
-              </button>
+              <button type="button" class="delete-ramo-btn text-destructive">🗑️</button>
             </td>
           </tr>
           {% endfor %}
@@ -148,57 +132,12 @@
     </div>
   </div>
 
+  <!-- BOTONES -->
   <div class="flex justify-end gap-4">
-    <a href="{% url 'crear_poliza' %}" class="px-6 py-3 border rounded-lg hover:bg-accent transition-colors">
-      Cancelar
-    </a>
-    <button type="submit" class="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity">
+    <a href="{% url 'crear_poliza' %}" class="px-6 py-3 border rounded-lg hover:bg-accent">Cancelar</a>
+    <button type="submit" class="px-6 py-3 bg-primary text-primary-foreground rounded-lg">
       Guardar Póliza
     </button>
   </div>
 </form>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const addButton = document.getElementById("add-ramo-btn");
-    const container = document.getElementById("ramos-container");
-    const totalForms = document.getElementById("id_ramos-TOTAL_FORMS");
-
-    addButton.addEventListener("click", function () {
-      const currentForms = document.getElementsByClassName("ramo-form");
-      const formNum = currentForms.length;
-      const newForm = currentForms[0].cloneNode(true);
-
-      // Reemplazar índices de 0 a N para que Django los reciba correctamente
-      const regexName = new RegExp("ramos-0-", "g");
-      const regexId = new RegExp("id_ramos-0-", "g");
-      
-      newForm.innerHTML = newForm.innerHTML.replace(regexName, "ramos-" + formNum + "-");
-      newForm.innerHTML = newForm.innerHTML.replace(regexId, "id_ramos-" + formNum + "-");
-
-      // Limpiar los valores de los inputs clonados
-      newForm.querySelectorAll("input").forEach(input => {
-        input.value = "";
-      });
-
-      container.appendChild(newForm);
-      
-      // Actualizar el Management Form de Django
-      totalForms.setAttribute("value", (formNum + 1).toString());
-    });
-
-    // Eliminar fila
-    container.addEventListener("click", function (e) {
-      if (e.target.closest(".delete-ramo-btn")) {
-        const forms = document.getElementsByClassName("ramo-form");
-        if (forms.length > 1) {
-          e.target.closest("tr").remove();
-          // Actualizar el contador total tras eliminar
-          const newCount = document.getElementsByClassName("ramo-form").length;
-          totalForms.setAttribute("value", newCount.toString());
-        }
-      }
-    });
-  });
-</script>
 {% endblock %}
