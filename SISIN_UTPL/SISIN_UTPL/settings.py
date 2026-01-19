@@ -39,9 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'django_fsm',
+    # Apps del proyecto
+    'usuarios',
     'polizas',
     'siniestros',
-    'usuarios',
+    'notificaciones',  # ← AGREGAR ESTA LÍNEA
     'reportes',
 ]
 
@@ -83,7 +85,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'sisis_utpl',
         'USER': 'postgres',
-        'PASSWORD': 'password',
+        'PASSWORD': 'PIZZA3',
         'HOST': 'localhost',
         'PORT': '5432',
     }
