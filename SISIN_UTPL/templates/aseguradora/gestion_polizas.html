@@ -1,0 +1,227 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Pólizas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="header-left">
+            <div class="brand"><span class="material-symbols-outlined brand-icon" style="font-size:28px;">shield_person</span> Asesora Seguros</div>
+            <nav class="nav-links">
+                <a href="{% url 'aseguradora:dashboard_aseguradora' %}" class="nav-link">Inicio</a>
+                <a href="{% url 'aseguradora:bandeja_siniestros' %}" class="nav-link">Siniestros</a>
+                <a href="#" class="nav-link active">Pólizas</a>
+            </nav>
+        </div>
+        <div class="header-right">
+            <div style="text-align:right; font-size:0.85rem;">
+                <p style="font-weight:600; margin:0;">Camila Rodríguez</p>
+                <p style="color:var(--text-muted); margin:0; font-size:0.75rem;">Administradora</p>
+            </div>
+            <img src="https://ui-avatars.com/api/?name=Camila+R&background=0D8ABC&color=fff" class="user-avatar">
+        </div>
+    </header>
+
+    <main class="app-content">
+        
+        <div class="form-card" style="padding: 1.5rem; flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size:1.5rem; font-weight:800; margin:0;">Gestión de Pólizas</h1>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.25rem;">Administra tus siniestros y pólizas activas.</p>
+            </div>
+            
+            <div class="policy-header-actions">
+                <div class="search-input-lg">
+                    <span class="material-symbols-outlined">search</span>
+                    <input type="text" placeholder="Buscar por nº póliza, cliente o ramo...">
+                </div>
+                <button class="btn-add">
+                    <span class="material-symbols-outlined">add</span> Crear Póliza
+                </button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nº Póliza</th>
+                            <th>Ramo</th>
+                            <th>Vigencia</th>
+                            <th>Costo</th>
+                            <th align="center">PDF</th>
+                            <th align="center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-family:monospace; font-weight:500;">
+                                POL-2023-8842 <span class="pill pill-green" style="margin-left:0.5rem;">Activa</span>
+                            </td>
+                            <td><div class="icon-row"><span class="material-symbols-outlined text-primary">directions_car</span> Automóvil</div></td>
+                            <td style="color:var(--text-muted);">01 Ene 2023 - 01 Ene 2024</td>
+                            <td style="font-weight:700;">$500.00 USD</td>
+                            <td align="center"><span class="material-symbols-outlined" style="color:var(--text-muted); cursor:pointer;">description</span></td>
+                            <td align="center">
+                                <div class="action-group">
+                                    <div class="btn-icon-circle"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></div>
+                                    <div class="btn-icon-circle delete"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-family:monospace; font-weight:500;">
+                                POL-2023-1293 <span class="pill pill-amber" style="margin-left:0.5rem;">Por Vencer</span>
+                            </td>
+                            <td><div class="icon-row"><span class="material-symbols-outlined text-pink">medical_services</span> Salud</div></td>
+                            <td style="color:var(--text-muted);">15 Feb 2023 - 15 Feb 2024</td>
+                            <td style="font-weight:700;">$1,200.00 USD</td>
+                            <td align="center"><span class="material-symbols-outlined" style="color:var(--text-muted); cursor:pointer;">description</span></td>
+                            <td align="center">
+                                <div class="action-group">
+                                    <div class="btn-icon-circle"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></div>
+                                    <div class="btn-icon-circle delete"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-family:monospace; font-weight:500;">
+                                POL-2023-4421 <span class="pill pill-green" style="margin-left:0.5rem;">Activa</span>
+                            </td>
+                            <td><div class="icon-row"><span class="material-symbols-outlined text-orange">home</span> Hogar</div></td>
+                            <td style="color:var(--text-muted);">10 Mar 2023 - 10 Mar 2024</td>
+                            <td style="font-weight:700;">$350.00 USD</td>
+                            <td align="center"><span class="material-symbols-outlined text-primary" style="cursor:pointer;">description</span></td>
+                            <td align="center">
+                                <div class="action-group">
+                                    <div class="btn-icon-circle"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></div>
+                                    <div class="btn-icon-circle delete"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-family:monospace; font-weight:500;">
+                                POL-2022-9912 <span class="pill pill-red" style="margin-left:0.5rem;">Vencida</span>
+                            </td>
+                            <td><div class="icon-row"><span class="material-symbols-outlined text-purple">favorite</span> Vida</div></td>
+                            <td style="color:var(--text-muted);">01 Abr 2022 - 01 Abr 2023</td>
+                            <td style="font-weight:700;">$800.00 USD</td>
+                            <td align="center"><span class="material-symbols-outlined" style="color:var(--text-muted); cursor:pointer;">description</span></td>
+                            <td align="center">
+                                <div class="action-group">
+                                    <div class="btn-icon-circle"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></div>
+                                    <div class="btn-icon-circle delete"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <span>Mostrando 1 a 4 de 24 resultados</span>
+                <div style="display:flex; gap:0.5rem;">
+                    <button class="page-btn">Anterior</button>
+                    <button class="page-btn">Siguiente</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <div class="form-header">
+                <h2><div class="fh-icon"><span class="material-symbols-outlined" style="font-size:18px;">edit_document</span></div> Crear / Editar Póliza</h2>
+                <button class="btn-icon-circle"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            
+            <div class="policy-form-grid">
+                <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ramo</label>
+                            <div class="input-wrapper">
+                                <select class="form-input" style="appearance:none;">
+                                    <option>Automóvil</option>
+                                    <option>Vida</option>
+                                    <option>Hogar</option>
+                                    <option>Salud</option>
+                                </select>
+                                <span class="material-symbols-outlined" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--text-muted);">expand_more</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Número de Póliza</label>
+                            <input type="text" class="form-input" placeholder="Ej. POL-2024-XXXX" style="padding-left:1rem;">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Vigencia (Inicio - Fin)</label>
+                            <div class="date-range">
+                                <input type="date" class="form-input" style="padding-left:1rem;">
+                                <span>-</span>
+                                <input type="date" class="form-input" style="padding-left:1rem;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Monto (Costo)</label>
+                            <div class="input-wrapper">
+                                <span style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--text-muted); font-weight:600;">$</span>
+                                <input type="number" class="form-input" placeholder="0.00" style="padding-left:2rem;">
+                                <span style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.8rem;">USD</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="deductible-header">
+                            <h3 style="font-size:1rem; font-weight:700;">Tabla de Deducibles</h3>
+                            <button style="color:var(--primary); background:none; border:none; font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:0.25rem; cursor:pointer;">
+                                <span class="material-symbols-outlined" style="font-size:16px;">add</span> Añadir Deducible
+                            </button>
+                        </div>
+                        <table class="mini-table">
+                            <thead><tr><th>Concepto</th><th>Monto</th><th align="right">Acción</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td>Daños a terceros</td>
+                                    <td style="font-family:monospace;">5%</td>
+                                    <td align="right"><span class="material-symbols-outlined" style="color:#ef4444; font-size:18px; cursor:pointer;">remove_circle</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Robo total</td>
+                                    <td style="font-family:monospace;">10%</td>
+                                    <td align="right"><span class="material-symbols-outlined" style="color:#ef4444; font-size:18px; cursor:pointer;">remove_circle</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="form-sidebar">
+                    <div class="form-group">
+                        <label>Adjuntar Póliza (PDF)</label>
+                        <div class="upload-zone" style="min-height:180px; padding:1.5rem;">
+                            <span class="material-symbols-outlined" style="font-size:2.5rem; color:var(--text-muted); margin-bottom:0.5rem;">upload_file</span>
+                            <p style="color:var(--primary); font-weight:600; font-size:0.9rem; margin:0;">Haz clic para subir</p>
+                            <p style="color:var(--text-muted); font-size:0.75rem; margin:0;">o arrastra y suelta el PDF</p>
+                        </div>
+                    </div>
+
+                    <div class="form-actions-bottom">
+                        <button class="btn-submit">Guardar Cambios</button>
+                        <button class="btn-cancel-lg">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</body>
+</html>

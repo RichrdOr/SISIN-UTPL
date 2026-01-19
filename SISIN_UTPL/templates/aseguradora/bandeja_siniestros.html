@@ -1,0 +1,80 @@
+{% extends 'aseguradora/base_asesor.html' %}
+{% load static %}
+
+{% block title %}Bandeja de Siniestros{% endblock %}
+
+{% block content %}
+<main class="app-content">
+    <!-- HEADER PAGINA -->
+    <div class="page-header flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold">Bandeja de Siniestros</h1>
+            <p class="text-slate-500">Gestión de casos recientes.</p>
+        </div>
+        <a href="{% url 'aseguradora:bandeja_siniestros' %}" class="btn-primary-lg flex items-center gap-1">
+            <span class="material-symbols-outlined">add</span> Nuevo Siniestro
+        </a>
+    </div>
+
+    <!-- FILTROS / CHIPS -->
+    <div class="chips-row flex gap-2 mb-4">
+        <button class="chip {% if filtro == 'todos' %}active{% endif %}">
+            <span class="material-symbols-outlined text-[18px]">table_rows</span> Todos
+        </button>
+        <button class="chip critical {% if filtro == 'criticos' %}active{% endif %}">
+            <span class="material-symbols-outlined text-[18px] text-red-600">warning</span> Críticos
+        </button>
+        <button class="chip {% if filtro == 'autos' %}active{% endif %}">
+            <span class="material-symbols-outlined text-[18px]">directions_car</span> Autos
+        </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-container">
+        <div class="table-toolbar flex justify-between mb-2">
+            <input type="text" class="search-input" placeholder="Buscar caso..." style="width:300px;">
+            <button class="chip">Exportar</button>
+        </div>
+        <div class="table-scroll">
+            <table class="w-full text-left">
+                <thead>
+                    <tr>
+                        <th>Nº Caso</th>
+                        <th>Asegurado</th>
+                        <th>Tipo</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-center">Vencimiento</th>
+                        <th class="text-right">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for siniestro in siniestros %}
+                    <tr>
+                        <td class="font-mono">#{{ siniestro.numero_siniestro }}</td>
+                        <td>{{ siniestro.reclamante_nombre }}</td>
+                        <td>{{ siniestro.tipo_bien }}</td>
+                        <td class="text-center">
+                            <span class="pill {% if siniestro.estado == 'creado' %}pill-blue{% elif siniestro.estado == 'en_proceso' %}pill-yellow{% elif siniestro.estado == 'cerrado' %}pill-green{% endif %}">
+                                {{ siniestro.estado|title }}
+                            </span>
+                        </td>
+                        <td class="text-center font-bold {% if siniestro.vencido %}text-red-600{% else %}text-green-600{% endif %}">
+                            {{ siniestro.tiempo_restante }}
+                        </td>
+                        <td class="text-right">
+                            <a href="{% url 'aseguradora:detalle_siniestro' siniestro.id %}" class="btn-action-fill">Gestionar</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-slate-500 py-4">
+                            No hay siniestros registrados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+{% endblock %}

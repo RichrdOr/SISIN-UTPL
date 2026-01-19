@@ -1,0 +1,141 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Liquidación Siniestro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="header-left">
+            <div class="brand"><span class="material-symbols-outlined brand-icon" style="font-size:28px;">shield_person</span> Gestión Siniestros</div>
+            <nav class="nav-links">
+                <a href="{% url 'dashboard_aseguradora' %}" class="nav-link">Inicio</a>
+                <a href="{% url 'bandeja_siniestros' %}" class="nav-link active">Siniestros</a>
+                <a href="{% url 'gestion_polizas' %}" class="nav-link">Pólizas</a>
+            </nav>
+        </div>
+        <div class="header-right">
+            <input type="text" class="search-input" placeholder="Buscar...">
+            <img src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" class="user-avatar">
+        </div>
+    </header>
+
+    <main class="app-content" style="max-width:1200px;">
+        
+        <div class="breadcrumbs">
+            <a href="{% url 'bandeja_siniestros' %}" class="bc-link">Inicio</a> / 
+            <a href="{% url 'bandeja_siniestros' %}" class="bc-link">Siniestros</a> / 
+            <span class="bc-current">Liquidación</span>
+        </div>
+
+        <div class="page-header" style="align-items:flex-end;">
+            <div>
+                <div style="display:flex; align-items:center; gap:1rem; margin-bottom:0.5rem;">
+                    <h1 style="margin:0;">Liquidación del Siniestro</h1>
+                    <span class="status-badge" style="background:#fef3c7; color:#b45309;">En Revisión</span>
+                </div>
+                <p>Complete los valores finales y adjunte el finiquito.</p>
+            </div>
+            <div style="font-size:0.875rem; color:#9ca3af;">Última actualización: Hoy, 10:42 AM</div>
+        </div>
+
+        <div class="liquidation-grid">
+            
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                
+                <div class="financial-card">
+                    <div class="fc-header"><span class="material-symbols-outlined" style="color:var(--primary);">payments</span> Detalles Económicos</div>
+                    <div class="fc-body">
+                        <div class="form-group">
+                            <label>Valor Proforma ($)</label>
+                            <div class="money-input-group">
+                                <span class="money-symbol">$</span>
+                                <input type="number" class="input-lg" value="1250.00">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Valor Aprobado ($)</label>
+                            <div class="money-input-group">
+                                <span class="money-symbol">$</span>
+                                <input type="number" class="input-lg" value="1000.00" style="color:var(--primary);">
+                            </div>
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>Deducible</label>
+                            <div class="input-wrapper">
+                                <span class="material-symbols-outlined input-icon">filter_list</span>
+                                <select class="custom-select">
+                                    <option>10% del valor del siniestro</option>
+                                    <option>Fijo $100.00</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div style="grid-column: span 2; border-top:1px dashed #e5e7eb; margin:0.5rem 0;"></div>
+
+                        <div class="total-card">
+                            <span class="total-label">Total a Pagar (Aseguradora)</span>
+                            <span class="total-value">$900.00</span>
+                        </div>
+                        <div class="copay-card">
+                            <span class="material-symbols-outlined copay-bg-icon">warning</span>
+                            <span class="total-label" style="color:#ea580c;">Copago Usuario</span>
+                            <span class="copay-value">$350.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="financial-card" style="flex:1;">
+                    <div class="fc-header"><span class="material-symbols-outlined" style="color:var(--primary);">folder_open</span> Documentación de Respaldo</div>
+                    <div style="padding:2rem;">
+                        <div class="upload-zone">
+                            <span class="material-symbols-outlined upload-icon-lg">cloud_upload</span>
+                            <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.5rem;">Subir Finiquito Firmado</h3>
+                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Arrastre su archivo aquí o haga clic para buscar.</p>
+                            <button class="btn-outline" style="color:var(--primary); border-color:var(--primary);">Seleccionar archivo</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                
+                <div class="summary-card">
+                    <h4 style="font-size:0.875rem; font-weight:700; color:#9ca3af; text-transform:uppercase; margin-bottom:1rem;">Resumen del Caso</h4>
+                    <div class="summary-item"><span class="sum-label">Asegurado</span><span class="sum-val">Juan Pérez</span></div>
+                    <div class="summary-item"><span class="sum-label">Póliza</span><span class="sum-val">AUTO-55920</span></div>
+                    <div class="summary-item"><span class="sum-label">Fecha</span><span class="sum-val">12/10/2023</span></div>
+                    <div class="summary-item"><span class="sum-label">Tipo</span><span class="sum-val">Choque Simple</span></div>
+                </div>
+
+                <div class="action-sticky">
+                    <h4 style="font-size:1.1rem; font-weight:800; margin-bottom:0.5rem;">Finalizar Liquidación</h4>
+                    <p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:1.5rem;">Se notificará al cliente y se enviará a pago.</p>
+                    
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="confirm" style="margin-top:4px;">
+                        <label for="confirm" style="font-size:0.875rem; line-height:1.4;">Confirmo que los valores coinciden con el finiquito adjunto.</label>
+                    </div>
+
+                    <button class="btn-register-lg" onclick="window.location.href='{% url 'cerrar_siniestro' %}'">
+                        Registrar Liquidación <span class="material-symbols-outlined">check_circle</span>
+                    </button>
+                    
+                    <div style="text-align:center; margin-top:1rem;">
+                        <a href="#" style="font-size:0.875rem; color:var(--text-muted); text-decoration:underline;">Guardar borrador</a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>

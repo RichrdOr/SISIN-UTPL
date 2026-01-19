@@ -1,0 +1,195 @@
+{% extends "asesora/base.html" %}
+{% load static %}
+
+{% block title %}Detalle de Siniestro{% endblock %}
+{% block header %}Detalle del Siniestro{% endblock %}
+
+{% block content %}
+
+<div class="space-y-6">
+
+  <!-- HEADER -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <a href="{% url 'siniestros' %}"
+         class="p-2 hover:bg-accent rounded-lg">
+        ←
+      </a>
+      <div>
+        <h2 class="text-xl font-semibold">Detalle del Siniestro</h2>
+        <p class="text-muted-foreground text-sm">
+          {{ siniestro.id }}
+        </p>
+      </div>
+    </div>
+
+    <button
+      class="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-lg">
+      📧 Enviar información a aseguradora
+    </button>
+  </div>
+
+  <!-- TIMELINE ESTADOS -->
+  <div class="bg-card rounded-lg border p-8">
+    <div class="relative flex items-center justify-between">
+
+      <!-- Línea base -->
+      <div class="absolute top-6 left-0 right-0 h-1 bg-muted -z-10"></div>
+
+      <!-- Línea progreso -->
+      <div class="absolute top-6 left-0 h-1 bg-green-600 -z-10"
+           style="width: {{ progreso_estado }}%;">
+      </div>
+
+      {% for estado in estados %}
+      <div class="flex flex-col items-center">
+        <div
+          class="w-12 h-12 rounded-full flex items-center justify-center
+                 {% if estado.activo %}
+                   bg-green-600 text-white scale-110
+                 {% else %}
+                   bg-muted text-muted-foreground
+                 {% endif %}">
+          {{ estado.icono }}
+        </div>
+
+        <div class="mt-3 text-sm">
+          {{ estado.nombre }}
+        </div>
+
+        {% if estado.actual %}
+        <div class="mt-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+          Actual
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+    </div>
+  </div>
+
+  <!-- INFO GENERAL + RECLAMANTE -->
+  <div class="grid grid-cols-2 gap-6">
+
+    <!-- INFO GENERAL -->
+    <div class="bg-card rounded-lg border p-6">
+      <h3 class="mb-4 pb-3 border-b">📋 Información General</h3>
+
+      <div class="space-y-3 text-sm">
+        <div>
+          <span class="text-muted-foreground">Nº Siniestro</span>
+          <p>{{ siniestro.id }}</p>
+        </div>
+        <div>
+          <span class="text-muted-foreground">Póliza</span>
+          <p>{{ siniestro.poliza }}</p>
+        </div>
+        <div>
+          <span class="text-muted-foreground">Bien Asegurado</span>
+          <p>{{ siniestro.bien }}</p>
+        </div>
+        <div>
+          <span class="text-muted-foreground">Tipo de Evento</span>
+          <p>{{ siniestro.tipo_evento }}</p>
+        </div>
+        <div>
+          <span class="text-muted-foreground">Ubicación</span>
+          <p>{{ siniestro.ubicacion }}</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <span class="text-muted-foreground">Fecha Ocurrencia</span>
+            <p>{{ siniestro.fecha_ocurrencia }}</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Fecha Reporte</span>
+            <p>{{ siniestro.fecha_reporte }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECLAMANTE -->
+    <div class="bg-card rounded-lg border p-6">
+      <h3 class="mb-4 pb-3 border-b">👤 Reclamante</h3>
+
+      <div class="space-y-3 text-sm">
+        <div>
+          <span class="text-muted-foreground">Nombre</span>
+          <p>{{ siniestro.reclamante.nombre }}</p>
+        </div>
+        <div>
+          <span class="text-muted-foreground">Email</span>
+          <p>{{ siniestro.reclamante.email }}</p>
+        </div>
+        <div>
+          <span class="text-muted-foreground">Teléfono</span>
+          <p>{{ siniestro.reclamante.telefono }}</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- DESCRIPCIÓN -->
+  <div class="bg-card rounded-lg border p-6">
+    <h3 class="mb-4 pb-3 border-b">📝 Descripción del Evento</h3>
+    <p class="leading-relaxed">
+      {{ siniestro.descripcion }}
+    </p>
+  </div>
+
+  <!-- MONTOS + DOCUMENTOS -->
+  <div class="grid grid-cols-2 gap-6">
+
+    <!-- MONTOS -->
+    <div class="bg-card rounded-lg border p-6">
+      <h3 class="mb-4 pb-3 border-b">💰 Montos</h3>
+
+      <div class="space-y-4 text-sm">
+        <div class="flex justify-between p-3 bg-muted rounded-lg">
+          <span>Monto Reclamado</span>
+          <span>{{ siniestro.monto_reclamado }}</span>
+        </div>
+        <div class="flex justify-between p-3 bg-red-50 text-red-700 rounded-lg">
+          <span>Deducible</span>
+          <span>- {{ siniestro.deducible }}</span>
+        </div>
+        <div class="flex justify-between p-3 bg-green-50 text-green-700 rounded-lg">
+          <span>Monto Aprobado</span>
+          <span>{{ siniestro.monto_aprobado }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCUMENTOS -->
+    <div class="bg-card rounded-lg border p-6">
+      <h3 class="mb-4 pb-3 border-b">📁 Documentos</h3>
+
+      <div class="space-y-2">
+        {% for doc in siniestro.documentos %}
+        <div class="flex items-center justify-between p-3 hover:bg-muted rounded-lg">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              📄
+            </div>
+            <div>
+              <div class="text-sm">{{ doc.nombre }}</div>
+              <div class="text-xs text-muted-foreground">{{ doc.archivo }}</div>
+            </div>
+          </div>
+
+          <a href="{{ doc.url }}"
+             class="p-2 hover:bg-primary hover:text-primary-foreground rounded-lg">
+            ⬇
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

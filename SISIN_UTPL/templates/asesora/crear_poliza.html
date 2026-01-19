@@ -1,0 +1,333 @@
+{% extends "asesora/base.html" %}
+{% load static %}
+
+{% block title %}Crear Póliza{% endblock %}
+{% block header %}Crear Nueva Póliza{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-8">
+<form method="post" class="space-y-6" id="poliza-form">
+  {% csrf_token %}
+
+  <!-- Encabezado -->
+  <div class="flex items-center gap-4">
+    <a href="{% url 'ver_polizas' %}" class="p-2 hover:bg-accent rounded-lg">←</a>
+    <div>
+      <h2 class="text-xl font-semibold">Crear Nueva Póliza</h2>
+      <p class="text-muted-foreground text-sm">
+        Ingrese la información general de la póliza
+      </p>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 1: DATOS DE LA PÓLIZA -->
+  <div class="bg-card rounded-lg border p-6">
+    <h3 class="mb-4 pb-3 border-b font-medium">📄 Datos de la Póliza</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="block text-sm mb-2">Nro. Póliza</label>
+        <input name="numero_poliza" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="POL-000123" required />
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Aseguradora</label>
+        <input name="aseguradora" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Nombre de la aseguradora" required />
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Fecha de Emisión</label>
+        <input type="date" name="fecha_emision" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required />
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Fecha Inicio</label>
+        <input type="date" name="fecha_inicio" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required />
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Fecha Fin</label>
+        <input type="date" name="fecha_fin" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required />
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Total Prima</label>
+        <input type="number" step="0.01" name="total_prima" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00" required />
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 2: BIEN ASEGURADO -->
+  <div class="bg-card rounded-lg border p-6">
+    <h3 class="mb-4 pb-3 border-b font-medium">🏠 Bien Asegurado</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="col-span-1 md:col-span-2">
+        <label class="block text-sm mb-2">Descripción del Bien</label>
+        <textarea name="descripcion_bien" rows="3" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Descripción detallada del bien asegurado..." required></textarea>
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Tipo de Bien</label>
+        <select name="tipo_bien" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required>
+          <option value="">Seleccione</option>
+          <option value="Residencial">Residencial</option>
+          <option value="Comercial">Comercial</option>
+          <option value="Industrial">Industrial</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Zona / Ubicación</label>
+        <input name="zona" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ciudad / Sector" required />
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Valor del Bien</label>
+        <input type="number" step="0.01" name="valor_bien" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00" required />
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 3: RAMOS -->
+  <div class="bg-card rounded-lg border p-6">
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">📊</span>
+        <h3 class="font-semibold text-lg">Ramos de la Póliza</h3>
+      </div>
+      <button type="button" id="add-ramo-btn" class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition">
+        <span>+</span> Agregar Ramo
+      </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full border-separate border-spacing-y-2">
+        <thead>
+          <tr class="bg-muted/30">
+            <th class="p-3 text-sm text-left">Grupo</th>
+            <th class="p-3 text-sm text-left">Subgrupo</th>
+            <th class="p-3 text-sm text-left">Ramo</th>
+            <th class="p-3 text-sm text-left">Suma Asegurada</th>
+            <th class="p-3 text-sm text-left">Deducible %</th>
+            <th class="p-3 text-sm text-center">Acción</th>
+          </tr>
+        </thead>
+        <tbody id="ramos-container">
+          <tr class="ramo-form bg-white">
+            <td class="p-1"><input name="ramos-0-grupo" class="w-full px-2 py-1 border rounded text-sm" required></td>
+            <td class="p-1"><input name="ramos-0-subgrupo" class="w-full px-2 py-1 border rounded text-sm"></td>
+            <td class="p-1"><input name="ramos-0-ramo" class="w-full px-2 py-1 border rounded text-sm" required></td>
+            <td class="p-1"><input type="number" step="0.01" name="ramos-0-suma_asegurada" class="w-full px-2 py-1 border rounded text-sm" required></td>
+            <td class="p-1"><input type="number" step="0.01" name="ramos-0-deducible" class="w-full px-2 py-1 border rounded text-sm"></td>
+            <td class="p-2 text-center">
+              <button type="button" class="delete-ramo-btn text-red-600 hover:bg-red-50 p-1 rounded">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 4: PDF Y DEDUCIBLES -->
+  <div class="bg-card rounded-lg border p-6">
+    <h3 class="mb-4 pb-3 border-b font-medium">📎 Documentos y Deducibles</h3>
+    
+    <!-- PDF Upload -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium mb-2">PDF de la Póliza</label>
+      <div class="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
+        <i data-lucide="upload" class="w-12 h-12 mx-auto mb-4 text-muted-foreground"></i>
+        <p class="text-sm text-muted-foreground mb-2">Arrastra y suelta el PDF aquí o haz clic para seleccionar</p>
+        <input type="file" name="pdf_file" accept=".pdf" class="hidden" id="pdfInput">
+        <button type="button" onclick="document.getElementById('pdfInput').click()"
+                class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition">
+          Seleccionar Archivo
+        </button>
+        <div id="pdfFileName" class="mt-2 text-sm text-muted-foreground"></div>
+      </div>
+    </div>
+
+    <!-- Tabla de Deducibles -->
+    <div>
+      <label class="block text-sm font-medium mb-4">Tabla de Deducibles</label>
+      <div class="overflow-x-auto">
+        <table class="w-full border-separate border-spacing-y-2">
+          <thead>
+            <tr class="bg-muted/30">
+              <th class="p-3 text-sm text-left">CONCEPTO</th>
+              <th class="p-3 text-sm text-left">MONTO</th>
+              <th class="p-3 text-sm text-center">ACCIÓN</th>
+            </tr>
+          </thead>
+          <tbody id="deduciblesTable">
+            <tr class="bg-white">
+              <td class="px-4 py-3">
+                <input type="text" name="concepto_0" placeholder="Concepto" class="w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-primary">
+              </td>
+              <td class="px-4 py-3">
+                <input type="text" name="monto_0" placeholder="Monto o %" class="w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-primary">
+              </td>
+              <td class="px-4 py-3 text-center">
+                <button onclick="removeDeducible(this)" class="p-1 hover:bg-accent rounded transition-colors">
+                  <i data-lucide="trash-2" class="w-4 h-4 text-red-600"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" onclick="addDeducible()" 
+              class="mt-4 flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-primary-foreground transition">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Añadir Deducible
+      </button>
+    </div>
+  </div>
+
+  <!-- BOTONES -->
+  <div class="flex justify-end gap-4">
+    <a href="{% url 'ver_polizas' %}" class="px-6 py-3 border rounded-lg hover:bg-accent transition">Cancelar</a>
+    <button type="submit" class="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition">
+      Guardar Póliza
+    </button>
+  </div>
+</form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let ramosCount = 1;
+let deduciblesCount = 1;
+
+// Agregar ramo
+document.getElementById('add-ramo-btn').addEventListener('click', function() {
+  const tbody = document.getElementById('ramos-container');
+  const newRow = document.createElement('tr');
+  newRow.className = 'ramo-form bg-white';
+  newRow.innerHTML = `
+    <td class="p-1"><input name="ramos-${ramosCount}-grupo" class="w-full px-2 py-1 border rounded text-sm" required></td>
+    <td class="p-1"><input name="ramos-${ramosCount}-subgrupo" class="w-full px-2 py-1 border rounded text-sm"></td>
+    <td class="p-1"><input name="ramos-${ramosCount}-ramo" class="w-full px-2 py-1 border rounded text-sm" required></td>
+    <td class="p-1"><input type="number" step="0.01" name="ramos-${ramosCount}-suma_asegurada" class="w-full px-2 py-1 border rounded text-sm" required></td>
+    <td class="p-1"><input type="number" step="0.01" name="ramos-${ramosCount}-deducible" class="w-full px-2 py-1 border rounded text-sm"></td>
+    <td class="p-2 text-center">
+      <button type="button" class="delete-ramo-btn text-red-600 hover:bg-red-50 p-1 rounded">🗑️</button>
+    </td>
+  `;
+  tbody.appendChild(newRow);
+  ramosCount++;
+});
+
+// Eliminar ramo
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('delete-ramo-btn')) {
+    e.target.closest('tr').remove();
+  }
+});
+
+// Funciones para deducibles
+function addDeducible() {
+  const tbody = document.getElementById('deduciblesTable');
+  const newRow = document.createElement('tr');
+  newRow.className = 'bg-white';
+  newRow.innerHTML = `
+    <td class="px-4 py-3">
+      <input type="text" name="concepto_${deduciblesCount}" placeholder="Concepto" class="w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-primary">
+    </td>
+    <td class="px-4 py-3">
+      <input type="text" name="monto_${deduciblesCount}" placeholder="Monto o %" class="w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-primary">
+    </td>
+    <td class="px-4 py-3 text-center">
+      <button onclick="removeDeducible(this)" class="p-1 hover:bg-accent rounded transition-colors">
+        <i data-lucide="trash-2" class="w-4 h-4 text-red-600"></i>
+      </button>
+    </td>
+  `;
+  tbody.appendChild(newRow);
+  deduciblesCount++;
+  setTimeout(() => lucide.createIcons(), 50);
+}
+
+function removeDeducible(button) {
+  button.closest('tr').remove();
+}
+
+// PDF file selection
+document.getElementById('pdfInput').addEventListener('change', function(e) {
+  const fileName = e.target.files[0]?.name || '';
+  document.getElementById('pdfFileName').textContent = fileName ? `Archivo seleccionado: ${fileName}` : '';
+});
+
+// Form submission
+document.getElementById('poliza-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(this);
+  
+  // Agregar PDF file si está seleccionado
+  const pdfFile = document.getElementById('pdfInput').files[0];
+  if (pdfFile) {
+    formData.append('pdf_file', pdfFile);
+  }
+  
+  // Agregar datos de deducibles
+  const deducibles = [];
+  for (let i = 0; i < deduciblesCount; i++) {
+    const concepto = document.querySelector(`[name="concepto_${i}"]`);
+    const monto = document.querySelector(`[name="monto_${i}"]`);
+    if (concepto && monto && concepto.value && monto.value) {
+      deducibles.push({
+        concepto: concepto.value,
+        monto: monto.value
+      });
+    }
+  }
+  formData.append('deducibles', JSON.stringify(deducibles));
+  
+  // Enviar al backend
+  fetch('/polizas/crear/', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken')
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Póliza creada exitosamente');
+      window.location.href = '/polizas/polizas/';
+    } else {
+      alert('Error: ' + data.message);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error al crear la póliza');
+  });
+});
+
+// CSRF token function
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Initialize Lucide icons
+document.addEventListener('DOMContentLoaded', function() {
+  lucide.createIcons();
+});
+</script>
+{% endblock %}

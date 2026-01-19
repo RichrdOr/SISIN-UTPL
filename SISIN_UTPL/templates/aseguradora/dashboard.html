@@ -1,0 +1,177 @@
+{% extends 'aseguradora/base_asesor.html' %}
+{% load static %}
+
+{% block title %}Dashboard Asesora{% endblock %}
+
+{% block content %}
+
+<main class="app-content">
+    
+    <div class="page-header">
+        <div>
+            <h1>Panel de Control</h1>
+            <p>Bienvenida. Aquí tienes un resumen de tus tareas y siniestros.</p>
+        </div>
+        <div style="font-size: 0.875rem; color: #9ca3af;">Última actualización: Hoy, 09:41 AM</div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-head">
+                <span class="stat-title">Siniestros Nuevos</span>
+                <span class="material-symbols-outlined icon-box ib-blue">new_releases</span>
+            </div>
+            <div class="stat-value">{{ kpis.nuevos }}</div>
+            <div class="stat-sub" style="color: #16a34a;">
+                <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span> +3 hoy
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-head">
+                <span class="stat-title">En Proceso</span>
+                <span class="material-symbols-outlined icon-box ib-orange">pending_actions</span>
+            </div>
+            <div class="stat-value">{{ kpis.proceso }}</div>
+            <div class="stat-sub" style="color: #6b7280;">Requieren seguimiento</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-head">
+                <span class="stat-title">Liquidados</span>
+                <span class="material-symbols-outlined icon-box ib-purple">payments</span>
+            </div>
+            <div class="stat-value">{{ kpis.liquidados }}</div>
+            <div class="stat-sub" style="color: #6b7280;">Este mes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-head">
+                <span class="stat-title">Cerrados</span>
+                <span class="material-symbols-outlined icon-box ib-gray">check_circle</span>
+            </div>
+            <div class="stat-value">{{ kpis.cerrados }}</div>
+            <div class="stat-sub" style="color: #6b7280;">Total acumulado</div>
+        </div>
+    </div>
+
+    <div>
+        <h2 class="section-title">Acciones Rápidas</h2>
+        <div class="actions-grid">
+            <div class="action-card primary" onclick="window.location.href='{% url 'aseguradora:gestion_polizas' %}'">
+                <div class="ac-icon">
+                    <span class="material-symbols-outlined" style="font-size: 28px;">add_circle</span>
+                </div>
+                <div class="ac-content">
+                    <h3>Crear Póliza</h3>
+                    <p>Ingresar nueva póliza individual o colectiva al sistema.</p>
+                </div>
+            </div>
+            <div class="action-card" onclick="window.location.href='{% url "aseguradora:gestion_polizas" %}'">
+                <div class="ac-icon">
+                    <span class="material-symbols-outlined" style="font-size: 28px;">folder_open</span>
+                </div>
+                <div class="ac-content">
+                    <h3>Ver Pólizas</h3>
+                    <p>Consultar listado histórico y documentos asociados.</p>
+                </div>
+            </div>
+            <div class="action-card danger" onclick="window.location.href='{% url 'aseguradora:alertas' %}'">
+                <div class="ac-icon">
+                    <span class="material-symbols-outlined" style="font-size: 28px;">notifications_active</span>
+                </div>
+                <div class="ac-content">
+                    <h3>Alertas y Tareas</h3>
+                    <p>Renovaciones próximas y siniestros vencidos.</p>
+                </div>
+            </div>
+            <div class="action-card success" onclick="window.location.href='{% url 'aseguradora:crear_siniestro' %}'">
+                <div class="ac-icon">
+                    <span class="material-symbols-outlined" style="font-size: 28px;">add_box</span>
+                </div>
+                <div class="ac-content">
+                    <h3>Nuevo Siniestro</h3>
+                    <p>Registrar un nuevo siniestro en el sistema.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 class="section-title" style="margin:0;">Estado de Siniestros</h2>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="page-btn">Filtrar</button>
+                <button class="page-btn">Exportar</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="text-center">Estado</th>
+                            <th>ID Siniestro</th>
+                            <th>Cliente</th>
+                            <th>Tipo</th>
+                            <th>Monto</th>
+                            <th>Vencimiento</th>
+                            <th class="text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for siniestro in siniestros %}
+                        <tr>
+                            <td align="center">
+                                {% if siniestro.estado == 'reportado' %}
+                                    <div class="dot dot-red"></div>
+                                {% elif siniestro.estado == 'en_revision' %}
+                                    <div class="dot dot-yellow"></div>
+                                {% elif siniestro.estado == 'aprobado' %}
+                                    <div class="dot dot-green"></div>
+                                {% else %}
+                                    <div class="dot dot-gray"></div>
+                                {% endif %}
+                            </td>
+                            <td style="font-family: monospace;">{{ siniestro.numero_siniestro }}</td>
+                            <td>
+                                <div>{{ siniestro.reclamante_nombre }}</div>
+                                <small style="color:#6b7280;">Póliza: {{ siniestro.poliza.numero_poliza }}</small>
+                            </td>
+                            <td>{{ siniestro.tipo_bien }}</td>
+                            <td style="font-family: monospace;">${{ siniestro.monto|floatformat:2 }}</td>
+                            <td>
+                                {% if siniestro.fecha_cierre %}
+                                    {{ siniestro.fecha_cierre|date:"d M Y" }}
+                                {% else %}
+                                    Pendiente
+                                {% endif %}
+                            </td>
+                            <td align="right"><span class="btn-action">Gestionar</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" style="text-align:center;">No hay siniestros registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <span>Mostrando 1-{{ siniestros|length }} de {{ total_siniestros }}</span>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="page-btn">Anterior</button>
+                    <button class="page-btn">Siguiente</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-legend">
+            <div class="legend-item"><div class="dot-sm" style="background:#ef4444;"></div> Vencido / Urgente</div>
+            <div class="legend-item"><div class="dot-sm" style="background:#facc15;"></div> Por vencer (24h)</div>
+            <div class="legend-item"><div class="dot-sm" style="background:#22c55e;"></div> En tiempo</div>
+        </div>
+    </div>
+
+</main>
+
+{% endblock %}

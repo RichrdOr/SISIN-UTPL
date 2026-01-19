@@ -1,0 +1,94 @@
+{% extends 'asegurado/base_asegurado.html' %}
+{% load static %}
+
+{% block title %}Gestión de Siniestros del Asegurado{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+<div class="mb-4">
+  {% for message in messages %}
+  <div
+    class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="flex flex-col gap-8">
+
+  <!-- TITULO -->
+  <div class="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
+    <div>
+      <h1 class="text-3xl font-black text-slate-900">Dashboard de Reclamos</h1>
+      <p class="text-slate-500">Gestione y realice el seguimiento de sus siniestros.</p>
+    </div>
+
+    <a href="{% url 'crear_siniestro' %}"
+      class="flex items-center gap-2 rounded-lg h-11 px-6 bg-primary text-white font-bold shadow hover:opacity-90 transition">
+      <span class="material-symbols-outlined">add_circle</span>
+      Reportar Nuevo Reclamo
+    </a>
+  </div>
+
+  <!-- STATS -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="card">
+      <p class="label">Total Reclamos</p>
+      <p class="value">{{ stats.total }}</p>
+    </div>
+    <div class="card">
+      <p class="label">Creados</p>
+      <p class="value">{{ stats.creados }}</p>
+    </div>
+    <div class="card en-proceso">
+      <p class="label text-primary">En Proceso</p>
+      <p class="value">{{ stats.en_proceso }}</p>
+    </div>
+    <div class="card finalizado">
+      <p class="label text-green-600">Finalizados</p>
+      <p class="value">{{ stats.finalizados }}</p>
+    </div>
+  </div>
+
+  <!-- TABLA DE SINIESTROS -->
+  <div class="overflow-hidden rounded-xl border bg-white shadow-sm">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+        <tr>
+          <th class="px-6 py-4">Código</th>
+          <th class="px-6 py-4">Bien</th>
+          <th class="px-6 py-4">Fecha</th>
+          <th class="px-6 py-4">Estado</th>
+          <th class="px-6 py-4 text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        {% for siniestro in siniestros %}
+        <tr class="hover:bg-slate-50 transition">
+          <td class="px-6 py-4 font-medium">{{ siniestro.id }}</td>
+          <td class="px-6 py-4">{{ siniestro.tipo_bien }}</td>
+          <td class="px-6 py-4">{{ siniestro.fecha|date:"d/m/Y" }}</td>
+          <td class="px-6 py-4">{{ siniestro.estado }}</td>
+          <td class="px-6 py-4 text-right">
+            <a href="{% url 'detalle_siniestro' siniestro.id %}" class="text-primary hover:opacity-80">
+              <span class="material-symbols-outlined">visibility</span>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center py-6 text-slate-400">
+            No existen reclamos registrados
+          </td>
+        </tr>
+        {% endfor %}
+
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+{% endblock %}
