@@ -3,8 +3,10 @@
 {% block title %}Dashboard Gerencial{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-transparent dark:border-[#2a3441]">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-sm dark:shadow-none border border-transparent dark:border-[#2a3441]">
         <div class="flex items-center gap-2 mb-1">
             <span class="material-symbols-outlined text-[#606e8a] dark:text-[#9aa2b1] text-[20px]">folder_open</span>
             <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Total Siniestros</p>
@@ -12,7 +14,7 @@
         <p class="text-[#111318] dark:text-white text-2xl font-bold">{{ kpis.total }}</p>
     </div>
     
-    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-l-4 border-l-amber-400 border-y-transparent border-r-transparent dark:border-y-[#2a3441] dark:border-r-[#2a3441]">
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-sm dark:shadow-none border border-l-4 border-l-amber-400 border-y-transparent border-r-transparent dark:border-y-[#2a3441] dark:border-r-[#2a3441]">
         <div class="flex items-center gap-2 mb-1">
             <span class="material-symbols-outlined text-amber-500 text-[20px]">warning</span>
             <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Abiertos</p>
@@ -20,7 +22,7 @@
         <p class="text-[#111318] dark:text-white text-2xl font-bold">{{ kpis.abiertos }}</p>
     </div>
 
-    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-l-4 border-l-green-500 border-y-transparent border-r-transparent dark:border-y-[#2a3441] dark:border-r-[#2a3441]">
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-sm dark:shadow-none border border-l-4 border-l-green-500 border-y-transparent border-r-transparent dark:border-y-[#2a3441] dark:border-r-[#2a3441]">
         <div class="flex items-center gap-2 mb-1">
             <span class="material-symbols-outlined text-green-600 text-[20px]">check_circle</span>
             <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Cerrados</p>
@@ -28,8 +30,8 @@
         <p class="text-[#111318] dark:text-white text-2xl font-bold">{{ kpis.cerrados }}</p>
     </div>
 
-    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border 
-        {% if config.alerta_fuera_plazo and kpis.vencidos > 0 %}
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-sm dark:shadow-none border 
+        {% if config.alerta_fuera_plazo and kpis.hay_vencidos_reales %}
             border-l-4 border-l-red-600 animate-pulse bg-red-50 dark:bg-red-900/10
         {% else %}
             border-l-4 border-l-gray-300
@@ -45,9 +47,9 @@
                 </span>
                 <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">
                     {% if config.alerta_fuera_plazo %}
-                        Vencidos (> {{ config.dias_reporte_siniestro }} días)
+                        Vencidos
                     {% else %}
-                        Alerta Apagada
+                        Alerta Off
                     {% endif %}
                 </p>
             </div>
@@ -62,7 +64,7 @@
         </p>
     </div>
 
-    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-transparent dark:border-[#2a3441]">
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-sm dark:shadow-none border border-transparent dark:border-[#2a3441]">
         <div class="flex items-center gap-2 mb-1">
             <span class="material-symbols-outlined text-primary text-[20px]">attach_money</span>
             <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Monto Siniestros</p>
@@ -70,7 +72,7 @@
         <p class="text-[#111318] dark:text-white text-2xl font-bold">${{ kpis.monto_siniestros }}</p>
     </div>
 
-    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-transparent dark:border-[#2a3441]">
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-sm dark:shadow-none border border-transparent dark:border-[#2a3441]">
         <div class="flex items-center gap-2 mb-1">
             <span class="material-symbols-outlined text-primary text-[20px]">savings</span>
             <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Monto Pólizas</p>
@@ -80,7 +82,7 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="rounded-xl bg-white dark:bg-[#1e2430] p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-transparent dark:border-[#2a3441] flex flex-col">
+    <div class="rounded-xl bg-white dark:bg-[#1e2430] p-6 shadow-sm dark:shadow-none border border-transparent dark:border-[#2a3441] flex flex-col">
         <h3 class="text-[#111318] dark:text-white text-base font-bold mb-6">Estado General</h3>
         <div class="flex flex-1 items-center justify-center relative min-h-[200px]">
             <div class="relative size-40 rounded-full bg-[conic-gradient(var(--tw-gradient-stops))] from-green-500 via-amber-400 to-primary" style="--tw-gradient-stops: #22c55e 0% 70%, #fbbf24 70% 90%, #ef4444 90% 100%;">
@@ -92,11 +94,55 @@
         </div>
     </div>
 
-    <div class="rounded-xl bg-white dark:bg-[#1e2430] p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none border border-transparent dark:border-[#2a3441] flex flex-col lg:col-span-2">
-        <h3 class="text-[#111318] dark:text-white text-base font-bold mb-6">Comparativo Visual</h3>
-        <div class="flex items-center justify-center h-full text-gray-400 text-sm">
-            <p>Gráficos detallados disponibles en reporte completo.</p>
+    <div class="rounded-xl bg-white dark:bg-[#1e2430] p-6 shadow-sm dark:shadow-none border border-transparent dark:border-[#2a3441] flex flex-col lg:col-span-2">
+        <h3 class="text-[#111318] dark:text-white text-base font-bold mb-4">Evolución de Siniestros (Últimos 6 meses)</h3>
+        
+        <div class="relative w-full h-64">
+            <canvas id="siniestrosChart"></canvas>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('siniestrosChart').getContext('2d');
+        
+        // Datos que vienen desde Django
+        const labels = {{ chart_labels|safe }};
+        const data = {{ chart_data|safe }};
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels.length > 0 ? labels : ['Sin datos'], // Si no hay datos, muestra etiqueta vacía
+                datasets: [{
+                    label: 'Siniestros Reportados',
+                    data: data.length > 0 ? data : [0],
+                    backgroundColor: 'rgba(59, 130, 246, 0.8)', // Azul primary
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    barThickness: 40,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(156, 163, 175, 0.1)' },
+                        ticks: { stepSize: 1 }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}
