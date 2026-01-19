@@ -1,0 +1,207 @@
+{% extends 'gerencia/base_gerencia.html' %}
+
+{% block title %}Parámetros{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-8 pb-12">
+    
+    <div class="bg-white dark:bg-[#1a202c] rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+        <div class="px-6 py-4 border-b dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Parámetros de Deducibles</h3>
+        </div>
+        
+        <form method="POST" class="p-4 bg-blue-50 dark:bg-blue-900/20 grid grid-cols-1 md:grid-cols-6 gap-3 items-end border-b dark:border-gray-800">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="nueva_regla">
+            
+            <div class="md:col-span-1">
+                <label class="text-xs font-bold text-gray-500">Tipo Póliza</label>
+                <select name="tipo_poliza" class="w-full rounded border-gray-300 text-sm h-9 bg-white" required>
+                    <option value="" disabled selected>Seleccionar...</option>
+                    {% for tipo in tipos_poliza %}
+                        <option value="{{ tipo }}">{{ tipo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="md:col-span-2">
+                <label class="text-xs font-bold text-gray-500">Regla (Descripción)</label>
+                <input type="text" name="descripcion" placeholder="Ej: 10% del valor" class="w-full rounded border-gray-300 text-sm h-9" required>
+            </div>
+            <div class="md:col-span-1">
+                <label class="text-xs font-bold text-gray-500">Min (USD)</label>
+                <input type="number" name="minimo" placeholder="0.00" class="w-full rounded border-gray-300 text-sm h-9">
+            </div>
+            <div class="md:col-span-1">
+                <label class="text-xs font-bold text-gray-500">Max (USD)</label>
+                <input type="number" name="maximo" placeholder="0.00" class="w-full rounded border-gray-300 text-sm h-9">
+            </div>
+            <div class="md:col-span-1">
+                <button type="submit" class="w-full bg-primary hover:bg-blue-700 text-white h-9 rounded text-sm font-medium">
+                    + Agregar
+                </button>
+            </div>
+        </form>
+
+        <table class="w-full text-left text-sm">
+            <thead class="bg-white dark:bg-gray-800 text-gray-500">
+                <tr>
+                    <th class="px-6 py-3">Tipo</th>
+                    <th class="px-6 py-3">Regla</th>
+                    <th class="px-6 py-3">Mínimo</th>
+                    <th class="px-6 py-3">Máximo</th>
+                    <th class="px-6 py-3 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                {% for regla in reglas %}
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 group">
+                    <td class="px-6 py-3 font-medium">{{ regla.tipo_poliza }}</td>
+                    <td class="px-6 py-3">{{ regla.descripcion }}</td>
+                    <td class="px-6 py-3">${{ regla.minimo }}</td>
+                    <td class="px-6 py-3">${{ regla.maximo }}</td>
+                    <td class="px-6 py-3 text-right flex justify-end gap-2">
+                        <button type="button" onclick="abrirModal('{{ regla.id }}', '{{ regla.tipo_poliza }}', '{{ regla.descripcion }}', '{{ regla.minimo }}', '{{ regla.maximo }}')" 
+                                class="text-blue-500 hover:text-blue-700 p-1" title="Editar">
+                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                        </button>
+
+                        <form method="POST" onsubmit="return confirm('¿Eliminar regla?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="accion" value="eliminar_regla">
+                            <input type="hidden" name="regla_id" value="{{ regla.id }}">
+                            <button class="text-gray-400 hover:text-red-600 p-1" title="Eliminar">
+                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-6 py-4 text-center text-gray-400">No hay reglas definidas.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <form method="POST" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="guardar_general">
+
+        <div class="bg-white dark:bg-[#1a202c] rounded-xl shadow-sm border p-6 space-y-4">
+            <h3 class="font-bold text-lg dark:text-white border-b pb-2">Plazos Operativos</h3>
+            <div>
+                <label class="text-sm font-medium dark:text-gray-300">Días reporte siniestro</label>
+                <input name="dias_reporte" type="number" value="{{ config.dias_reporte_siniestro }}" class="w-full mt-1 rounded border-gray-300 h-10 px-3">
+            </div>
+            <div>
+                <label class="text-sm font-medium dark:text-gray-300">Días respuesta seguro</label>
+                <input name="dias_respuesta" type="number" value="{{ config.dias_respuesta_seguro }}" class="w-full mt-1 rounded border-gray-300 h-10 px-3">
+            </div>
+            <div>
+                <label class="text-sm font-medium dark:text-gray-300">Días pago máximo</label>
+                <input name="dias_pago" type="number" value="{{ config.dias_pago }}" class="w-full mt-1 rounded border-gray-300 h-10 px-3">
+            </div>
+        </div>
+
+        <div class="space-y-8">
+            <div class="bg-white dark:bg-[#1a202c] rounded-xl shadow-sm border p-6 space-y-4">
+                <h3 class="font-bold text-lg dark:text-white border-b pb-2">Parámetros de Descuentos</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-medium dark:text-gray-300">Desc. Pronto Pago (%)</label>
+                        <input name="descuento_valor" type="number" step="0.01" value="{{ config.descuento_pronto_pago }}" class="w-full mt-1 rounded border-gray-300 h-10 px-3">
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium dark:text-gray-300">Plazo (días)</label>
+                        <input name="descuento_plazo" type="number" value="{{ config.plazo_max_descuento }}" class="w-full mt-1 rounded border-gray-300 h-10 px-3">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-[#1a202c] rounded-xl shadow-sm border p-6">
+                <h3 class="font-bold text-lg dark:text-white border-b pb-4 mb-4">Alertas Activas</h3>
+                <label class="flex items-center gap-3 mb-3">
+                    <input type="checkbox" name="alerta_plazo" class="w-5 h-5 text-primary" {% if config.alerta_fuera_plazo %}checked{% endif %}>
+                    <span class="text-sm dark:text-gray-300">Alertar siniestros fuera de plazo</span>
+                </label>
+                <label class="flex items-center gap-3">
+                    <input type="checkbox" name="alerta_pagos" class="w-5 h-5 text-primary" {% if config.alerta_pagos_vencidos %}checked{% endif %}>
+                    <span class="text-sm dark:text-gray-300">Alertar pagos vencidos</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 flex justify-end">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold shadow-md flex items-center gap-2">
+                <span class="material-symbols-outlined">save</span> Guardar Cambios Generales
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="modalEditar" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white dark:bg-[#1a202c] w-full max-w-lg rounded-xl shadow-2xl p-6 transform transition-all scale-100">
+        <div class="flex justify-between items-center mb-4 border-b pb-2 dark:border-gray-700">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Editar Regla</h3>
+            <button onclick="cerrarModal()" class="text-gray-500 hover:text-red-500">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="editar_regla">
+            <input type="hidden" name="regla_id" id="modal_id">
+
+            <div>
+                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Tipo de Póliza</label>
+                <select name="tipo_poliza" id="modal_tipo" class="w-full rounded border-gray-300 h-10 bg-gray-50 dark:bg-gray-800 dark:border-gray-600" required>
+                    {% for tipo in tipos_poliza %}
+                        <option value="{{ tipo }}">{{ tipo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Descripción</label>
+                <input type="text" name="descripcion" id="modal_desc" class="w-full rounded border-gray-300 h-10 px-3 dark:bg-gray-800 dark:border-gray-600" required>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Mínimo</label>
+                    <input type="number" name="minimo" id="modal_min" class="w-full rounded border-gray-300 h-10 px-3 dark:bg-gray-800 dark:border-gray-600">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Máximo</label>
+                    <input type="number" name="maximo" id="modal_max" class="w-full rounded border-gray-300 h-10 px-3 dark:bg-gray-800 dark:border-gray-600">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t dark:border-gray-700">
+                <button type="button" onclick="cerrarModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg dark:text-gray-300 dark:hover:bg-gray-700">Cancelar</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function abrirModal(id, tipo, desc, min, max) {
+        // Llenar los campos del modal con los datos de la fila
+        document.getElementById('modal_id').value = id;
+        document.getElementById('modal_tipo').value = tipo;
+        document.getElementById('modal_desc').value = desc;
+        
+        // Convertir 'None' a vacío si es necesario
+        document.getElementById('modal_min').value = (min === 'None') ? '' : min;
+        document.getElementById('modal_max').value = (max === 'None') ? '' : max;
+
+        // Mostrar el modal
+        document.getElementById('modalEditar').classList.remove('hidden');
+    }
+
+    function cerrarModal() {
+        document.getElementById('modalEditar').classList.add('hidden');
+    }
+</script>
+{% endblock %}
