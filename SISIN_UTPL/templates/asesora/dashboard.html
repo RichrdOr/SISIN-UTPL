@@ -425,156 +425,181 @@ document.addEventListener('DOMContentLoaded', function() {
   Chart.defaults.font.family = 'system-ui, -apple-system, sans-serif';
   Chart.defaults.color = '#64748b';
   
-  // Datos desde Django
-  const chartEstadosData = {{ chart_estados|safe }};
-  const chartEvolucionData = {{ chart_evolucion|safe }};
-  const chartTiposData = {{ chart_tipos|safe }};
-  const chartMontosData = {{ chart_montos|safe }};
+  // Datos desde Django con valores por defecto
+  const chartEstadosData = {{ chart_estados|safe|default:'{"labels":[],"data":[],"colors":[]}' }};
+  const chartEvolucionData = {{ chart_evolucion|safe|default:'{"labels":[],"data":[]}' }};
+  const chartTiposData = {{ chart_tipos|safe|default:'{"labels":[],"data":[],"colors":[]}' }};
+  const chartMontosData = {{ chart_montos|safe|default:'{"labels":["Reclamado","Aprobado","Pagado"],"data":[0,0,0],"colors":["#0ea5e9","#22c55e","#16a34a"]}' }};
+  
+  // Verificar que Chart.js está cargado
+  if (typeof Chart === 'undefined') {
+    console.error('Chart.js no está cargado');
+    return;
+  }
   
   // Gráfico 1: Donut de Estados
-  new Chart(document.getElementById('chartEstados'), {
-    type: 'doughnut',
-    data: {
-      labels: chartEstadosData.labels,
-      datasets: [{
-        data: chartEstadosData.data,
-        backgroundColor: chartEstadosData.colors,
-        borderWidth: 2,
-        borderColor: '#ffffff'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            padding: 15,
-            usePointStyle: true
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage = ((context.parsed / total) * 100).toFixed(1);
-              return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+  const ctxEstados = document.getElementById('chartEstados');
+  if (ctxEstados && chartEstadosData.data && chartEstadosData.data.length > 0) {
+    new Chart(ctxEstados, {
+      type: 'doughnut',
+      data: {
+        labels: chartEstadosData.labels,
+        datasets: [{
+          data: chartEstadosData.data,
+          backgroundColor: chartEstadosData.colors,
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 15,
+              usePointStyle: true
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+              }
             }
           }
         }
       }
-    }
-  });
+    });
+  } else if (ctxEstados) {
+    ctxEstados.parentElement.innerHTML = '<p class="text-center text-muted-foreground py-8">No hay datos de estados disponibles</p>';
+  }
   
   // Gráfico 2: Línea de Evolución
-  new Chart(document.getElementById('chartEvolucion'), {
-    type: 'line',
-    data: {
-      labels: chartEvolucionData.labels,
-      datasets: [{
-        label: 'Siniestros Reportados',
-        data: chartEvolucionData.data,
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.4,
-        fill: true,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        pointBackgroundColor: '#3b82f6'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        }
+  const ctxEvolucion = document.getElementById('chartEvolucion');
+  if (ctxEvolucion && chartEvolucionData.data && chartEvolucionData.data.length > 0) {
+    new Chart(ctxEvolucion, {
+      type: 'line',
+      data: {
+        labels: chartEvolucionData.labels,
+        datasets: [{
+          label: 'Siniestros Reportados',
+          data: chartEvolucionData.data,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4,
+          fill: true,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#3b82f6'
+        }]
       },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: 1
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
           }
         }
       }
-    }
-  });
+    });
+  } else if (ctxEvolucion) {
+    ctxEvolucion.parentElement.innerHTML = '<p class="text-center text-muted-foreground py-8">No hay datos de evolución disponibles</p>';
+  }
   
   // Gráfico 3: Barras Horizontales por Tipo
-  new Chart(document.getElementById('chartTipos'), {
-    type: 'bar',
-    data: {
-      labels: chartTiposData.labels,
-      datasets: [{
-        label: 'Cantidad',
-        data: chartTiposData.data,
-        backgroundColor: chartTiposData.colors,
-        borderRadius: 6
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        }
+  const ctxTipos = document.getElementById('chartTipos');
+  if (ctxTipos && chartTiposData.data && chartTiposData.data.length > 0) {
+    new Chart(ctxTipos, {
+      type: 'bar',
+      data: {
+        labels: chartTiposData.labels,
+        datasets: [{
+          label: 'Cantidad',
+          data: chartTiposData.data,
+          backgroundColor: chartTiposData.colors,
+          borderRadius: 6
+        }]
       },
-      scales: {
-        x: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: 1
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
           }
         }
       }
-    }
-  });
+    });
+  } else if (ctxTipos) {
+    ctxTipos.parentElement.innerHTML = '<p class="text-center text-muted-foreground py-8">No hay datos de tipos disponibles</p>';
+  }
   
   // Gráfico 4: Barras Comparativas de Montos
-  new Chart(document.getElementById('chartMontos'), {
-    type: 'bar',
-    data: {
-      labels: chartMontosData.labels,
-      datasets: [{
-        label: 'Monto (USD)',
-        data: chartMontosData.data,
-        backgroundColor: chartMontosData.colors,
-        borderRadius: 8
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return context.label + ': $' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2});
+  const ctxMontos = document.getElementById('chartMontos');
+  if (ctxMontos) {
+    new Chart(ctxMontos, {
+      type: 'bar',
+      data: {
+        labels: chartMontosData.labels,
+        datasets: [{
+          label: 'Monto (USD)',
+          data: chartMontosData.data,
+          backgroundColor: chartMontosData.colors,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.label + ': $' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2});
+              }
             }
           }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: function(value) {
-              return '$' + value.toLocaleString('en-US');
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return '$' + value.toLocaleString('en-US');
+              }
             }
           }
         }
       }
-    }
-  });
+    });
+  }
   
+  console.log('Gráficos inicializados correctamente');
 });
 </script>
 

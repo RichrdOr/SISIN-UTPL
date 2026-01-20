@@ -20,12 +20,13 @@ class Broker(models.Model):
 
 
 class Siniestro(models.Model):
+    # FLUJO CORRECTO:
+    # Reportado → Enviado a Aseguradora → En Revisión → Aprobado → Liquidado → Pagado → Cerrado
+    # El rechazo solo puede ocurrir desde "En Revisión"
     ESTADO_CHOICES = [
         ('reportado', 'Reportado'),
-        ('documentos_incompletos', 'Documentos Incompletos'),
-        ('documentos_completos', 'Documentos Completos'),
         ('enviado_aseguradora', 'Enviado a Aseguradora'),
-        ('en_revision', 'En Revisión por Aseguradora'),
+        ('en_revision', 'En Revisión'),
         ('aprobado', 'Aprobado'),
         ('rechazado', 'Rechazado'),
         ('liquidado', 'Liquidado'),
@@ -366,18 +367,15 @@ class Siniestro(models.Model):
 
     @property
     def documentos_obligatorios_completos(self):
-        """Verifica si tiene todos los documentos obligatorios"""
-        tipos_obligatorios = ['carta', 'informe', 'proforma', 'preexistencia']
-        documentos_actuales = self.documentos.values_list('tipo', flat=True)
-        return all(tipo in documentos_actuales for tipo in tipos_obligatorios)
+        """Verifica si tiene documentos cargados (ya no son obligatorios al crear)"""
+        return self.documentos.exists()
 
     @property
     def puede_enviarse_a_aseguradora(self):
-        """Verifica si cumple condiciones para envío"""
+        """Verifica si cumple condiciones para envío - documentos ya no son obligatorios"""
         return (
-            self.documentos_obligatorios_completos and
             not self.fuera_de_plazo and
-            self.estado in ['reportado', 'documentos_completos']
+            self.estado == 'reportado'
         )
 
     @property
@@ -388,21 +386,15 @@ class Siniestro(models.Model):
             return hoy > self.fecha_limite_respuesta_aseguradora
         return False
 
-    # 🔹 TRANSICIONES FSM
-    @transition(field=estado, source='reportado', target='documentos_incompletos')
-    def marcar_documentos_incompletos(self):
-        """Cuando faltan documentos"""
-        pass
-
-    @transition(field=estado, source=['reportado', 'documentos_incompletos'], target='documentos_completos')
-    def marcar_documentos_completos(self):
-        """Cuando se completan todos los documentos obligatorios"""
-        if not self.documentos_obligatorios_completos:
-            raise ValueError("Aún faltan documentos obligatorios")
-
-    @transition(field=estado, source='documentos_completos', target='enviado_aseguradora')
+    # 🔹 TRANSICIONES FSM - FLUJO CORRECTO
+    # Reportado → Enviado a Aseguradora → En Revisión → Aprobado → Liquidado → Pagado → Cerrado
+    
+    @transition(field=estado, source='reportado', target='enviado_aseguradora')
     def enviar_a_aseguradora(self):
-        """Marca envío a aseguradora"""
+        """
+        Paso 1→2: Envía el siniestro a la aseguradora.
+        Los documentos pueden estar incompletos en este punto.
+        """
         self.fecha_envio_aseguradora = timezone.now().date()
         self.fecha_limite_respuesta_aseguradora = (
             self.fecha_envio_aseguradora + timedelta(days=8)
@@ -410,12 +402,18 @@ class Siniestro(models.Model):
 
     @transition(field=estado, source='enviado_aseguradora', target='en_revision')
     def marcar_en_revision(self):
-        """La aseguradora ha comenzado a revisar"""
+        """
+        Paso 2→3: La aseguradora ha recibido y está analizando el caso.
+        Puede pedir más documentos, aceptar o rechazar.
+        """
         pass
 
     @transition(field=estado, source='en_revision', target='aprobado')
     def aprobar(self):
-        """Aprueba el siniestro"""
+        """
+        Paso 3→4: La aseguradora acepta cubrir el evento bajo la póliza.
+        IMPORTANTE: Aprobado NO significa pagado, solo que la aseguradora da el OK formal.
+        """
         self.fecha_respuesta_aseguradora = timezone.now().date()
         self.cobertura_valida = True
         # Verificar si respondió fuera de plazo
@@ -425,21 +423,33 @@ class Siniestro(models.Model):
 
     @transition(field=estado, source='en_revision', target='rechazado')
     def rechazar(self, razon=''):
-        """Rechaza el siniestro"""
+        """
+        Rechazo: Solo puede ocurrir desde "En Revisión".
+        Razones: evento no cubierto, fuera de plazo, bien no coincide, exclusiones, documentación inválida.
+        """
         self.fecha_respuesta_aseguradora = timezone.now().date()
         self.cobertura_valida = False
         self.razon_rechazo = razon
 
     @transition(field=estado, source='aprobado', target='liquidado')
-    def liquidar(self, monto_aprobado, deducible):
-        """Registra liquidación"""
-        self.monto_aprobado = monto_aprobado
-        self.deducible_aplicado = deducible
-        self.monto_a_pagar = monto_aprobado - deducible
+    def liquidar(self, monto_aprobado=None, deducible=None):
+        """
+        Paso 4→5: La aseguradora calcula cuánto va a pagar.
+        Se registra: monto aprobado, deducible, valor a pagar, documento de liquidación.
+        """
+        if monto_aprobado is not None:
+            self.monto_aprobado = monto_aprobado
+        if deducible is not None:
+            self.deducible_aplicado = deducible
+        if self.monto_aprobado and self.deducible_aplicado:
+            self.monto_a_pagar = self.monto_aprobado - self.deducible_aplicado
 
     @transition(field=estado, source='liquidado', target='pagado')
     def registrar_pago(self):
-        """Marca como pagado"""
+        """
+        Paso 5→6: Se registra el pago efectivo.
+        Se registra: fecha de pago, comprobante.
+        """
         self.fecha_pago_real = timezone.now().date()
         # Verificar si el pago fue fuera de plazo
         if self.fecha_limite_pago and self.fecha_pago_real > self.fecha_limite_pago:
@@ -447,7 +457,10 @@ class Siniestro(models.Model):
 
     @transition(field=estado, source=['pagado', 'rechazado'], target='cerrado')
     def cerrar(self):
-        """Cierra el siniestro"""
+        """
+        Paso 6→7 (o Rechazado→Cerrado): Cierre final del siniestro.
+        No hay más acciones, no se puede modificar, queda solo para consulta.
+        """
         self.fecha_cierre = timezone.now().date()
 
 

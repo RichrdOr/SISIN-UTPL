@@ -4,7 +4,8 @@ from django.urls import path
 from .views import (
     crear_siniestro, 
     detalle_siniestro, 
-    dashboard_siniestros, 
+    dashboard_siniestros,
+    dashboard_asesora,
     siniestros_asesora,
     enviar_a_revision,
     aprobar_siniestro,
@@ -23,7 +24,7 @@ from .views import (
 )
 
 urlpatterns = [
-    path('dashboard/', siniestros_asesora, name='dashboard_asesora'), 
+    path('dashboard/', dashboard_asesora, name='dashboard_asesora'), 
     
     path('siniestro/<int:siniestro_id>/', detalle_siniestro, name='detalle_siniestro'),
     path('crear/', crear_siniestro, name='crear_siniestro'),

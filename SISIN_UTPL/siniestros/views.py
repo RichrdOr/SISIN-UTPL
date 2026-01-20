@@ -19,6 +19,8 @@ from .forms import SiniestroForm, DocumentoSiniestroForm, RoboSiniestroForm
 from polizas.models import Poliza, RamoPoliza
 from usuarios.models import AsesorUTPL
 from notificaciones.models import Notificacion
+from django.db.models.functions import TruncMonth
+from siniestros.models import Siniestro
 
 # ==========================================
 # VISTAS DE DASHBOARD Y LISTADOS (ASESORA)
@@ -61,23 +63,200 @@ def dashboard_siniestros(request):
         'tiempo_promedio': round(tiempo_promedio, 1),
         'tasa_aprobacion': tasa_aprobacion,
     }
+    
+    return render(request, "asesora/dashboard.html", {'stats': stats})
 
-    # Gráficos (JSON para Chart.js)
-    chart_estados = {
-        'labels': ['Reportados', 'Revisión', 'Aprobados', 'Pagados', 'Rechazados'],
-        'data': [siniestros_reportados, siniestros_revision, siniestros_aprobados, siniestros_pagados, siniestros_rechazados],
-        'colors': ['#f59e0b', '#3b82f6', '#10b981', '#22c55e', '#ef4444']
+
+def dashboard_asesora(request):
+    """
+    Dashboard principal para la asesora con métricas, gráficos y listados.
+    """
+    from datetime import date, timedelta
+    
+    hoy = date.today()
+    
+    # ================================
+    # BASE QUERYSETS
+    # ================================
+    siniestros = Siniestro.objects.select_related('poliza', 'ramo').all()
+    polizas = Poliza.objects.all()
+
+    # ================================
+    # MÉTRICAS PRINCIPALES
+    # ================================
+    total = siniestros.count()
+    reportados = siniestros.filter(estado='reportado').count()
+    en_revision = siniestros.filter(estado='en_revision').count()
+    aprobados = siniestros.filter(estado='aprobado').count()
+    rechazados = siniestros.filter(estado='rechazado').count()
+    pagados = siniestros.filter(estado='pagado').count()
+    liquidados = siniestros.filter(estado='liquidado').count()
+    cerrados = siniestros.filter(estado='cerrado').count()
+    
+    # Tiempo promedio de resolución
+    siniestros_cerrados = siniestros.filter(
+        estado__in=['aprobado', 'pagado', 'cerrado'],
+        tiempo_resolucion_dias__isnull=False
+    )
+    tiempo_promedio = siniestros_cerrados.aggregate(
+        promedio=Avg('tiempo_resolucion_dias')
+    )['promedio'] or 0
+    
+    # Tasa de aprobación
+    total_procesados = aprobados + pagados + rechazados + liquidados + cerrados
+    tasa_aprobacion = round(
+        (aprobados + pagados + liquidados + cerrados) / total_procesados * 100, 1
+    ) if total_procesados > 0 else 0
+    
+    # Pólizas por vencer (próximos 30 días)
+    fecha_limite = hoy + timedelta(days=30)
+    polizas_por_vencer = polizas.filter(
+        fecha_vencimiento__gte=hoy,
+        fecha_vencimiento__lte=fecha_limite
+    ).count()
+
+    stats = {
+        'total': total,
+        'reportados': reportados,
+        'en_revision': en_revision,
+        'aprobados': aprobados,
+        'rechazados': rechazados,
+        'pagados': pagados,
+        'polizas_activas': polizas.filter(estado='activa').count(),
+        'polizas_por_vencer': polizas_por_vencer,
+        'tiempo_promedio': round(tiempo_promedio, 1),
+        'tasa_aprobacion': tasa_aprobacion
     }
 
-    # Siniestros Recientes
-    ultimos_siniestros = Siniestro.objects.all().order_by('-fecha_reporte')[:10]
+    # ================================
+    # GRÁFICO 1: ESTADOS (DONUT)
+    # ================================
+    estados = siniestros.values('estado').annotate(total=Count('id'))
+    
+    # Mapeo de estados a etiquetas legibles
+    estado_labels = {
+        'reportado': 'Reportado',
+        'enviado_aseguradora': 'Enviado',
+        'en_revision': 'En Revisión',
+        'aprobado': 'Aprobado',
+        'rechazado': 'Rechazado',
+        'liquidado': 'Liquidado',
+        'pagado': 'Pagado',
+        'cerrado': 'Cerrado',
+        'fuera_plazo': 'Fuera de Plazo',
+    }
+    
+    estado_colors = {
+        'reportado': '#f59e0b',
+        'enviado_aseguradora': '#8b5cf6',
+        'en_revision': '#3b82f6',
+        'aprobado': '#10b981',
+        'rechazado': '#ef4444',
+        'liquidado': '#06b6d4',
+        'pagado': '#22c55e',
+        'cerrado': '#6b7280',
+        'fuera_plazo': '#dc2626',
+    }
 
+    chart_estados = {
+        'labels': [estado_labels.get(e['estado'], e['estado']) for e in estados],
+        'data': [e['total'] for e in estados],
+        'colors': [estado_colors.get(e['estado'], '#9ca3af') for e in estados]
+    }
+
+    # ================================
+    # GRÁFICO 2: EVOLUCIÓN MENSUAL
+    # ================================
+    evolucion = (
+        siniestros
+        .annotate(mes=TruncMonth('fecha_reporte'))
+        .values('mes')
+        .annotate(total=Count('id'))
+        .order_by('mes')
+    )
+
+    chart_evolucion = {
+        'labels': [e['mes'].strftime('%b %Y') if e['mes'] else 'Sin fecha' for e in evolucion],
+        'data': [e['total'] for e in evolucion]
+    }
+
+    # ================================
+    # GRÁFICO 3: TIPOS DE EVENTO
+    # ================================
+    tipos = siniestros.values('tipo_evento').annotate(total=Count('id'))
+    
+    tipo_labels = {
+        'danio': 'Daño',
+        'robo': 'Robo',
+        'hurto': 'Hurto',
+        'incendio': 'Incendio',
+        'inundacion': 'Inundación',
+        'terremoto': 'Terremoto',
+        'otro': 'Otro',
+    }
+    
+    tipo_colors = ['#6366f1', '#f97316', '#10b981', '#ef4444', '#3b82f6', '#8b5cf6', '#6b7280']
+
+    chart_tipos = {
+        'labels': [tipo_labels.get(t['tipo_evento'], t['tipo_evento']) for t in tipos],
+        'data': [t['total'] for t in tipos],
+        'colors': tipo_colors[:len(tipos)]
+    }
+
+    # ================================
+    # GRÁFICO 4: MONTOS
+    # ================================
+    montos = siniestros.aggregate(
+        reclamado=Sum('monto_reclamado'),
+        aprobado=Sum('monto_aprobado'),
+        pagado=Sum('monto_a_pagar')
+    )
+
+    chart_montos = {
+        'labels': ['Reclamado', 'Aprobado', 'Pagado'],
+        'data': [
+            float(montos['reclamado'] or 0),
+            float(montos['aprobado'] or 0),
+            float(montos['pagado'] or 0),
+        ],
+        'colors': ['#0ea5e9', '#22c55e', '#16a34a']
+    }
+
+    # ================================
+    # LISTADOS
+    # ================================
+    ultimos_siniestros = siniestros.order_by('-fecha_reporte')[:5]
+    
+    # Siniestros pendientes de acción (en revisión o reportados)
+    pendientes = siniestros.filter(
+        estado__in=['reportado', 'en_revision', 'enviado_aseguradora']
+    ).order_by('-fecha_reporte')[:5]
+
+    # Pólizas próximas a vencer
+    proximas_vencer = polizas.filter(
+        fecha_vencimiento__gte=hoy,
+        fecha_vencimiento__lte=fecha_limite
+    ).order_by('fecha_vencimiento')[:5]
+
+    # Notificaciones recientes
+    notificaciones = Notificacion.objects.order_by('-fecha_creacion')[:5]
+
+    # ================================
+    # CONTEXTO
+    # ================================
     context = {
         'stats': stats,
         'chart_estados': json.dumps(chart_estados),
+        'chart_evolucion': json.dumps(chart_evolucion),
+        'chart_tipos': json.dumps(chart_tipos),
+        'chart_montos': json.dumps(chart_montos),
         'ultimos_siniestros': ultimos_siniestros,
+        'pendientes': pendientes,
+        'proximas_vencer': proximas_vencer,
+        'notificaciones': notificaciones,
     }
-    return render(request, "asesora/dashboard.html", context)
+
+    return render(request, 'asesora/dashboard.html', context)
 
 
 def siniestros_asesora(request):
