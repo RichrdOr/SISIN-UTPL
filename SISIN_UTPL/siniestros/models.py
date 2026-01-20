@@ -567,12 +567,6 @@ class RoboSiniestro(models.Model):
         verbose_name_plural = "Información de Robos"
 
 class Hurto(models.Model):
-    evento = models.OneToOneField(Evento, on_delete=models.CASCADE, primary_key=True)
+    # CORREGIDO: Ahora apunta a Siniestro en lugar de "Evento" para evitar errores
+    siniestro = models.OneToOneField(Siniestro, on_delete=models.CASCADE, primary_key=True)
     ubicacion_ultima_vista = models.CharField(max_length=255)
-
-
-# En siniestros/models.py
-
-# Asegúrate que esto esté importado arriba
-
-    

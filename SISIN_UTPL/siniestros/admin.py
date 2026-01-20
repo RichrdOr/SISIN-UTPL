@@ -3,10 +3,9 @@ from .models import (
     Siniestro,
     Broker,
     DocumentoSiniestro,
-    PagareSiniestro
+    # PagareSiniestro se eliminó porque no existe en models.py
 )
 
 admin.site.register(Siniestro)
 admin.site.register(DocumentoSiniestro)
-admin.site.register(PagareSiniestro)
 admin.site.register(Broker)
