@@ -2,9 +2,9 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 from django_fsm import FSMField, transition
-from polizas.models import *
-from usuarios.models import *
-from datetime import date 
+from polizas.models import Poliza, RamoPoliza
+from usuarios.models import Usuario, AsesorUTPL
+
 
 class Broker(models.Model):
     nombre = models.CharField(max_length=100)
@@ -21,12 +21,49 @@ class Broker(models.Model):
 
 
 class Siniestro(models.Model):
+    """
+    Modelo principal de Siniestro con FSM (Finite State Machine).
+    
+    FLUJO DE ESTADOS:
+    ================
+    1. REPORTADO 📝 → Estado inicial al crear siniestro
+       ├── Si faltan documentos → DOCS_INCOMPLETOS
+       └── Si documentos OK → DOCS_COMPLETOS
+    
+    2. DOCS_INCOMPLETOS ⚠️ → Esperando documentación
+       └── Cuando se completan → DOCS_COMPLETOS
+    
+    3. DOCS_COMPLETOS 📋 → Listo para enviar
+       └── Enviar a aseguradora → ENVIADO
+    
+    4. ENVIADO 📤 → Correo enviado a aseguradora
+       └── Marcar en revisión → EN_REVISION
+    
+    5. EN_REVISION 🔍 → Aseguradora analizando
+       ├── Si rechaza → RECHAZADO (FIN)
+       └── Si aprueba → APROBADO
+    
+    6. APROBADO ✅ → Cobertura confirmada
+       └── Liquidar (ingresar montos) → LIQUIDADO
+    
+    7. LIQUIDADO 💰 → Montos calculados
+       └── Registrar pago → PAGADO
+    
+    8. PAGADO 💳 → Dinero entregado
+       └── Cerrar → CERRADO (INMUTABLE)
+    
+    9. RECHAZADO ❌ → Siniestro no cubierto
+       └── Cerrar → CERRADO (INMUTABLE)
+    
+    10. FUERA_PLAZO ⏰ → Reportado después de 15 días (automático)
+    """
+    
     ESTADO_CHOICES = [
         ('reportado', 'Reportado'),
-        ('documentos_incompletos', 'Documentos Incompletos'),
-        ('documentos_completos', 'Documentos Completos'),
-        ('enviado_aseguradora', 'Enviado a Aseguradora'),
-        ('en_revision', 'En Revisión por Aseguradora'),
+        ('docs_incompletos', 'Documentos Incompletos'),
+        ('docs_completos', 'Documentos Completos'),
+        ('enviado', 'Enviado a Aseguradora'),
+        ('en_revision', 'En Revisión'),
         ('aprobado', 'Aprobado'),
         ('rechazado', 'Rechazado'),
         ('liquidado', 'Liquidado'),
@@ -53,7 +90,7 @@ class Siniestro(models.Model):
         editable=False
     )
 
-    # 🔹 RELACIÓN CON PÓLIZA Y RAMO (EL RAMO GOBIERNA EL SINIESTRO)
+    # 🔹 RELACIÓN CON PÓLIZA Y RAMO
     poliza = models.ForeignKey(
         Poliza,
         on_delete=models.PROTECT,
@@ -69,7 +106,7 @@ class Siniestro(models.Model):
         help_text="El ramo que gobierna este siniestro"
     )
 
-    # 🔹 RECLAMANTE (capturado por asesora)
+    # 🔹 RECLAMANTE
     reclamante = models.ForeignKey(
         Usuario,
         on_delete=models.CASCADE,
@@ -99,7 +136,7 @@ class Siniestro(models.Model):
         verbose_name="Causa Probable"
     )
 
-    # 🔹 FECHAS CRÍTICAS DEL EVENTO
+    # 🔹 FECHAS CRÍTICAS
     fecha_ocurrencia = models.DateField(
         verbose_name="Fecha de Ocurrencia del Evento"
     )
@@ -118,7 +155,7 @@ class Siniestro(models.Model):
         verbose_name="Descripción Detallada del Siniestro"
     )
 
-    # 🔹 CONTROL DE PLAZO DE 15 DÍAS
+    # 🔹 CONTROL DE PLAZO DE 15 DÍAS (RN-05)
     dias_transcurridos_reporte = models.IntegerField(
         editable=False,
         null=True,
@@ -128,7 +165,6 @@ class Siniestro(models.Model):
 
     fuera_de_plazo = models.BooleanField(
         default=False,
-        editable=False,
         verbose_name="¿Reportado fuera del plazo de 15 días?"
     )
 
@@ -164,7 +200,7 @@ class Siniestro(models.Model):
         help_text="Monto aprobado - deducible"
     )
 
-    # 🔹 CONTROL DE ESTADO
+    # 🔹 CONTROL DE ESTADO (FSM)
     estado = FSMField(
         default='reportado',
         choices=ESTADO_CHOICES,
@@ -187,8 +223,7 @@ class Siniestro(models.Model):
         null=True,
         blank=True,
         editable=False,
-        verbose_name="Fecha Límite Respuesta (8 días)",
-        help_text="Se calcula automáticamente: fecha_envio + 8 días"
+        verbose_name="Fecha Límite Respuesta (8 días)"
     )
 
     fecha_respuesta_aseguradora = models.DateField(
@@ -221,7 +256,7 @@ class Siniestro(models.Model):
         verbose_name="¿Pago fuera de plazo?"
     )
 
-    # 🔹 FECHAS DE CIERRE
+    # 🔹 FECHAS DE CIERRE (RN-15)
     fecha_cierre = models.DateField(
         null=True,
         blank=True,
@@ -264,7 +299,7 @@ class Siniestro(models.Model):
         verbose_name="Asesor UTPL Asignado"
     )
 
-    # 🔹 OBSERVACIONES
+    # 🔹 OBSERVACIONES Y NOTAS
     observaciones_internas = models.TextField(
         blank=True,
         verbose_name="Observaciones Internas"
@@ -275,7 +310,6 @@ class Siniestro(models.Model):
         verbose_name="Razón de Rechazo"
     )
 
-    # 🔹 CAMPOS ADICIONALES PARA FLUJO COMPLETO
     documentos_faltantes = models.TextField(
         blank=True,
         verbose_name="Documentos Faltantes",
@@ -298,14 +332,6 @@ class Siniestro(models.Model):
         verbose_name="Mensaje enviado a Aseguradora"
     )
 
-    monto_liquidado_aseguradora = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        verbose_name="Monto Liquidado por Aseguradora"
-    )
-
     notas_liquidacion = models.TextField(
         blank=True,
         verbose_name="Notas de Liquidación"
@@ -322,7 +348,7 @@ class Siniestro(models.Model):
         ordering = ['-fecha_reporte']
 
     def __str__(self):
-        return f"{self.numero_siniestro} - {self.tipo_evento} - {self.estado}"
+        return f"{self.numero_siniestro} - {self.get_tipo_evento_display()} - {self.get_estado_display()}"
 
     def save(self, *args, **kwargs):
         # Generar número de siniestro automático
@@ -333,16 +359,14 @@ class Siniestro(models.Model):
             ).count() + 1
             self.numero_siniestro = f"SIN-{year}-{count:05d}"
 
-        # Calcular días transcurridos entre ocurrencia y reporte
-        if self.fecha_ocurrencia and self.fecha_reporte:
-            delta = self.fecha_reporte - self.fecha_ocurrencia
+        # RN-05: Calcular días transcurridos y validar plazo de 15 días
+        if self.fecha_ocurrencia:
+            fecha_ref = self.fecha_reporte if self.fecha_reporte else timezone.now().date()
+            delta = fecha_ref - self.fecha_ocurrencia
             self.dias_transcurridos_reporte = delta.days
             
-            # Validar si está fuera del plazo de 15 días
-            if self.dias_transcurridos_reporte > 15:
+            if self.dias_transcurridos_reporte > 15 and self.estado == 'reportado':
                 self.fuera_de_plazo = True
-                self.cobertura_valida = False
-                self.estado = 'fuera_plazo'
 
         # Calcular fecha límite de respuesta aseguradora (8 días)
         if self.fecha_envio_aseguradora and not self.fecha_limite_respuesta_aseguradora:
@@ -351,129 +375,184 @@ class Siniestro(models.Model):
             )
 
         # Calcular fecha límite de pago (72 horas = 3 días)
-        if self.estado == 'aprobado' and self.monto_aprobado and not self.fecha_limite_pago:
+        if self.estado == 'liquidado' and not self.fecha_limite_pago:
             self.fecha_limite_pago = timezone.now().date() + timedelta(days=3)
 
-        # Calcular monto a pagar
+        # RN-11: Calcular monto a pagar
         if self.monto_aprobado and self.deducible_aplicado:
             self.monto_a_pagar = self.monto_aprobado - self.deducible_aplicado
 
-        # Calcular tiempo de resolución
+        # RN-15: Calcular tiempo de resolución al cerrar
         if self.fecha_cierre and self.fecha_apertura:
             delta = self.fecha_cierre - self.fecha_apertura
             self.tiempo_resolucion_dias = delta.days
 
         super().save(*args, **kwargs)
 
+    # =============================================
+    # PROPIEDADES ÚTILES
+    # =============================================
+    
     @property
-    def documentos_obligatorios_completos(self):
-        """Verifica si tiene todos los documentos obligatorios"""
-        tipos_obligatorios = ['carta', 'informe', 'proforma', 'preexistencia']
-        documentos_actuales = self.documentos.values_list('tipo', flat=True)
-        return all(tipo in documentos_actuales for tipo in tipos_obligatorios)
+    def dias_transcurridos(self):
+        """Días desde el reporte hasta hoy"""
+        if self.fecha_reporte:
+            return (timezone.now().date() - self.fecha_reporte).days
+        return 0
 
     @property
-    def puede_enviarse_a_aseguradora(self):
-        """Verifica si cumple condiciones para envío"""
-        return (
-            self.documentos_obligatorios_completos and
-            not self.fuera_de_plazo and
-            self.estado in ['reportado', 'documentos_completos']
-        )
+    def tiene_documentos(self):
+        """Verifica si tiene al menos un documento"""
+        return self.documentos.exists()
 
     @property
     def alerta_respuesta_aseguradora(self):
         """Verifica si la aseguradora está tardando"""
         if self.fecha_limite_respuesta_aseguradora and not self.fecha_respuesta_aseguradora:
-            hoy = timezone.now().date()
-            return hoy > self.fecha_limite_respuesta_aseguradora
+            return timezone.now().date() > self.fecha_limite_respuesta_aseguradora
         return False
 
-    # 🔹 TRANSICIONES FSM
-    @transition(field=estado, source='reportado', target='documentos_incompletos')
+    @property
+    def estado_color(self):
+        """Retorna el color asociado al estado para UI"""
+        colores = {
+            'reportado': '#f59e0b',
+            'docs_incompletos': '#ef4444',
+            'docs_completos': '#3b82f6',
+            'enviado': '#8b5cf6',
+            'en_revision': '#06b6d4',
+            'aprobado': '#10b981',
+            'rechazado': '#dc2626',
+            'liquidado': '#0ea5e9',
+            'pagado': '#22c55e',
+            'cerrado': '#6b7280',
+            'fuera_plazo': '#991b1b',
+        }
+        return colores.get(self.estado, '#9ca3af')
+
+    @property
+    def estado_bg(self):
+        """Retorna el color de fondo para badges"""
+        return f"{self.estado_color}20"
+
+    @property
+    def estado_label(self):
+        """Retorna la etiqueta del estado"""
+        return self.get_estado_display()
+
+    # =============================================
+    # TRANSICIONES FSM
+    # =============================================
+
+    # 1. REPORTADO → DOCS_INCOMPLETOS
+    @transition(field=estado, source='reportado', target='docs_incompletos')
     def marcar_documentos_incompletos(self):
-        """Cuando faltan documentos"""
+        """
+        Marca el siniestro como documentos incompletos.
+        Se debe especificar qué documentos faltan.
+        """
         pass
 
-    @transition(field=estado, source=['reportado', 'documentos_incompletos'], target='documentos_completos')
+    # 2. REPORTADO → DOCS_COMPLETOS (validación visual OK)
+    @transition(field=estado, source=['reportado', 'docs_incompletos'], target='docs_completos')
     def marcar_documentos_completos(self):
-        """Cuando se completan todos los documentos obligatorios"""
-        if not self.documentos_obligatorios_completos:
-            raise ValueError("Aún faltan documentos obligatorios")
+        """
+        Confirma que los documentos están completos (validación visual).
+        No requiere que todos los archivos estén subidos físicamente.
+        """
+        self.documentos_faltantes = ''
 
-    @transition(field=estado, source='documentos_completos', target='enviado_aseguradora')
+    # 3. DOCS_COMPLETOS → ENVIADO
+    @transition(field=estado, source='docs_completos', target='enviado')
     def enviar_a_aseguradora(self):
-        """Marca envío a aseguradora"""
+        """
+        Envía el siniestro a la aseguradora.
+        Registra fecha de envío y calcula fecha límite de respuesta.
+        """
         self.fecha_envio_aseguradora = timezone.now().date()
         self.fecha_limite_respuesta_aseguradora = (
             self.fecha_envio_aseguradora + timedelta(days=8)
         )
 
-    @transition(field=estado, source='enviado_aseguradora', target='en_revision')
+    # 4. ENVIADO → EN_REVISION
+    @transition(field=estado, source='enviado', target='en_revision')
     def marcar_en_revision(self):
-        """La aseguradora ha comenzado a revisar"""
+        """
+        La aseguradora ha recibido y está analizando el caso.
+        """
         pass
 
+    # 5A. EN_REVISION → APROBADO
     @transition(field=estado, source='en_revision', target='aprobado')
     def aprobar(self):
-        """Aprueba el siniestro"""
+        """
+        La aseguradora aprueba la cobertura.
+        Solo confirma cobertura, NO se ingresan montos aquí.
+        """
         self.fecha_respuesta_aseguradora = timezone.now().date()
         self.cobertura_valida = True
+        
         # Verificar si respondió fuera de plazo
         if self.fecha_limite_respuesta_aseguradora:
             if self.fecha_respuesta_aseguradora > self.fecha_limite_respuesta_aseguradora:
                 self.aseguradora_fuera_de_plazo = True
 
+    # 5B. EN_REVISION → RECHAZADO
     @transition(field=estado, source='en_revision', target='rechazado')
-    def rechazar(self, razon=''):
-        """Rechaza el siniestro"""
+    def rechazar(self):
+        """
+        La aseguradora rechaza el siniestro.
+        Se debe guardar la razón del rechazo.
+        """
         self.fecha_respuesta_aseguradora = timezone.now().date()
         self.cobertura_valida = False
-        self.razon_rechazo = razon
 
+    # 6. APROBADO → LIQUIDADO
     @transition(field=estado, source='aprobado', target='liquidado')
-    def liquidar(self, monto_aprobado, deducible):
-        """Registra liquidación"""
-        self.monto_aprobado = monto_aprobado
-        self.deducible_aplicado = deducible
-        self.monto_a_pagar = monto_aprobado - deducible
-
-    def validar_cobertura(self):
+    def liquidar(self):
         """
-        Retorna True si la póliza estaba activa y vigente al momento del siniestro.
+        Se ingresan los montos (aprobado, deducible) y se calcula monto a pagar.
+        Se debe subir el PDF de liquidación.
         """
-        # Seguridad: Si no tiene póliza asignada, no hay cobertura
-        if not self.poliza:
-            return False
-
-        # 1. Verificar estado de la póliza
-        if self.poliza.estado != 'activa':
-            return False
-
-        # 2. Verificar vigencia (Fecha Ocurrencia vs Fechas Póliza)
-        # Asumimos que fecha_ocurrencia es obligatorio
-        if self.poliza.fecha_inicio <= self.fecha_ocurrencia <= self.poliza.fecha_fin:
-            return True
+        # RN-11: Validar montos positivos
+        if self.monto_aprobado and self.monto_aprobado <= 0:
+            raise ValueError("El monto aprobado debe ser positivo")
+        if self.deducible_aplicado and self.deducible_aplicado < 0:
+            raise ValueError("El deducible no puede ser negativo")
         
-        return False
+        # Calcular monto a pagar
+        if self.monto_aprobado and self.deducible_aplicado is not None:
+            self.monto_a_pagar = self.monto_aprobado - self.deducible_aplicado
+        
+        # Establecer fecha límite de pago (72 horas)
+        self.fecha_limite_pago = timezone.now().date() + timedelta(days=3)
 
-    # --- 2. CALCULAR TIEMPO DE RESOLUCIÓN (Métricas) ---
-    def calcular_tiempo_resolucion(self):
+    # 7. LIQUIDADO → PAGADO
+    @transition(field=estado, source='liquidado', target='pagado')
+    def registrar_pago(self):
         """
-        Calcula los días transcurridos desde la apertura hasta el cierre (o hasta hoy).
+        Se registra el pago efectivo.
+        Se debe subir el comprobante de pago.
         """
-        fecha_fin_calculo = self.fecha_cierre if self.fecha_cierre else date.today()
-        delta = fecha_fin_calculo - self.fecha_apertura
-        return delta.days
+        self.fecha_pago_real = timezone.now().date()
+        
+        # Verificar si el pago fue fuera de plazo
+        if self.fecha_limite_pago and self.fecha_pago_real > self.fecha_limite_pago:
+            self.pago_fuera_de_plazo = True
 
-
+    # 8. PAGADO/RECHAZADO → CERRADO
     @transition(field=estado, source=['pagado', 'rechazado'], target='cerrado')
     def cerrar(self):
-        """Cierra el siniestro"""
+        """
+        Cierre final del siniestro (RN-15).
+        El siniestro queda inmutable para consulta.
+        """
         self.fecha_cierre = timezone.now().date()
 
 
 class DocumentoSiniestro(models.Model):
+    """Documentos asociados a un siniestro"""
+    
     TIPO_CHOICES = [
         ('carta', 'Carta Formal'),
         ('informe', 'Informe Técnico'),
@@ -512,67 +591,85 @@ class DocumentoSiniestro(models.Model):
     
     fecha_subida = models.DateTimeField(
         auto_now_add=True,
-        verbose_name="Fecha de Carga"
-    )
-
-    subido_por = models.ForeignKey(
-        AsesorUTPL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        verbose_name="Subido Por"
+        verbose_name="Fecha de Subida"
     )
 
     class Meta:
         verbose_name = "Documento de Siniestro"
         verbose_name_plural = "Documentos de Siniestro"
-        unique_together = ['siniestro', 'tipo']  # Un solo documento de cada tipo
+        ordering = ['-fecha_subida']
 
     def __str__(self):
-        return f"{self.siniestro.numero_siniestro} - {self.get_tipo_display()}"
+        return f"{self.get_tipo_display()} - {self.siniestro.numero_siniestro}"
 
+    @property
+    def nombre_archivo(self):
+        """Retorna solo el nombre del archivo sin la ruta"""
+        return self.archivo.name.split('/')[-1] if self.archivo else ''
 
-# 🔹 MODELOS ESPECIALIZADOS POR TIPO DE EVENTO (OPCIONAL, según necesidad)
-class DanioSiniestro(models.Model):
-    """Información adicional específica para siniestros de tipo Daño"""
-    siniestro = models.OneToOneField(
-        Siniestro,
-        on_delete=models.CASCADE,
-        primary_key=True,
-        related_name='info_danio'
-    )
-    area_asignada = models.CharField(max_length=100, verbose_name="Área Asignada")
-    tecnico_asignado = models.CharField(max_length=100, verbose_name="Técnico Asignado")
-    requiere_reparacion = models.BooleanField(default=True)
-    
-    class Meta:
-        verbose_name = "Información de Daño"
-        verbose_name_plural = "Información de Daños"
+    @property
+    def extension(self):
+        """Retorna la extensión del archivo"""
+        if self.archivo:
+            return self.archivo.name.split('.')[-1].upper()
+        return ''
 
 
 class RoboSiniestro(models.Model):
-    """Información adicional específica para robos"""
+    """Datos adicionales para siniestros de tipo robo"""
+    
+    # Mantener siniestro como primary_key para compatibilidad con migración inicial
     siniestro = models.OneToOneField(
         Siniestro,
         on_delete=models.CASCADE,
         primary_key=True,
         related_name='info_robo'
     )
-    denuncia_policial = models.CharField(max_length=50, verbose_name="Nro. Denuncia")
-    fiscalia = models.CharField(max_length=100, verbose_name="Fiscalía")
-    fecha_denuncia = models.DateField(verbose_name="Fecha de Denuncia")
     
+    denuncia_policial = models.TextField(
+        blank=True,
+        verbose_name="Número/Detalle Denuncia Policial"
+    )
+    
+    fiscalia = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="Fiscalía"
+    )
+    
+    fecha_denuncia = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha de Denuncia"
+    )
+
     class Meta:
-        verbose_name = "Información de Robo"
-        verbose_name_plural = "Información de Robos"
+        verbose_name = "Datos de Robo"
+        verbose_name_plural = "Datos de Robo"
 
-class Hurto(models.Model):
-    evento = models.OneToOneField(Evento, on_delete=models.CASCADE, primary_key=True)
-    ubicacion_ultima_vista = models.CharField(max_length=255)
+    def __str__(self):
+        return f"Robo - {self.siniestro.numero_siniestro}"
 
 
-# En siniestros/models.py
-
-# Asegúrate que esto esté importado arriba
-
+class HistorialEstado(models.Model):
+    """Registro histórico de cambios de estado"""
     
+    siniestro = models.ForeignKey(
+        Siniestro,
+        on_delete=models.CASCADE,
+        related_name='historial_estados'
+    )
+    
+    estado_anterior = models.CharField(max_length=30)
+    estado_nuevo = models.CharField(max_length=30)
+    fecha_cambio = models.DateTimeField(auto_now_add=True)
+    usuario = models.CharField(max_length=150, blank=True)
+    observaciones = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = "Historial de Estado"
+        verbose_name_plural = "Historial de Estados"
+        ordering = ['-fecha_cambio']
+
+    def __str__(self):
+        return f"{self.siniestro.numero_siniestro}: {self.estado_anterior} → {self.estado_nuevo}"
