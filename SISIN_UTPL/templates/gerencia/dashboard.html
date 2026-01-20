@@ -1,0 +1,199 @@
+{% extends 'gerencia/base_gerencia.html' %}
+
+{% block title %}Dashboard Gerencial{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-sm dark:shadow-none border border-transparent dark:border-[#2a3441]">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-[#606e8a] dark:text-[#9aa2b1] text-[20px]">folder_open</span>
+            <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Total Siniestros</p>
+        </div>
+        <p class="text-[#111318] dark:text-white text-2xl font-bold">{{ kpis.total }}</p>
+    </div>
+    
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-sm dark:shadow-none border border-l-4 border-l-amber-400 border-y-transparent border-r-transparent dark:border-y-[#2a3441] dark:border-r-[#2a3441]">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-amber-500 text-[20px]">warning</span>
+            <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Abiertos</p>
+        </div>
+        <p class="text-[#111318] dark:text-white text-2xl font-bold">{{ kpis.abiertos }}</p>
+    </div>
+
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-sm dark:shadow-none border border-l-4 border-l-green-500 border-y-transparent border-r-transparent dark:border-y-[#2a3441] dark:border-r-[#2a3441]">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-green-600 text-[20px]">check_circle</span>
+            <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Cerrados</p>
+        </div>
+        <p class="text-[#111318] dark:text-white text-2xl font-bold">{{ kpis.cerrados }}</p>
+    </div>
+
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-sm dark:shadow-none border 
+        {% if config.alerta_fuera_plazo and kpis.hay_vencidos_reales %}
+            border-l-4 border-l-red-600 animate-pulse bg-red-50 dark:bg-red-900/10
+        {% else %}
+            border-l-4 border-l-gray-300
+        {% endif %} 
+        border-y-transparent border-r-transparent dark:border-y-[#2a3441] dark:border-r-[#2a3441]">
+        
+        <div class="flex items-center justify-between mb-1">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined 
+                    {% if config.alerta_fuera_plazo and kpis.vencidos > 0 %}text-red-600{% else %}text-gray-400{% endif %} 
+                    text-[20px]">
+                    {% if config.alerta_fuera_plazo %}notifications_active{% else %}notifications_off{% endif %}
+                </span>
+                <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">
+                    {% if config.alerta_fuera_plazo %}
+                        Vencidos
+                    {% else %}
+                        Alerta Off
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <p class="text-[#111318] dark:text-white text-2xl font-bold">
+            {% if config.alerta_fuera_plazo %}
+                {{ kpis.vencidos }}
+            {% else %}
+                -
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-sm dark:shadow-none border border-transparent dark:border-[#2a3441]">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-primary text-[20px]">attach_money</span>
+            <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Monto Siniestros</p>
+        </div>
+        <p class="text-[#111318] dark:text-white text-2xl font-bold">${{ kpis.monto_siniestros }}</p>
+    </div>
+
+    <div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-[#1e2430] p-5 shadow-sm dark:shadow-none border border-transparent dark:border-[#2a3441]">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-primary text-[20px]">savings</span>
+            <p class="text-[#606e8a] dark:text-[#9aa2b1] text-xs font-bold uppercase tracking-wide">Monto Pólizas</p>
+        </div>
+        <p class="text-[#111318] dark:text-white text-2xl font-bold">${{ kpis.monto_polizas }}</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="rounded-xl bg-white dark:bg-[#1e2430] p-6 shadow-sm dark:shadow-none border border-transparent dark:border-[#2a3441] flex flex-col">
+        <h3 class="text-[#111318] dark:text-white text-base font-bold mb-2">Composición de Siniestros</h3>
+        <p class="text-xs text-gray-500 mb-6">Distribución por estado actual</p>
+        
+        <div class="flex flex-1 items-center justify-center relative min-h-[220px]">
+            <canvas id="estadoChart"></canvas>
+            
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="text-center">
+                    <span class="text-3xl font-bold text-[#111318] dark:text-white">{{ kpis.total }}</span>
+                    <p class="text-xs text-gray-400 font-bold uppercase">Total</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="rounded-xl bg-white dark:bg-[#1e2430] p-6 shadow-sm dark:shadow-none border border-transparent dark:border-[#2a3441] flex flex-col lg:col-span-2">
+        <h3 class="text-[#111318] dark:text-white text-base font-bold mb-4">Evolución de Siniestros (Últimos 6 meses)</h3>
+        
+        <div class="relative w-full h-64">
+            <canvas id="siniestrosChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- GRÁFICA 1: BARRAS COMPARATIVAS (Siniestros vs Pólizas) ---
+        const ctxBarras = document.getElementById('siniestrosChart').getContext('2d');
+        const labels = {{ chart_labels|safe }};
+        const datosSiniestros = {{ data_siniestros|safe }};
+        const datosPolizas = {{ data_polizas|safe }};
+
+        new Chart(ctxBarras, {
+            type: 'bar',
+            data: {
+                labels: labels.length > 0 ? labels : ['Sin datos'],
+                datasets: [
+                    {
+                        label: 'Siniestros',
+                        data: datosSiniestros,
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)', // Azul
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Pólizas',
+                        data: datosPolizas,
+                        backgroundColor: 'rgba(34, 197, 94, 0.8)', // Verde
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } }
+            }
+        });
+
+        // --- GRÁFICA 2: DONA DE ESTADO GENERAL (NUEVO) ---
+        const ctxDona = document.getElementById('estadoChart').getContext('2d');
+        const dataEstado = {{ data_estado_general|safe }}; // [Cerrados, AbiertosOK, Vencidos]
+
+        new Chart(ctxDona, {
+            type: 'doughnut',
+            data: {
+                labels: ['Cerrados', 'Abiertos (Al día)', 'Vencidos'],
+                datasets: [{
+                    data: dataEstado,
+                    backgroundColor: [
+                        'rgba(34, 197, 94, 0.8)',  // Verde (Cerrados)
+                        'rgba(251, 191, 36, 0.8)', // Amarillo (Abiertos Bien)
+                        'rgba(239, 68, 68, 0.8)'   // Rojo (Vencidos)
+                    ],
+                    borderColor: [
+                        'rgba(34, 197, 94, 1)',
+                        'rgba(251, 191, 36, 1)',
+                        'rgba(239, 68, 68, 1)'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%', // Hace la dona más fina
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 8,
+                            padding: 20,
+                            font: { size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            // MAGIA: Calcula y muestra el porcentaje en el tooltip
+                            label: function(context) {
+                                let label = context.label || '';
+                                let value = context.raw || 0;
+                                let total = context.chart._metasets[context.datasetIndex].total;
+                                let percentage = Math.round((value / total) * 100) + '%';
+                                return ` ${label}: ${value} (${percentage})`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
