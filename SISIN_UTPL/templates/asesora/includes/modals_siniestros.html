@@ -15,32 +15,91 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm text-gray-600 mb-3 font-semibold">Seleccione qué falta:</label>
-                    <div class="space-y-2">
-                        <label class="flex items-center gap-3 p-2 bg-gray-50 rounded cursor-pointer">
-                            <input type="checkbox" name="docs_faltantes" value="Identificación" class="text-orange-500 rounded">
-                            <span class="text-sm">Cédula / Identificación ilegible</span>
+                    <label class="block text-sm text-gray-600 mb-3 font-semibold">Seleccione los documentos faltantes:</label>
+                    
+                    <!-- Documentos principales del siniestro -->
+                    <div class="space-y-2 mb-4">
+                        <p class="text-xs text-gray-500 uppercase font-bold mb-2">📁 Documentos de Soporte</p>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="carta" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">📄</span>
+                                <span class="text-sm font-medium">Carta Formal</span>
+                            </div>
                         </label>
-                        <label class="flex items-center gap-3 p-2 bg-gray-50 rounded cursor-pointer">
-                            <input type="checkbox" name="docs_faltantes" value="Poliza" class="text-orange-500 rounded">
-                            <span class="text-sm">Póliza o anexo faltante</span>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="informe" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🔧</span>
+                                <span class="text-sm font-medium">Informe Técnico</span>
+                            </div>
                         </label>
-                        <label class="flex items-center gap-3 p-2 bg-gray-50 rounded cursor-pointer">
-                            <input type="checkbox" name="docs_faltantes" value="Evidencia" class="text-orange-500 rounded">
-                            <span class="text-sm">Fotos o evidencia insuficiente</span>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="proforma" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🧾</span>
+                                <span class="text-sm font-medium">Proforma de Reparación</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="preexistencia" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">✅</span>
+                                <span class="text-sm font-medium">Certificado de Preexistencia</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Documentos específicos para robo -->
+                    {% if siniestro.tipo_evento == 'robo' %}
+                    <div class="space-y-2 mb-4 pt-4 border-t">
+                        <p class="text-xs text-red-500 uppercase font-bold mb-2">🚨 Documentos de Robo</p>
+                        <label class="flex items-center gap-3 p-3 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 transition-colors border border-transparent hover:border-red-200">
+                            <input type="checkbox" name="documentos_faltantes" value="denuncia" class="w-5 h-5 text-red-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🚨</span>
+                                <span class="text-sm font-medium">Denuncia Fiscalía</span>
+                            </div>
+                        </label>
+                    </div>
+                    {% endif %}
+
+                    <!-- Otros documentos -->
+                    <div class="space-y-2 pt-4 border-t">
+                        <p class="text-xs text-gray-500 uppercase font-bold mb-2">📋 Otros</p>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="cedula" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🪪</span>
+                                <span class="text-sm font-medium">Cédula / Identificación</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="facturas" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🧾</span>
+                                <span class="text-sm font-medium">Facturas o Comprobantes</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="fotos" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">📷</span>
+                                <span class="text-sm font-medium">Fotografías del Siniestro</span>
+                            </div>
                         </label>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm text-gray-600 mb-2">Mensaje al Usuario *</label>
-                    <textarea name="observaciones" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-400" required placeholder="Explique qué debe corregir..."></textarea>
+                    <label class="block text-sm text-gray-600 mb-2">Mensaje adicional al Usuario</label>
+                    <textarea name="observaciones" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-400" placeholder="Explique detalles adicionales o instrucciones específicas..."></textarea>
                 </div>
             </div>
 
             <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end gap-3 border-t">
                 <button type="button" onclick="cerrarModal('modal-docs-incompletos')" class="px-4 py-2 border rounded-lg">Cancelar</button>
-                <button type="submit" class="px-6 py-2 bg-[#F2A900] text-white rounded-lg hover:bg-orange-600">Notificar al Usuario</button>
+                <button type="submit" class="px-6 py-2 bg-[#F2A900] text-white rounded-lg hover:bg-orange-600 font-medium">Notificar al Usuario</button>
             </div>
         </form>
     </div>

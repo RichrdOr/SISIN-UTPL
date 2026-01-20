@@ -27,5 +27,6 @@ urlpatterns = [
     path("aseguradora/", include("aseguradora.urls")),
     path("polizas/", include("polizas.urls")),
     path("notificaciones/", include("notificaciones.urls")),
-    path('', RedirectView.as_view(url='/aseguradora/dashboard/')),
+    # Redirige la raíz al dashboard de la asesora
+    path('dashboard/', RedirectView.as_view(url='/siniestros/dashboard/', permanent=False), name='dashboard_redirect'),
 ]

@@ -141,22 +141,22 @@
         <div class="bg-card rounded-lg border p-6 shadow-sm">
             <h3 class="mb-4 pb-3 border-b font-medium flex items-center gap-2">
                 <span class="bg-primary/10 text-primary w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold">4</span>
-                📁 Documentación de Soporte
+                📁 Documentación de Soporte (Opcional)
             </h3>
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-primary transition-colors">
                     <div class="text-2xl mb-1">📄</div>
-                    <div class="text-xs font-bold mb-2 uppercase">Carta Formal *</div>
-                    <input type="file" name="doc_carta" id="file_carta" class="hidden" accept=".pdf,application/pdf" required onchange="updateLabel('carta')">
+                    <div class="text-xs font-bold mb-2 uppercase">Carta Formal</div>
+                    <input type="file" name="doc_carta" id="file_carta" class="hidden" accept=".pdf,application/pdf" onchange="updateLabel('carta')">
                     <label for="file_carta" id="label_carta" class="cursor-pointer block px-2 py-1.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold hover:bg-primary/20 transition-all">SELECCIONAR PDF</label>
                     <p id="name_carta" class="text-[9px] text-muted-foreground mt-1 truncate"></p>
                 </div>
 
                 <div id="wrapper_doc_dinamico" class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-primary transition-colors">
                     <div id="icon_dinamico" class="text-2xl mb-1">🔧</div>
-                    <div id="title_dinamico" class="text-xs font-bold mb-2 uppercase">Informe Técnico *</div>
-                    <input type="file" name="doc_informe" id="file_dinamico" class="hidden" accept=".pdf,application/pdf" required onchange="updateLabel('dinamico')">
+                    <div id="title_dinamico" class="text-xs font-bold mb-2 uppercase">Informe Técnico</div>
+                    <input type="file" name="doc_informe" id="file_dinamico" class="hidden" accept=".pdf,application/pdf" onchange="updateLabel('dinamico')">
                     <label for="file_dinamico" id="label_dinamico" class="cursor-pointer block px-2 py-1.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold hover:bg-primary/20 transition-all">
                         SELECCIONAR PDF
                     </label>
@@ -165,24 +165,24 @@
 
                 <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-primary transition-colors">
                     <div class="text-2xl mb-1">🧾</div>
-                    <div class="text-xs font-bold mb-2 uppercase">Proforma *</div>
-                    <input type="file" name="doc_proforma" id="file_proforma" class="hidden" accept=".pdf,application/pdf" required onchange="updateLabel('proforma')">
+                    <div class="text-xs font-bold mb-2 uppercase">Proforma</div>
+                    <input type="file" name="doc_proforma" id="file_proforma" class="hidden" accept=".pdf,application/pdf" onchange="updateLabel('proforma')">
                     <label for="file_proforma" id="label_proforma" class="cursor-pointer block px-2 py-1.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold hover:bg-primary/20 transition-all">SELECCIONAR PDF</label>
                     <p id="name_proforma" class="text-[9px] text-muted-foreground mt-1 truncate"></p>
                 </div>
 
                 <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-primary transition-colors">
                     <div class="text-2xl mb-1">✅</div>
-                    <div class="text-xs font-bold mb-2 uppercase">Preexistencia *</div>
-                    <input type="file" name="doc_preexistencia" id="file_preexistencia" class="hidden" accept=".pdf,application/pdf" required onchange="updateLabel('preexistencia')">
+                    <div class="text-xs font-bold mb-2 uppercase">Preexistencia</div>
+                    <input type="file" name="doc_preexistencia" id="file_preexistencia" class="hidden" accept=".pdf,application/pdf" onchange="updateLabel('preexistencia')">
                     <label for="file_preexistencia" id="label_preexistencia" class="cursor-pointer block px-2 py-1.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold hover:bg-primary/20 transition-all">SELECCIONAR PDF</label>
                     <p id="name_preexistencia" class="text-[9px] text-muted-foreground mt-1 truncate"></p>
                 </div>
             </div>
 
-            <div class="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-lg flex gap-2 items-center">
-                <span class="text-amber-600">⚠️</span>
-                <p class="text-[11px] text-amber-800">Los 4 documentos son obligatorios y deben ser archivos PDF.</p>
+            <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex gap-2 items-center">
+                <span class="text-blue-600">ℹ️</span>
+                <p class="text-[11px] text-blue-800">Los documentos son opcionales en este paso. Puede subirlos después desde el detalle del siniestro.</p>
             </div>
         </div>
 
@@ -236,7 +236,7 @@
         const camposRobo = document.getElementById('campos_robo');
         camposRobo.classList.toggle('hidden', !esRobo);
 
-        // Cambiar dinámicamente el requerimiento de los campos de texto
+        // Cambiar dinámicamente el requerimiento de los campos de texto de robo
         const inputsRobo = camposRobo.querySelectorAll('input');
         inputsRobo.forEach(input => {
             input.required = esRobo;
@@ -250,12 +250,12 @@
 
         if (esRobo) {
             icon.textContent = "🚨";
-            title.textContent = "Denuncia Fiscalía *";
+            title.textContent = "Denuncia Fiscalía";
             fileInput.name = "doc_denuncia"; // Cambio clave para el backend
             wrapper.classList.add('border-red-200', 'bg-red-50/30');
         } else {
             icon.textContent = "🔧";
-            title.textContent = "Informe Técnico *";
+            title.textContent = "Informe Técnico";
             fileInput.name = "doc_informe"; // Vuelve a la normalidad
             wrapper.classList.remove('border-red-200', 'bg-red-50/30');
         }
