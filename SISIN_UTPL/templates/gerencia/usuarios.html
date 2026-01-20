@@ -1,0 +1,72 @@
+{% extends 'gerencia/base_gerencia.html' %}
+
+{% block title %}Usuarios{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8">
+    <h1 class="text-3xl font-bold text-neutral-dark dark:text-white">Gestión de Usuarios</h1>
+
+    <div class="bg-white dark:bg-[#111827] rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
+        <div class="px-6 py-4 border-b dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+            <h3 class="font-bold text-lg flex items-center gap-2 dark:text-white">
+                <span class="material-symbols-outlined text-primary">person_add</span> Nuevo Usuario
+            </h3>
+        </div>
+        <form method="POST" class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Nombre Completo</label>
+                <input name="userName" type="text" class="w-full rounded-lg border-gray-300 h-10 px-3" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Correo Electrónico</label>
+                <input name="userEmail" type="email" class="w-full rounded-lg border-gray-300 h-10 px-3" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Rol</label>
+                <select name="userRole" class="w-full rounded-lg border-gray-300 h-10 px-3 dark:bg-gray-800 dark:border-gray-600 dark:text-white" required>
+                    <option value="" disabled selected>Seleccione un rol...</option>
+                    {% for rol in roles %}
+                        <option value="{{ rol.id }}">{{ rol.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="md:col-span-3 flex justify-end">
+                <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700">
+                    Guardar Usuario
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-white dark:bg-[#111827] rounded-xl shadow-sm border overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-gray-50 dark:bg-gray-900 border-b">
+                <tr>
+                    <th class="px-6 py-3 text-xs uppercase text-gray-500">Usuario</th>
+                    <th class="px-6 py-3 text-xs uppercase text-gray-500">Rol</th>
+                    <th class="px-6 py-3 text-xs uppercase text-gray-500">Estado</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                {% for u in usuarios %}
+                <tr>
+                    <td class="px-6 py-4">
+                        <div class="font-medium text-gray-900 dark:text-white">{{ u.first_name }}</div>
+                        <div class="text-xs text-gray-500">{{ u.email }}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if u.is_superuser %}Admin{% elif u.is_staff %}Staff{% else %}Usuario{% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                            {{ u.groups.first.name|default:"Sin Rol" }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
