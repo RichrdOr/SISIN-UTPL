@@ -1,0 +1,96 @@
+{% extends 'gerencia/base_gerencia.html' %}
+
+{% block title %}Reportes de Siniestralidad{% endblock %}
+
+{% block content %}
+<div class="max-w-[1400px] mx-auto flex flex-col gap-6">
+    <h1 class="text-2xl font-bold text-neutral-dark dark:text-white">Reportes de Siniestralidad</h1>
+
+    <form method="GET" class="bg-white dark:bg-[#1a2234] rounded-xl p-5 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="flex flex-col lg:flex-row gap-5 justify-between items-end">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-gray-500 uppercase">Fecha Inicio</label>
+                    <input type="date" name="fecha_inicio" value="{{ filtros.fecha_inicio }}" class="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white h-10 px-3">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-gray-500 uppercase">Estado</label>
+                    <select name="estado" class="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white h-10">
+                        <option value="Todos">Todos</option>
+                        {% for clave, nombre in lista_estados %}
+                            <option value="{{ clave }}" {% if filtros.estado == clave %}selected{% endif %}>
+                                {{ nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-gray-500 uppercase">Tipo Bien</label>
+                    <select name="tipo" class="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white h-10">
+                        <option value="Todos">Todos</option>
+                        {% for tipo in lista_tipos %}
+                            <option value="{{ tipo }}" {% if filtros.tipo == tipo %}selected{% endif %}>
+                                {{ tipo }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="bg-primary text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700 transition">
+                Aplicar Filtros
+            </button>
+        </div>
+    </form>
+
+    <div class="bg-white dark:bg-[#1a2234] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+            <h3 class="font-bold text-neutral-dark dark:text-white">Resultados</h3>
+            
+            <div class="flex gap-2">
+                <a href="?{{ request.GET.urlencode }}&export=csv" class="flex items-center gap-2 px-3 py-1.5 border rounded-lg hover:bg-green-100 text-green-700 border-green-200 bg-green-50 text-sm font-medium transition-colors" title="Descargar CSV">
+                    <span class="material-symbols-outlined text-sm">table_view</span> CSV
+                </a>
+                <a href="?{{ request.GET.urlencode }}&export=pdf" class="flex items-center gap-2 px-3 py-1.5 border rounded-lg hover:bg-red-100 text-red-700 border-red-200 bg-red-50 text-sm font-medium transition-colors" title="Descargar PDF">
+                    <span class="material-symbols-outlined text-sm">picture_as_pdf</span> PDF
+                </a>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-800">
+                    <tr>
+                        <th class="px-6 py-3 text-xs uppercase text-gray-500">Nº Caso</th>
+                        <th class="px-6 py-3 text-xs uppercase text-gray-500">Estado</th>
+                        <th class="px-6 py-3 text-xs uppercase text-gray-500">Tipo</th>
+                        <th class="px-6 py-3 text-xs uppercase text-gray-500">Fecha</th>
+                        <th class="px-6 py-3 text-xs uppercase text-gray-500 text-right">Monto</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    {% for s in siniestros %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td class="px-6 py-3 text-primary font-medium">#{{ s.numero_siniestro }}</td>
+                        <td class="px-6 py-3">
+                            {% if s.estado == 'pagado' or s.estado == 'cerrado' %}
+                                <span class="text-green-600 font-bold text-xs bg-green-100 px-2 py-1 rounded">Cerrado</span>
+                            {% elif s.estado == 'rechazado' %}
+                                <span class="text-red-600 font-bold text-xs bg-red-100 px-2 py-1 rounded">Rechazado</span>
+                            {% else %}
+                                <span class="text-blue-600 font-bold text-xs bg-blue-100 px-2 py-1 rounded">Abierto</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-3">{{ s.tipo_bien }}</td>
+                        <td class="px-6 py-3 text-gray-500">{{ s.fecha_reporte|date:"d/m/Y" }}</td>
+                        <td class="px-6 py-3 text-right font-bold">${{ s.monto_reclamado }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No se encontraron resultados para estos filtros.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

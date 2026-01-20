@@ -2,8 +2,9 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 from django_fsm import FSMField, transition
-from polizas.models import Poliza, RamoPoliza
-from usuarios.models import Usuario, AsesorUTPL
+from polizas.models import *
+from usuarios.models import *
+from datetime import date 
 
 class Broker(models.Model):
     nombre = models.CharField(max_length=100)
@@ -437,13 +438,34 @@ class Siniestro(models.Model):
         self.deducible_aplicado = deducible
         self.monto_a_pagar = monto_aprobado - deducible
 
-    @transition(field=estado, source='liquidado', target='pagado')
-    def registrar_pago(self):
-        """Marca como pagado"""
-        self.fecha_pago_real = timezone.now().date()
-        # Verificar si el pago fue fuera de plazo
-        if self.fecha_limite_pago and self.fecha_pago_real > self.fecha_limite_pago:
-            self.pago_fuera_de_plazo = True
+    def validar_cobertura(self):
+        """
+        Retorna True si la póliza estaba activa y vigente al momento del siniestro.
+        """
+        # Seguridad: Si no tiene póliza asignada, no hay cobertura
+        if not self.poliza:
+            return False
+
+        # 1. Verificar estado de la póliza
+        if self.poliza.estado != 'activa':
+            return False
+
+        # 2. Verificar vigencia (Fecha Ocurrencia vs Fechas Póliza)
+        # Asumimos que fecha_ocurrencia es obligatorio
+        if self.poliza.fecha_inicio <= self.fecha_ocurrencia <= self.poliza.fecha_fin:
+            return True
+        
+        return False
+
+    # --- 2. CALCULAR TIEMPO DE RESOLUCIÓN (Métricas) ---
+    def calcular_tiempo_resolucion(self):
+        """
+        Calcula los días transcurridos desde la apertura hasta el cierre (o hasta hoy).
+        """
+        fecha_fin_calculo = self.fecha_cierre if self.fecha_cierre else date.today()
+        delta = fecha_fin_calculo - self.fecha_apertura
+        return delta.days
+
 
     @transition(field=estado, source=['pagado', 'rechazado'], target='cerrado')
     def cerrar(self):
@@ -544,50 +566,13 @@ class RoboSiniestro(models.Model):
         verbose_name = "Información de Robo"
         verbose_name_plural = "Información de Robos"
 
+class Hurto(models.Model):
+    evento = models.OneToOneField(Evento, on_delete=models.CASCADE, primary_key=True)
+    ubicacion_ultima_vista = models.CharField(max_length=255)
 
-class PagareSiniestro(models.Model):
-    """Pagaré cuando el usuario debe pagar el deducible"""
-    ESTADO_CHOICES = [
-        ('pendiente', 'Pendiente de Firma'),
-        ('firmado', 'Firmado'),
-        ('pagado', 'Pagado'),
-        ('cancelado', 'Cancelado'),
-    ]
 
-    siniestro = models.OneToOneField(
-        Siniestro,
-        on_delete=models.CASCADE,
-        related_name="pagare"
-    )
+# En siniestros/models.py
 
-    monto = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        verbose_name="Monto del Pagaré"
-    )
+# Asegúrate que esto esté importado arriba
 
-    archivo = models.FileField(
-        upload_to="siniestros/pagares/%Y/%m/",
-        null=True,
-        blank=True,
-        verbose_name="Archivo del Pagaré"
-    )
-
-    estado = models.CharField(
-        max_length=20,
-        choices=ESTADO_CHOICES,
-        default='pendiente'
-    )
-
-    fecha_emision = models.DateField(auto_now_add=True)
-    fecha_firma = models.DateField(null=True, blank=True)
-    fecha_pago = models.DateField(null=True, blank=True)
-
-    observaciones = models.TextField(blank=True)
-
-    class Meta:
-        verbose_name = "Pagaré"
-        verbose_name_plural = "Pagarés"
-
-    def __str__(self):
-        return f"Pagaré {self.siniestro.numero_siniestro} - ${self.monto}"
+    
