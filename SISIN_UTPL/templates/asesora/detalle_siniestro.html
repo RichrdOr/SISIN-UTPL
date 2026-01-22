@@ -22,7 +22,7 @@
     <div class="px-4 py-2 rounded-lg font-medium text-sm
         {% if siniestro.estado == 'reportado' %}bg-yellow-100 text-yellow-800
         {% elif siniestro.estado == 'documentos_incompletos' %}bg-orange-100 text-orange-800
-        {% elif siniestro.estado == 'documentos_completos' or siniestro.estado == 'enviado_aseguradora' or siniestro.estado == 'en_revision' %}bg-blue-100 text-blue-800
+        {% elif siniestro.estado == 'documentos_completos' or siniestro.estado == 'enviado' or siniestro.estado == 'en_revision' %}bg-blue-100 text-blue-800
         {% elif siniestro.estado == 'rechazado' %}bg-red-100 text-red-800
         {% elif siniestro.estado == 'fuera_plazo' %}bg-red-100 text-red-800
         {% elif siniestro.estado == 'aprobado' or siniestro.estado == 'liquidado' %}bg-emerald-100 text-emerald-800
@@ -98,19 +98,48 @@
     <p class="text-sm text-gray-600">Este siniestro fue reportado después del plazo de 15 días y no puede ser procesado.</p>
     <p class="text-sm text-red-600 mt-2">Días transcurridos: {{ siniestro.dias_transcurridos_reporte }}</p>
   </div>
-  {% elif siniestro.estado == 'documentos_incompletos' %}
+  {% elif siniestro.estado == 'documentos_incompletos' or siniestro.estado == 'docs_incompletos' %}
   <div class="bg-orange-50 border border-orange-200 rounded-lg p-6">
-    <div class="flex items-start gap-4">
+    <div class="flex items-start gap-4 mb-4">
       <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
       </div>
-      <div>
+      <div class="flex-1">
         <h3 class="text-lg font-semibold text-gray-800 mb-2">Documentos Incompletos</h3>
         <p class="text-sm text-gray-600 mb-2">Faltan documentos para procesar este siniestro.</p>
         {% if siniestro.documentos_faltantes %}
         <p class="text-sm text-orange-700"><strong>Documentos faltantes:</strong> {{ siniestro.documentos_faltantes }}</p>
         {% endif %}
       </div>
+    </div>
+    
+    <!-- Formulario para subir documentos faltantes -->
+    <div class="mt-4 pt-4 border-t border-orange-200">
+      <h4 class="text-sm font-semibold text-gray-700 mb-3">📤 Subir Documento Faltante</h4>
+      <form method="POST" action="{% url 'subir_documento' siniestro.id %}" enctype="multipart/form-data" class="flex flex-wrap gap-3 items-end">
+        {% csrf_token %}
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-xs text-gray-500 mb-1">Tipo de Documento</label>
+          <select name="tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400">
+            <option value="">Seleccione...</option>
+            <option value="carta">📄 Carta Formal</option>
+            <option value="informe">🔧 Informe Técnico</option>
+            <option value="proforma">🧾 Proforma de Reparación</option>
+            <option value="preexistencia">✅ Certificado de Preexistencia</option>
+            <option value="denuncia">🚨 Denuncia Fiscalía</option>
+            <option value="otro">📋 Otro</option>
+          </select>
+        </div>
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-xs text-gray-500 mb-1">Archivo PDF</label>
+          <input type="file" name="archivo" required accept=".pdf,application/pdf" 
+                 class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 cursor-pointer">
+        </div>
+        <button type="submit" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium text-sm flex items-center gap-2 whitespace-nowrap">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          Subir
+        </button>
+      </form>
     </div>
   </div>
   {% endif %}
@@ -302,19 +331,19 @@
                 Validar Documentación
             </button>
         
-        {% elif siniestro.estado == 'documentos_completos' %}
-            <button onclick="abrirModal('modal-enviar-aseguradora')" class="flex items-center gap-2 px-6 py-2 bg-[#0B3C5D] text-white rounded-lg hover:bg-[#082A42] font-medium shadow-md transition-all hover:scale-105">
+        {% elif siniestro.estado == 'documentos_completos' or siniestro.estado == 'docs_completos' %}
+            <button onclick="abrirModal('modal-envio')" class="flex items-center gap-2 px-6 py-2 bg-[#0B3C5D] text-white rounded-lg hover:bg-[#082A42] font-medium shadow-md transition-all hover:scale-105">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
                 Enviar a Aseguradora
             </button>
 
-        {% elif siniestro.estado == 'documentos_incompletos' %}
+        {% elif siniestro.estado == 'documentos_incompletos' or siniestro.estado == 'docs_incompletos' %}
              <button onclick="abrirModal('modal-docs-completos')" class="flex items-center gap-2 px-6 py-2 bg-[#1F6FB2] text-white rounded-lg hover:bg-blue-700 font-medium shadow-md transition-all hover:scale-105">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
                 Revisar Nuevamente
             </button>
 
-        {% elif siniestro.estado == 'enviado_aseguradora' %}
+        {% elif siniestro.estado == 'enviado' %}
             <button onclick="abrirModal('modal-revision')" class="flex items-center gap-2 px-6 py-2 bg-[#1F6FB2] text-white rounded-lg hover:bg-blue-700 font-medium shadow-md transition-all hover:scale-105">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 Marcar En Revisión

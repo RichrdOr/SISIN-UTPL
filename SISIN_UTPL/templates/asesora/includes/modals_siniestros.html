@@ -1,810 +1,506 @@
-<!-- Aprobar Siniestro -->
- <div id="modal-aprobar" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-[#2E8B57] text-white p-6 rounded-t-lg flex items-center justify-between z-10">
-            <h2 class="text-xl font-semibold">Aprobar Siniestro</h2>
-            <button type="button" onclick="cerrarModal('modal-aprobar')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-        </div>
-
-        <form method="POST" action="{% url 'aprobar_siniestro' siniestro.id %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="p-6 space-y-6">
-                
-                <div class="bg-[#E8F5E9] border border-[#2E8B57] rounded-lg p-4">
-                    <div class="flex items-center gap-2 mb-3">
-                        <svg class="w-5 h-5 text-[#2E8B57]" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                        <h3 class="text-sm text-[#2C2C2C] font-semibold">Cálculo de Montos</h3>
-                    </div>
-                    <p class="text-sm text-[#6E6E6E]">
-                        Configure los montos aprobados para este siniestro.
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
-                    <div>
-                        <label class="block text-sm text-[#6E6E6E] mb-2">
-                            Monto Reclamado <span class="text-[#6E6E6E]">(referencia)</span>
-                        </label>
-                        <div class="px-4 py-3 bg-[#F4F6F8] rounded-lg text-[#2C2C2C] font-medium">
-                            $ {{ siniestro.monto_reclamado|default:"0.00" }}
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-[#6E6E6E] mb-2">
-                            Monto Aprobado <span class="text-[#C0392B]">*</span>
-                        </label>
-                        <div class="relative">
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#6E6E6E]">$</span>
-                            <input 
-                                type="number" 
-                                step="0.01" 
-                                name="monto_aprobado" 
-                                id="input-monto-aprobado"
-                                value="{{ siniestro.monto_reclamado|stringformat:'.2f' }}" 
-                                required
-                                class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2E8B57]"
-                                oninput="calcularMontoFinal()"
-                            >
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-[#6E6E6E] mb-2">
-                            Deducible Aplicado <span class="text-[#C0392B]">*</span>
-                        </label>
-                        <div class="relative">
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#6E6E6E]">$</span>
-                            <input 
-                                type="number" 
-                                step="0.01" 
-                                name="deducible" 
-                                id="input-deducible"
-                                value="0.00" 
-                                required
-                                class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2E8B57]"
-                                oninput="calcularMontoFinal()"
-                            >
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-[#6E6E6E] mb-2">Monto Final a Pagar</label>
-                        <div class="px-4 py-3 bg-[#2E8B57] text-white rounded-lg flex items-center gap-2">
-                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg>
-                            <span class="text-lg font-bold" id="display-monto-final">
-                                $ 0.00
-                            </span>
-                            <input type="hidden" name="monto_final" id="input-monto-final">
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Observaciones Internas <span class="text-[#C0392B]">*</span>
-                    </label>
-                    <textarea name="observaciones" rows="4" placeholder="Justificación de la aprobación, ajustes realizados, etc..." class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2E8B57]" required></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Documento de Liquidación <span class="text-[#C0392B]">*</span>
-                    </label>
-                    <div class="relative w-full">
-                        <input type="file" name="documento_liquidacion" id="file-liquidacion" required class="hidden" onchange="mostrarNombreArchivo('file-liquidacion', 'nombre-archivo-liquidacion')">
-                        <label for="file-liquidacion" class="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#2E8B57] hover:bg-[#E8F5E9] transition-colors">
-                            <svg class="w-8 h-8 text-[#6E6E6E] mb-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                            <span class="text-sm text-[#2C2C2C]">Cargar documento de liquidación (PDF)</span>
-                            <span id="nombre-archivo-liquidacion" class="text-xs text-[#2E8B57] mt-1 font-semibold h-4"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="bg-[#FEF3E2] border border-[#F2A900] rounded-lg p-4">
-                    <p class="text-sm text-[#2C2C2C]">
-                        <strong>Importante:</strong> Al aprobar este siniestro, el monto final calculado quedará registrado para su posterior pago.
-                    </p>
-                </div>
-            </div>
-
-            <div class="sticky bottom-0 bg-gray-50 px-6 py-4 rounded-b-lg flex items-center justify-end gap-4 border-t border-gray-200">
-                <button type="button" onclick="cerrarModal('modal-aprobar')" class="px-6 py-3 border border-gray-300 text-[#2C2C2C] rounded-lg hover:bg-white transition-colors">
-                    Cancelar
-                </button>
-                <button type="submit" class="px-6 py-3 bg-[#2E8B57] text-white rounded-lg hover:bg-[#257249] transition-colors">
-                    Aprobar Siniestro
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-    function calcularMontoFinal() {
-        const aprobado = parseFloat(document.getElementById('input-monto-aprobado').value) || 0;
-        const deducible = parseFloat(document.getElementById('input-deducible').value) || 0;
-        const final = aprobado - deducible;
-        
-        // Actualizar visualización
-        document.getElementById('display-monto-final').textContent = `$ ${final.toFixed(2)}`;
-        // Actualizar input oculto para envío
-        document.getElementById('input-monto-final').value = final.toFixed(2);
-    }
-    
-    // Ejecutar al cargar por si hay valores por defecto
-    document.addEventListener("DOMContentLoaded", function() {
-        calcularMontoFinal();
-    });
-</script>
-
-<!-- Cerrar Siniestro -->
- <div id="modal-cerrar" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full">
-        <div class="bg-[#2E8B57] text-white p-6 rounded-t-lg flex items-center justify-between">
-            <h2 class="text-xl font-semibold">Cerrar Siniestro</h2>
-            <button type="button" onclick="cerrarModal('modal-cerrar')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-        </div>
-
-        <form method="POST" action="{% url 'cerrar_siniestro' siniestro.id %}">
-            {% csrf_token %}
-            <div class="p-6 space-y-6">
-                <div class="flex items-start gap-4 bg-[#E8F5E9] border border-[#2E8B57] rounded-lg p-6 text-center">
-                    <div class="w-full">
-                        <div class="w-16 h-16 bg-[#2E8B57] rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-10 h-10 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                        </div>
-                        <h3 class="text-lg text-[#2C2C2C] font-semibold mb-2">
-                            ¿Está seguro de cerrar este siniestro?
-                        </h3>
-                        <p class="text-sm text-[#6E6E6E]">
-                            El siniestro <strong>#{{ siniestro.id }}</strong> será marcado como completado.
-                            Esta acción indica que todo el proceso ha finalizado exitosamente.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="bg-[#F4F6F8] rounded-lg p-4">
-                    <h4 class="text-sm text-[#2C2C2C] font-semibold mb-3">Verificación automática antes de cerrar:</h4>
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2 text-sm text-[#6E6E6E]">
-                            <svg class="w-4 h-4 text-[#2E8B57]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            <span>Documentación completa cargada</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm text-[#6E6E6E]">
-                            <svg class="w-4 h-4 text-[#2E8B57]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            <span>Información enviada a aseguradora</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm text-[#6E6E6E]">
-                            <svg class="w-4 h-4 text-[#2E8B57]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            <span>Siniestro aprobado y liquidado</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm text-[#6E6E6E]">
-                            <svg class="w-4 h-4 text-[#2E8B57]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            <span>Pago registrado con comprobante</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Notas de Cierre <span class="text-[#6E6E6E]">(opcional)</span>
-                    </label>
-                    <textarea name="notas_cierre" rows="4" placeholder="Comentarios finales, lecciones aprendidas..." class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2E8B57]"></textarea>
-                </div>
-
-                <div class="bg-[#FEF3E2] border border-[#F2A900] rounded-lg p-4">
-                    <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" required class="w-5 h-5 text-[#2E8B57] border-gray-300 rounded focus:ring-2 focus:ring-[#2E8B57] mt-0.5">
-                        <span class="text-sm text-[#2C2C2C]">
-                            Confirmo que todas las etapas han sido completadas.
-                        </span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex items-center justify-end gap-4 border-t border-gray-200">
-                <button type="button" onclick="cerrarModal('modal-cerrar')" class="px-6 py-3 border border-gray-300 text-[#2C2C2C] rounded-lg hover:bg-white transition-colors">
-                    Cancelar
-                </button>
-                <button type="submit" class="px-6 py-3 bg-[#2E8B57] text-white rounded-lg hover:bg-[#257249] transition-colors">
-                    Cerrar Siniestro
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-<!-- Documentos Completos -->
-
-<div id="modal-docs-completos" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full">
-        <div class="bg-[#0B3C5D] text-white p-6 rounded-t-lg flex items-center justify-between">
-            <h2 class="text-xl font-semibold">Marcar Documentos como Completos</h2>
-            <button type="button" onclick="cerrarModal('modal-docs-completos')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-        </div>
-
-        <form method="POST" action="{% url 'confirmar_documentos' siniestro.id %}">
-            {% csrf_token %}
-            <div class="p-6 space-y-6">
-                <div class="bg-[#E3F2FD] border border-[#1F6FB2] rounded-lg p-4">
-                    <p class="text-sm text-[#2C2C2C]">
-                        Esta acción confirmará que todos los documentos requeridos están completos y el siniestro está listo para ser enviado a la aseguradora.
-                    </p>
-                </div>
-
-                <div>
-                    <h3 class="text-sm text-[#6E6E6E] font-semibold mb-3">Documentos verificados en sistema:</h3>
-                    <div class="space-y-2 max-h-60 overflow-y-auto">
-                        {% for doc in siniestro.documentos.all %}
-                        <div class="flex items-center gap-3 p-3 bg-[#F4F6F8] rounded-lg">
-                            <svg class="w-5 h-5 text-[#2E8B57]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                            <span class="text-sm text-[#2C2C2C]">{{ doc.tipo }}</span> <a href="{{ doc.archivo.url }}" target="_blank" class="text-xs text-[#1F6FB2] hover:underline ml-auto">Ver archivo</a>
-                        </div>
-                        {% empty %}
-                        <p class="text-sm text-red-500 italic">No se han cargado documentos aún.</p>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="bg-[#FEF3E2] border border-[#F2A900] rounded-lg p-4">
-                    <p class="text-sm text-[#2C2C2C]">
-                        <strong>Importante:</strong> Una vez marcado como completo, el siguiente paso será enviar la información a la aseguradora.
-                    </p>
-                </div>
-            </div>
-
-            <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex items-center justify-end gap-4 border-t border-gray-200">
-                <button type="button" onclick="cerrarModal('modal-docs-completos')" class="px-6 py-3 border border-gray-300 text-[#2C2C2C] rounded-lg hover:bg-white transition-colors">
-                    Cancelar
-                </button>
-                <button type="submit" class="px-6 py-3 bg-[#1F6FB2] text-white rounded-lg hover:bg-[#0B3C5D] transition-colors">
-                    Confirmar y continuar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-<!-- Liquidar Siniestro -->
-
-<div id="modal-liquidar" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full">
-        <div class="bg-[#0B3C5D] text-white p-6 rounded-t-lg flex items-center justify-between">
-            <h2 class="text-xl font-semibold">Liquidar Siniestro</h2>
-            <button type="button" onclick="cerrarModal('modal-liquidar')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-        </div>
-
-        <form method="POST" action="{% url 'liquidar_siniestro' siniestro.id %}">
-            {% csrf_token %}
-            <div class="p-6 space-y-6">
-                
-                <div class="bg-[#E3F2FD] border border-[#1F6FB2] rounded-lg p-4">
-                    <div class="flex items-center gap-2 mb-2">
-                        <svg class="w-5 h-5 text-[#1F6FB2]" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                        <h3 class="text-sm text-[#2C2C2C] font-semibold">Confirmar Liquidación</h3>
-                    </div>
-                    <p class="text-sm text-[#6E6E6E]">
-                        Esta acción confirmará que el siniestro está listo para el pago al reclamante. El monto aprobado será procesado.
-                    </p>
-                </div>
-
-                <div class="bg-[#E8F5E9] border border-[#2E8B57] rounded-lg p-6 text-center">
-                    <div class="text-sm text-[#6E6E6E] mb-2">Monto a Liquidar</div>
-                    <div class="text-3xl font-bold text-[#2E8B57]">
-                        $ {{ siniestro.monto_liquidado_aseguradora|default:"0.00" }}
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Notas de Liquidación <span class="text-[#6E6E6E]">(opcional)</span>
-                    </label>
-                    <textarea name="notas_liquidacion" rows="4" placeholder="Observaciones sobre el proceso de liquidación..." class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1F6FB2]"></textarea>
-                </div>
-
-                <div class="bg-[#FEF3E2] border border-[#F2A900] rounded-lg p-4">
-                    <p class="text-sm text-[#2C2C2C]">
-                        <strong>Siguiente paso:</strong> Una vez liquidado, deberá registrar el pago efectivo al reclamante con el comprobante correspondiente.
-                    </p>
-                </div>
-            </div>
-
-            <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex items-center justify-end gap-4 border-t border-gray-200">
-                <button type="button" onclick="cerrarModal('modal-liquidar')" class="px-6 py-3 border border-gray-300 text-[#2C2C2C] rounded-lg hover:bg-white transition-colors">
-                    Cancelar
-                </button>
-                <button type="submit" class="px-6 py-3 bg-[#1F6FB2] text-white rounded-lg hover:bg-[#0B3C5D] transition-colors">
-                    Confirmar Liquidación
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Marcar en Revisión -->
-<div id="modal-revision" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full">
-        <div class="bg-[#0B3C5D] text-white p-6 rounded-t-lg flex items-center justify-between">
-            <h2 class="text-xl font-semibold">Marcar Siniestro en Revisión</h2>
-            <button type="button" onclick="cerrarModal('modal-revision')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-        </div>
-
-        <form method="POST" action="{% url 'marcar_revision' siniestro.id %}">
-            {% csrf_token %}
-            <div class="p-6 space-y-6">
-                <div class="flex items-start gap-4 bg-[#E3F2FD] border border-[#1F6FB2] rounded-lg p-4">
-                    <svg class="w-6 h-6 text-[#1F6FB2] flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M5 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path><path d="M9 17v1a3 3 0 0 1-6 0v-1"></path></svg>
-                    <div>
-                        <h3 class="text-sm text-[#2C2C2C] font-semibold mb-1">
-                            El siniestro pasará a estado "En Revisión"
-                        </h3>
-                        <p class="text-sm text-[#6E6E6E]">
-                            La aseguradora ha recibido la información y está evaluando el caso.
-                            Este estado indica que el proceso de análisis está en curso.
-                        </p>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="nota_revision" class="block text-sm text-[#6E6E6E] mb-2">
-                        Notas internas (opcional)
-                    </label>
-                    <textarea
-                        id="nota_revision"
-                        name="nota"
-                        rows="4"
-                        placeholder="Agregue observaciones sobre el proceso de revisión..."
-                        class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1F6FB2]"
-                    ></textarea>
-                </div>
-            </div>
-
-            <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex items-center justify-end gap-4 border-t border-gray-200">
-                <button type="button" onclick="cerrarModal('modal-revision')" class="px-6 py-3 border border-gray-300 text-[#2C2C2C] rounded-lg hover:bg-white transition-colors">
-                    Cancelar
-                </button>
-                <button type="submit" class="px-6 py-3 bg-[#1F6FB2] text-white rounded-lg hover:bg-[#0B3C5D] transition-colors">
-                    Marcar en revisión
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Rechazar Siniestro -->
- <div id="modal-rechazar" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-[#C0392B] text-white p-6 rounded-t-lg flex items-center justify-between z-10">
-            <h2 class="text-xl font-semibold">Rechazar Siniestro</h2>
-            <button type="button" onclick="cerrarModal('modal-rechazar')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-        </div>
-
-        <form method="POST" action="{% url 'rechazar_siniestro' siniestro.id %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="p-6 space-y-6">
-                
-                <div class="flex items-start gap-4 bg-[#FFEBEE] border border-[#C0392B] rounded-lg p-4">
-                    <svg class="w-6 h-6 text-[#C0392B] flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                    <div>
-                        <h3 class="text-sm text-[#2C2C2C] font-semibold mb-1">
-                            Esta acción rechazará permanentemente el siniestro
-                        </h3>
-                        <p class="text-sm text-[#6E6E6E]">
-                            El reclamante será notificado sobre el rechazo. Asegúrese de proporcionar una justificación clara.
-                        </p>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Razón de Rechazo <span class="text-[#C0392B]">*</span>
-                    </label>
-                    <select name="razon_rechazo" required class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B] bg-white">
-                        <option value="">Seleccione una razón</option>
-                        <option value="documentacion_insuficiente">Documentación insuficiente</option>
-                        <option value="fuera_cobertura">Evento fuera de cobertura</option>
-                        <option value="poliza_vencida">Póliza vencida o suspendida</option>
-                        <option value="fraude_detectado">Posible fraude detectado</option>
-                        <option value="informacion_incorrecta">Información incorrecta o inconsistente</option>
-                        <option value="no_cumple_requisitos">No cumple requisitos de póliza</option>
-                        <option value="otros">Otros</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Detalles del Rechazo <span class="text-[#C0392B]">*</span>
-                    </label>
-                    <textarea name="detalles" rows="6" required placeholder="Proporcione una explicación detallada..." class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B]"></textarea>
-                    <p class="text-xs text-[#6E6E6E] mt-1">Mínimo 50 caracteres requeridos</p>
-                </div>
-
-                <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Documento de Respaldo <span class="text-[#6E6E6E]">(opcional)</span>
-                    </label>
-                    
-                    <div class="relative w-full">
-                        <input type="file" name="documento_respaldo" id="file-rechazo" class="hidden" onchange="mostrarNombreArchivo('file-rechazo', 'nombre-archivo-rechazo')">
-                        <label for="file-rechazo" class="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#C0392B] hover:bg-[#FFEBEE] transition-colors">
-                            <svg class="w-8 h-8 text-[#6E6E6E] mb-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                            <span class="text-sm text-[#2C2C2C]">Click para cargar documento (PDF)</span>
-                            <span id="nombre-archivo-rechazo" class="text-xs text-[#C0392B] mt-1 font-semibold h-4"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="bg-[#FEF3E2] border border-[#F2A900] rounded-lg p-4">
-                    <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" required class="w-5 h-5 text-[#C0392B] border-gray-300 rounded focus:ring-2 focus:ring-[#C0392B] mt-0.5">
-                        <span class="text-sm text-[#2C2C2C]">
-                            Confirmo que he revisado toda la información y la decisión está justificada.
-                        </span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="sticky bottom-0 bg-gray-50 px-6 py-4 rounded-b-lg flex items-center justify-end gap-4 border-t border-gray-200">
-                <button type="button" onclick="cerrarModal('modal-rechazar')" class="px-6 py-3 border border-gray-300 text-[#2C2C2C] rounded-lg hover:bg-white transition-colors">
-                    Cancelar
-                </button>
-                <button type="submit" class="px-6 py-3 bg-[#C0392B] text-white rounded-lg hover:bg-[#A02E23] transition-colors">
-                    Rechazar Siniestro
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Registrar Pago -->
- <div id="modal-pago" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-[#2E8B57] text-white p-6 rounded-t-lg flex items-center justify-between z-10">
-            <h2 class="text-xl font-semibold">Registrar Pago</h2>
-            <button type="button" onclick="cerrarModal('modal-pago')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-        </div>
-
-        <form method="POST" action="{% url 'registrar_pago' siniestro.id %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="p-6 space-y-6">
-                
-                <div class="bg-[#E8F5E9] border border-[#2E8B57] rounded-lg p-6 text-center">
-                    <div class="text-sm text-[#6E6E6E] mb-2">Monto Aprobado a Pagar</div>
-                    <div class="text-3xl font-bold text-[#2E8B57]">
-                        $ {{ siniestro.monto_liquidado_aseguradora|default:"0.00" }}
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Fecha de Pago <span class="text-[#C0392B]">*</span>
-                    </label>
-                    <div class="relative">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <svg class="w-5 h-5 text-[#6E6E6E]" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        </div>
-                        <input type="date" name="fecha_pago" required class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2E8B57]">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Comprobante de Pago <span class="text-[#C0392B]">*</span>
-                    </label>
-                    <div class="relative w-full">
-                        <input type="file" name="comprobante_pago" id="file-pago" required class="hidden" onchange="mostrarNombreArchivo('file-pago', 'nombre-archivo-pago')">
-                        <label for="file-pago" class="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#2E8B57] hover:bg-[#E8F5E9] transition-colors">
-                            <svg class="w-8 h-8 text-[#6E6E6E] mb-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                            <span class="text-sm text-[#2C2C2C]">Cargar comprobante (PDF, JPG)</span>
-                            <span id="nombre-archivo-pago" class="text-xs text-[#2E8B57] mt-1 font-semibold h-4"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="bg-[#F4F6F8] rounded-lg p-4">
-                    <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" name="pago_fuera_plazo" class="w-5 h-5 text-[#F2A900] border-gray-300 rounded focus:ring-2 focus:ring-[#F2A900] mt-0.5">
-                        <div>
-                            <span class="text-sm text-[#2C2C2C] block mb-1 font-medium">
-                                Marcar como pago fuera de plazo
-                            </span>
-                            <span class="text-xs text-[#6E6E6E]">
-                                Active esta opción si el pago se realizó después del plazo estándar de 30 días.
-                            </span>
-                        </div>
-                    </label>
-                </div>
-
-                <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Observaciones <span class="text-[#6E6E6E]">(opcional)</span>
-                    </label>
-                    <textarea name="observaciones" rows="3" placeholder="Notas adicionales sobre el pago..." class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2E8B57]"></textarea>
-                </div>
-
-                <div class="bg-[#E3F2FD] border border-[#1F6FB2] rounded-lg p-4">
-                    <p class="text-sm text-[#2C2C2C]">
-                        <strong>Siguiente paso:</strong> Una vez registrado el pago, podrá cerrar el siniestro.
-                    </p>
-                </div>
-            </div>
-
-            <div class="sticky bottom-0 bg-gray-50 px-6 py-4 rounded-b-lg flex items-center justify-end gap-4 border-t border-gray-200">
-                <button type="button" onclick="cerrarModal('modal-pago')" class="px-6 py-3 border border-gray-300 text-[#2C2C2C] rounded-lg hover:bg-white transition-colors">
-                    Cancelar
-                </button>
-                <button type="submit" class="px-6 py-3 bg-[#2E8B57] text-white rounded-lg hover:bg-[#257249] transition-colors">
-                    Registrar Pago
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-    function mostrarNombreArchivo(inputId, spanId) {
-        const input = document.getElementById(inputId);
-        const span = document.getElementById(spanId);
-        if (input.files && input.files.length > 0) {
-            span.textContent = input.files[0].name;
-            span.classList.remove('hidden');
-        } else {
-            span.textContent = '';
-        }
-    }
-</script>
-
-<!-- Documentos Incompletos -->
 <div id="modal-docs-incompletos" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="sticky top-0 bg-[#F2A900] text-white p-6 rounded-t-lg flex items-center justify-between z-10">
-            <h2 class="text-xl font-semibold">Marcar Documentos como Incompletos</h2>
-            <button type="button" onclick="cerrarModal('modal-docs-incompletos')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
+            <h2 class="text-xl font-semibold">⚠️ Documentación Incompleta</h2>
+            <button type="button" onclick="cerrarModal('modal-docs-incompletos')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg">✕</button>
         </div>
 
         <form method="POST" action="{% url 'marcar_docs_incompletos' siniestro.id %}">
             {% csrf_token %}
             <div class="p-6 space-y-6">
-                <div class="flex items-start gap-4 bg-[#FEF3E2] border border-[#F2A900] rounded-lg p-4">
-                    <svg class="w-6 h-6 text-[#F2A900] flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    <div>
-                        <h3 class="text-sm text-[#2C2C2C] font-semibold mb-1">
-                            Faltan documentos para procesar este siniestro
-                        </h3>
-                        <p class="text-sm text-[#6E6E6E]">
-                            Indique qué documentos faltan para que el asegurado pueda completar la información requerida.
-                        </p>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-3 font-semibold">
-                        Documentos Faltantes <span class="text-[#C0392B]">*</span>
-                    </label>
-                    <div class="space-y-3">
-                        <label class="flex items-center gap-3 p-3 bg-[#F4F6F8] rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                            <input type="checkbox" name="docs_faltantes" value="cedula" class="w-5 h-5 text-[#F2A900] border-gray-300 rounded focus:ring-2 focus:ring-[#F2A900]">
-                            <span class="text-sm text-[#2C2C2C]">Cédula de identidad</span>
-                        </label>
-                        <label class="flex items-center gap-3 p-3 bg-[#F4F6F8] rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                            <input type="checkbox" name="docs_faltantes" value="poliza" class="w-5 h-5 text-[#F2A900] border-gray-300 rounded focus:ring-2 focus:ring-[#F2A900]">
-                            <span class="text-sm text-[#2C2C2C]">Copia de la póliza</span>
-                        </label>
-                        <label class="flex items-center gap-3 p-3 bg-[#F4F6F8] rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                            <input type="checkbox" name="docs_faltantes" value="denuncia" class="w-5 h-5 text-[#F2A900] border-gray-300 rounded focus:ring-2 focus:ring-[#F2A900]">
-                            <span class="text-sm text-[#2C2C2C]">Denuncia policial</span>
-                        </label>
-                        <label class="flex items-center gap-3 p-3 bg-[#F4F6F8] rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                            <input type="checkbox" name="docs_faltantes" value="facturas" class="w-5 h-5 text-[#F2A900] border-gray-300 rounded focus:ring-2 focus:ring-[#F2A900]">
-                            <span class="text-sm text-[#2C2C2C]">Facturas o comprobantes</span>
-                        </label>
-                        <label class="flex items-center gap-3 p-3 bg-[#F4F6F8] rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                            <input type="checkbox" name="docs_faltantes" value="fotos" class="w-5 h-5 text-[#F2A900] border-gray-300 rounded focus:ring-2 focus:ring-[#F2A900]">
-                            <span class="text-sm text-[#2C2C2C]">Fotografías del siniestro</span>
-                        </label>
-                        <label class="flex items-center gap-3 p-3 bg-[#F4F6F8] rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                            <input type="checkbox" name="docs_faltantes" value="certificado_medico" class="w-5 h-5 text-[#F2A900] border-gray-300 rounded focus:ring-2 focus:ring-[#F2A900]">
-                            <span class="text-sm text-[#2C2C2C]">Certificado médico</span>
-                        </label>
-                        <label class="flex items-center gap-3 p-3 bg-[#F4F6F8] rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                            <input type="checkbox" name="docs_faltantes" value="otros" class="w-5 h-5 text-[#F2A900] border-gray-300 rounded focus:ring-2 focus:ring-[#F2A900]">
-                            <span class="text-sm text-[#2C2C2C]">Otros documentos</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Observaciones adicionales <span class="text-[#6E6E6E]">(opcional)</span>
-                    </label>
-                    <textarea name="observaciones" rows="4" placeholder="Especifique detalles adicionales sobre los documentos requeridos..." class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F2A900]"></textarea>
-                </div>
-
-                <div class="bg-[#E3F2FD] border border-[#1F6FB2] rounded-lg p-4">
-                    <p class="text-sm text-[#2C2C2C]">
-                        <strong>Nota:</strong> Se enviará una notificación al asegurado indicando los documentos faltantes.
+                <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <p class="text-sm text-gray-800">
+                        El siniestro pasará a estado <strong>Docs Incompletos</strong>. Se notificará al usuario para que subsane las observaciones.
                     </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-600 mb-3 font-semibold">Seleccione los documentos faltantes:</label>
+                    
+                    <div class="space-y-2 mb-4">
+                        <p class="text-xs text-gray-500 uppercase font-bold mb-2">📁 Documentos de Soporte</p>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="carta" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">📄</span>
+                                <span class="text-sm font-medium">Carta Formal</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="informe" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🔧</span>
+                                <span class="text-sm font-medium">Informe Técnico</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="proforma" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🧾</span>
+                                <span class="text-sm font-medium">Proforma de Reparación</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="preexistencia" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">✅</span>
+                                <span class="text-sm font-medium">Certificado de Preexistencia</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    {% if siniestro.tipo_evento == 'robo' %}
+                    <div class="space-y-2 mb-4 pt-4 border-t">
+                        <p class="text-xs text-red-500 uppercase font-bold mb-2">🚨 Documentos de Robo</p>
+                        <label class="flex items-center gap-3 p-3 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 transition-colors border border-transparent hover:border-red-200">
+                            <input type="checkbox" name="documentos_faltantes" value="denuncia" class="w-5 h-5 text-red-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🚨</span>
+                                <span class="text-sm font-medium">Denuncia Fiscalía</span>
+                            </div>
+                        </label>
+                    </div>
+                    {% endif %}
+
+                    <div class="space-y-2 pt-4 border-t">
+                        <p class="text-xs text-gray-500 uppercase font-bold mb-2">📋 Otros</p>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="cedula" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🪪</span>
+                                <span class="text-sm font-medium">Cédula / Identificación</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="facturas" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🧾</span>
+                                <span class="text-sm font-medium">Facturas o Comprobantes</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
+                            <input type="checkbox" name="documentos_faltantes" value="fotos" class="w-5 h-5 text-orange-500 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">📷</span>
+                                <span class="text-sm font-medium">Fotografías del Siniestro</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">Mensaje adicional al Usuario</label>
+                    <textarea name="observaciones" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-400" placeholder="Explique detalles adicionales o instrucciones específicas..."></textarea>
                 </div>
             </div>
 
-            <div class="sticky bottom-0 bg-gray-50 px-6 py-4 rounded-b-lg flex items-center justify-end gap-4 border-t border-gray-200">
-                <button type="button" onclick="cerrarModal('modal-docs-incompletos')" class="px-6 py-3 border border-gray-300 text-[#2C2C2C] rounded-lg hover:bg-white transition-colors">
-                    Cancelar
-                </button>
-                <button type="submit" class="px-6 py-3 bg-[#F2A900] text-white rounded-lg hover:bg-[#D99700] transition-colors">
-                    Marcar como Incompleto
-                </button>
+            <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end gap-3 border-t">
+                <button type="button" onclick="cerrarModal('modal-docs-incompletos')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+                <button type="submit" class="px-6 py-2 bg-[#F2A900] text-white rounded-lg hover:bg-orange-600 font-medium">Notificar al Usuario</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Enviar a Aseguradora -->
-<div id="modal-enviar-aseguradora" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+<div id="modal-docs-completos" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full">
+        <div class="bg-[#1F6FB2] text-white p-6 rounded-t-lg flex items-center justify-between">
+            <h2 class="text-xl font-semibold">📋 Validar Documentación</h2>
+            <button type="button" onclick="cerrarModal('modal-docs-completos')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg">✕</button>
+        </div>
+
+        <form method="POST" action="{% url 'confirmar_documentos' siniestro.id %}">
+            {% csrf_token %}
+            <div class="p-6 space-y-6">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-sm text-gray-800">
+                        Confirme que ha revisado los documentos cargados y que cumplen con los requisitos mínimos para ser procesados.
+                    </p>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Documentos en sistema:</h4>
+                    <ul class="space-y-2">
+                        {% for doc in documentos %}
+                        <li class="flex items-center text-sm text-gray-600">
+                            <span class="text-green-500 mr-2">✔</span> {{ doc.tipo }}
+                        </li>
+                        {% empty %}
+                        <li class="text-sm text-red-500 italic">No hay documentos cargados aún.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end gap-3 border-t">
+                <button type="button" onclick="cerrarModal('modal-docs-completos')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+                <button type="submit" class="px-6 py-2 bg-[#1F6FB2] text-white rounded-lg hover:bg-blue-700">Validar y Continuar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-envio" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div class="sticky top-0 bg-[#0B3C5D] text-white p-6 rounded-t-lg flex items-center justify-between z-10">
-            <h2 class="text-xl font-semibold">Enviar Siniestro a Aseguradora</h2>
-            <button type="button" onclick="cerrarModal('modal-enviar-aseguradora')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
+            <h2 class="text-xl font-semibold">📤 Enviar a Aseguradora</h2>
+            <button type="button" onclick="cerrarModal('modal-envio')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
 
-        <form method="POST" action="{% url 'enviar_aseguradora' siniestro.id %}" enctype="multipart/form-data">
+        <form method="POST" action="{% url 'enviar_aseguradora' siniestro.id %}">
             {% csrf_token %}
             <div class="p-6 space-y-6">
-                <div class="bg-[#E3F2FD] border border-[#1F6FB2] rounded-lg p-4">
-                    <div class="flex items-center gap-2 mb-2">
-                        <svg class="w-5 h-5 text-[#1F6FB2]" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
-                        <h3 class="text-sm text-[#2C2C2C] font-semibold">Envío de Información</h3>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
+                    <span class="text-2xl">📧</span>
+                    <div>
+                        <p class="text-sm text-gray-800">
+                            Se enviará un correo oficial con la documentación adjunta para iniciar el reclamo.
+                        </p>
                     </div>
-                    <p class="text-sm text-[#6E6E6E]">
-                        Se enviará toda la documentación del siniestro a la aseguradora para su evaluación.
-                    </p>
                 </div>
 
-                <!-- Resumen del siniestro -->
-                <div class="bg-[#F4F6F8] rounded-lg p-4">
-                    <h4 class="text-sm text-[#2C2C2C] font-semibold mb-3">Resumen del Siniestro</h4>
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <h4 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2">Resumen del Caso</h4>
                     <div class="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                            <span class="text-[#6E6E6E]">Número:</span>
-                            <span class="text-[#2C2C2C] font-medium ml-2">#{{ siniestro.id }}</span>
+                            <span class="text-gray-500 block">Nº Siniestro:</span>
+                            <span class="font-medium text-gray-900">#{{ siniestro.numero_siniestro }}</span>
                         </div>
                         <div>
-                            <span class="text-[#6E6E6E]">Póliza:</span>
-                            <span class="text-[#2C2C2C] font-medium ml-2">{{ siniestro.poliza.numero_poliza }}</span>
+                            <span class="text-gray-500 block">Póliza:</span>
+                            <span class="font-medium text-gray-900">{{ siniestro.poliza.numero_poliza }}</span>
                         </div>
                         <div>
-                            <span class="text-[#6E6E6E]">Tipo:</span>
-                            <span class="text-[#2C2C2C] font-medium ml-2">{{ siniestro.tipo_siniestro }}</span>
+                            <span class="text-gray-500 block">Asegurado:</span>
+                            <span class="font-medium text-gray-900">{{ siniestro.reclamante_nombre }}</span>
                         </div>
                         <div>
-                            <span class="text-[#6E6E6E]">Monto Reclamado:</span>
-                            <span class="text-[#2C2C2C] font-medium ml-2">$ {{ siniestro.monto_reclamado|default:"0.00" }}</span>
+                            <span class="text-gray-500 block">Aseguradora:</span>
+                            <span class="font-medium text-gray-900">{{ siniestro.poliza.aseguradora }}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Documentos adjuntos -->
                 <div>
-                    <h4 class="text-sm text-[#6E6E6E] font-semibold mb-3">Documentos a enviar:</h4>
-                    <div class="space-y-2 max-h-40 overflow-y-auto">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">📎 Documentos Adjuntos al Correo:</h4>
+                    <div class="border rounded-lg max-h-40 overflow-y-auto bg-gray-50 p-2 space-y-2">
                         {% for doc in siniestro.documentos.all %}
-                        <div class="flex items-center gap-3 p-3 bg-[#E8F5E9] rounded-lg">
-                            <svg class="w-5 h-5 text-[#2E8B57]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                            <span class="text-sm text-[#2C2C2C]">{{ doc.tipo }}</span>
-                            <span class="text-xs text-[#6E6E6E] ml-auto">{{ doc.archivo.name|slice:"-20:" }}</span>
+                        <div class="flex items-center gap-3 p-2 bg-white rounded border border-gray-200">
+                            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v15a2 2 0 002 2z"></path></svg>
+                            <span class="text-sm text-gray-700">{{ doc.tipo }}</span>
+                            <span class="text-xs text-gray-400 ml-auto">PDF</span>
                         </div>
                         {% empty %}
-                        <p class="text-sm text-[#F2A900] italic">No hay documentos cargados.</p>
+                        <div class="text-center text-sm text-orange-500 py-2 italic">
+                            ⚠️ No hay documentos cargados. Se enviará solo la notificación.
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
 
-                <!-- Datos de la aseguradora -->
                 <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Aseguradora Destino <span class="text-[#C0392B]">*</span>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">
+                        Destinatario (Aseguradora) <span class="text-red-500">*</span>
                     </label>
-                    <select name="aseguradora" required class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0B3C5D] bg-white">
-                        <option value="">Seleccione la aseguradora</option>
-                        <option value="seguros_sucre">Seguros Sucre</option>
-                        <option value="seguros_equinoccial">Seguros Equinoccial</option>
-                        <option value="aig_metropolitana">AIG Metropolitana</option>
-                        <option value="seguros_unidos">Seguros Unidos</option>
-                        <option value="liberty_seguros">Liberty Seguros</option>
-                        <option value="mapfre_atlas">Mapfre Atlas</option>
-                        <option value="otros">Otra aseguradora</option>
-                    </select>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-gray-400">@</span>
+                        <input type="email" 
+                               name="correo_aseguradora" 
+                               required
+                               value="{{ form_enviar_aseguradora.initial.correo_aseguradora|default:'' }}"
+                               placeholder="ej: siniestros@aseguradora.com"
+                               class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B3C5D] focus:border-[#0B3C5D] outline-none transition-all">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Puedes modificar este correo si es necesario.</p>
                 </div>
 
                 <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Correo de la Aseguradora <span class="text-[#C0392B]">*</span>
-                    </label>
-                    <input type="email" name="correo_aseguradora" required placeholder="siniestros@aseguradora.com" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0B3C5D]">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Mensaje Adicional</label>
+                    <textarea name="mensaje" rows="3" placeholder="Añadir notas específicas para el analista..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B3C5D] outline-none"></textarea>
                 </div>
 
-                <div>
-                    <label class="block text-sm text-[#6E6E6E] mb-2">
-                        Mensaje Adicional <span class="text-[#6E6E6E]">(opcional)</span>
-                    </label>
-                    <textarea name="mensaje" rows="4" placeholder="Información adicional para la aseguradora..." class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0B3C5D]"></textarea>
-                </div>
-
-                <div class="bg-[#FEF3E2] border border-[#F2A900] rounded-lg p-4">
-                    <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" required class="w-5 h-5 text-[#0B3C5D] border-gray-300 rounded focus:ring-2 focus:ring-[#0B3C5D] mt-0.5">
-                        <span class="text-sm text-[#2C2C2C]">
-                            Confirmo que toda la documentación está completa y verificada para su envío.
-                        </span>
+                <div class="flex items-start gap-2 pt-2">
+                    <input type="checkbox" required id="check_envio_final" class="mt-1 w-4 h-4 text-[#0B3C5D] rounded cursor-pointer">
+                    <label for="check_envio_final" class="text-sm text-gray-600 cursor-pointer select-none">
+                        Confirmo que he revisado la información y autorizo el envío.
                     </label>
                 </div>
             </div>
 
-            <div class="sticky bottom-0 bg-gray-50 px-6 py-4 rounded-b-lg flex items-center justify-end gap-4 border-t border-gray-200">
-                <button type="button" onclick="cerrarModal('modal-enviar-aseguradora')" class="px-6 py-3 border border-gray-300 text-[#2C2C2C] rounded-lg hover:bg-white transition-colors">
+            <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end gap-3 border-t">
+                <button type="button" onclick="cerrarModal('modal-envio')" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-white transition-colors">
                     Cancelar
                 </button>
-                <button type="submit" class="px-6 py-3 bg-[#0B3C5D] text-white rounded-lg hover:bg-[#082A42] transition-colors flex items-center gap-2">
-                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
-                    Enviar a Aseguradora
+                <button type="submit" class="flex items-center gap-2 px-6 py-2 bg-[#0B3C5D] text-white rounded-lg hover:bg-[#082A42] font-medium shadow-md transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    Enviar Correo
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- JavaScript para abrir/cerrar modals -->
+<div id="modal-revision" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-2xl max-w-xl w-full">
+        <div class="bg-[#1F6FB2] text-white p-6 rounded-t-lg flex items-center justify-between">
+            <h2 class="text-xl font-semibold">🔍 En Revisión</h2>
+            <button type="button" onclick="cerrarModal('modal-revision')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg">✕</button>
+        </div>
+
+        <form method="POST" action="{% url 'marcar_revision' siniestro.id %}">
+            {% csrf_token %}
+            <div class="p-6 space-y-4">
+                <p class="text-gray-700">
+                    Utilice esta opción cuando la aseguradora haya confirmado la recepción del caso o haya iniciado el análisis.
+                </p>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">Nota Interna (Opcional)</label>
+                    <textarea name="nota" rows="2" class="w-full border rounded-lg p-2"></textarea>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end gap-3 border-t">
+                <button type="button" onclick="cerrarModal('modal-revision')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+                <button type="submit" class="px-6 py-2 bg-[#1F6FB2] text-white rounded-lg hover:bg-blue-700">Confirmar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-rechazar" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full">
+        <div class="bg-[#C0392B] text-white p-6 rounded-t-lg flex items-center justify-between">
+            <h2 class="text-xl font-semibold">❌ Rechazar Siniestro</h2>
+            <button type="button" onclick="cerrarModal('modal-rechazar')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg">✕</button>
+        </div>
+
+        <form method="POST" action="{% url 'rechazar_siniestro' siniestro.id %}">
+            {% csrf_token %}
+            <div class="p-6 space-y-6">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4 flex gap-3">
+                    <span class="text-2xl text-red-600">⚠️</span>
+                    <p class="text-sm text-gray-800">
+                        Esta acción es irreversible. El siniestro pasará a estado <strong>RECHAZADO</strong> y se notificará al usuario.
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">Razón del Rechazo *</label>
+                    <select name="razon_rechazo" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 bg-white">
+                        <option value="">Seleccione...</option>
+                        <option value="Fuera de cobertura">Evento fuera de cobertura</option>
+                        <option value="Deducible mayor al daño">Deducible mayor al daño</option>
+                        <option value="Documentación falsa">Documentación inconsistente</option>
+                        <option value="Fuera de plazo">Reportado fuera de plazo</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">Detalle para el cliente *</label>
+                    <textarea name="detalles" rows="4" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500" required placeholder="Explique claramente por qué se rechaza..."></textarea>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end gap-3 border-t">
+                <button type="button" onclick="cerrarModal('modal-rechazar')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+                <button type="submit" class="px-6 py-2 bg-[#C0392B] text-white rounded-lg hover:bg-red-700">Confirmar Rechazo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-aprobar" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full">
+        <div class="bg-[#2E8B57] text-white p-6 rounded-t-lg flex items-center justify-between">
+            <h2 class="text-xl font-semibold">✅ Aprobar Cobertura</h2>
+            <button type="button" onclick="cerrarModal('modal-aprobar')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg">✕</button>
+        </div>
+
+        <form method="POST" action="{% url 'aprobar_siniestro' siniestro.id %}">
+            {% csrf_token %}
+            <div class="p-6 space-y-6">
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p class="text-sm text-gray-800">
+                        La aseguradora ha confirmado que <strong>el evento SÍ tiene cobertura</strong>. 
+                        <br><br>
+                        Al confirmar, el estado pasará a <strong>APROBADO</strong>. En el siguiente paso (Liquidación) se registrarán los valores monetarios finales.
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">Observaciones de la Aseguradora</label>
+                    <textarea name="observaciones" rows="4" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2E8B57]" required placeholder="Ej: Cobertura aceptada según carta de fecha..."></textarea>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end gap-3 border-t">
+                <button type="button" onclick="cerrarModal('modal-aprobar')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+                <button type="submit" class="px-6 py-2 bg-[#2E8B57] text-white rounded-lg hover:bg-green-700">Confirmar Cobertura</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-liquidar" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-2xl max-w-3xl w-full">
+        <div class="bg-[#1F6FB2] text-white p-6 rounded-t-lg flex items-center justify-between">
+            <h2 class="text-xl font-semibold">💰 Registrar Liquidación</h2>
+            <button type="button" onclick="cerrarModal('modal-liquidar')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg">✕</button>
+        </div>
+
+        <form method="POST" action="{% url 'liquidar_siniestro' siniestro.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="p-6 space-y-6">
+                
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-2xl">🧮</span>
+                    <p class="text-sm text-gray-600">Ingrese los valores finales dictaminados por la aseguradora.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-2 font-medium">Monto Aprobado (Aseguradora) *</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2 text-gray-500">$</span>
+                            <input type="number" step="0.01" name="monto_aprobado" id="input-monto" required
+                                   class="w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-lg font-semibold"
+                                   oninput="calcularLiquidacion()">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-2 font-medium">Deducible Aplicado *</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2 text-gray-500">$</span>
+                            <input type="number" step="0.01" name="deducible" id="input-deducible" required
+                                   class="w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-lg font-semibold text-red-600"
+                                   oninput="calcularLiquidacion()">
+                        </div>
+                    </div>
+
+                    <div class="col-span-1 md:col-span-2 bg-blue-50 p-4 rounded-lg flex justify-between items-center border border-blue-200 shadow-inner">
+                        <div>
+                            <span class="block font-semibold text-blue-900">Total a Pagar al Usuario:</span>
+                            <span class="text-xs text-blue-600">(Monto Aprobado - Deducible)</span>
+                        </div>
+                        <span class="text-3xl font-bold text-blue-700" id="display-total">$ 0.00</span>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <label class="block text-sm text-gray-600 mb-2 font-medium">Documento de Liquidación (PDF) *</label>
+                    <input type="file" name="documento_liquidacion" required accept=".pdf"
+                           class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                </div>
+            </div>
+
+            <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end gap-3 border-t">
+                <button type="button" onclick="cerrarModal('modal-liquidar')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+                <button type="submit" class="px-6 py-2 bg-[#1F6FB2] text-white rounded-lg hover:bg-blue-700">Guardar Liquidación</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-pago" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full">
+        <div class="bg-[#2E8B57] text-white p-6 rounded-t-lg flex items-center justify-between">
+            <h2 class="text-xl font-semibold">💳 Registrar Pago</h2>
+            <button type="button" onclick="cerrarModal('modal-pago')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg">✕</button>
+        </div>
+
+        <form method="POST" action="{% url 'registrar_pago' siniestro.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="p-6 space-y-6">
+                <div class="bg-green-50 p-4 rounded-lg text-center border border-green-200">
+                    <span class="text-sm text-gray-600">Monto a Transferir</span>
+                    <div class="text-3xl font-bold text-green-700">${{ siniestro.monto_a_pagar|default:"0.00" }}</div>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">Fecha de Pago *</label>
+                    <input type="date" name="fecha_pago" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">Comprobante de Transferencia (PDF o Imagen) *</label>
+                    <input type="file" 
+                           name="comprobante_pago" 
+                           required 
+                           accept=".pdf, .jpg, .jpeg, .png"
+                           class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer">
+                    <p class="text-xs text-gray-500 mt-1">Formatos permitidos: PDF, JPG, PNG.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">Observaciones (Opcional)</label>
+                    <textarea name="observaciones" rows="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500" placeholder="Ej: Transferencia #123456 Banco Pichincha"></textarea>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end gap-3 border-t">
+                <button type="button" onclick="cerrarModal('modal-pago')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+                <button type="submit" class="px-6 py-2 bg-[#2E8B57] text-white rounded-lg hover:bg-green-700">Confirmar Pago</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-cerrar" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-2xl max-w-xl w-full">
+        <div class="bg-[#0B3C5D] text-white p-6 rounded-t-lg flex items-center justify-between">
+            <h2 class="text-xl font-semibold">🔒 Cerrar Siniestro</h2>
+            <button type="button" onclick="cerrarModal('modal-cerrar')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg">✕</button>
+        </div>
+
+        <form method="POST" action="{% url 'cerrar_siniestro' siniestro.id %}">
+            {% csrf_token %}
+            <div class="p-6 space-y-6">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-3xl">🏁</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800">¿Desea cerrar el caso #{{ siniestro.id }}?</h3>
+                    <p class="text-sm text-gray-600 mt-2">
+                        Al cerrar el siniestro, este quedará archivado como finalizado y ya no podrá ser modificado.
+                        <br>
+                        <strong>Asegúrese de que el usuario ya recibió el pago.</strong>
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-center gap-2 mt-4">
+                    <input type="checkbox" required id="check_cerrar" class="w-5 h-5 text-blue-900 rounded cursor-pointer">
+                    <label for="check_cerrar" class="text-sm text-gray-800 cursor-pointer font-medium">Sí, cerrar definitivamente</label>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end gap-3 border-t">
+                <button type="button" onclick="cerrarModal('modal-cerrar')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+                <button type="submit" class="px-6 py-2 bg-[#0B3C5D] text-white rounded-lg hover:bg-slate-800">Cerrar Caso</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-    function abrirModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
+    // Lógica de la calculadora para el Modal LIQUIDAR
+    function calcularLiquidacion() {
+        // Obtenemos los valores de los inputs dentro de modal-liquidar
+        const inputMonto = document.getElementById('input-monto');
+        const inputDeducible = document.getElementById('input-deducible');
+        const displayTotal = document.getElementById('display-total');
+
+        if (!inputMonto || !inputDeducible) return; // Seguridad
+
+        const monto = parseFloat(inputMonto.value) || 0;
+        const deducible = parseFloat(inputDeducible.value) || 0;
+        
+        // Evitamos números negativos
+        const total = Math.max(0, monto - deducible);
+        
+        // Formateo de moneda
+        displayTotal.textContent = `$ ${total.toFixed(2)}`;
     }
-    
-    function cerrarModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
-    }
-    
-    // Cerrar modal al hacer clic fuera del contenido
-    document.addEventListener('click', function(event) {
-        if (event.target.classList.contains('fixed') && event.target.classList.contains('inset-0')) {
-            event.target.classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
-    });
-    
-    // Cerrar modal con tecla Escape
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            const modals = document.querySelectorAll('.fixed.inset-0:not(.hidden)');
-            modals.forEach(modal => {
-                modal.classList.add('hidden');
-            });
-            document.body.style.overflow = 'auto';
-        }
-    });
 </script>
