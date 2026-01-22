@@ -22,7 +22,7 @@
     <div class="px-4 py-2 rounded-lg font-medium text-sm
         {% if siniestro.estado == 'reportado' %}bg-yellow-100 text-yellow-800
         {% elif siniestro.estado == 'documentos_incompletos' %}bg-orange-100 text-orange-800
-        {% elif siniestro.estado == 'documentos_completos' or siniestro.estado == 'enviado_aseguradora' or siniestro.estado == 'en_revision' %}bg-blue-100 text-blue-800
+        {% elif siniestro.estado == 'documentos_completos' or siniestro.estado == 'enviado' or siniestro.estado == 'en_revision' %}bg-blue-100 text-blue-800
         {% elif siniestro.estado == 'rechazado' %}bg-red-100 text-red-800
         {% elif siniestro.estado == 'fuera_plazo' %}bg-red-100 text-red-800
         {% elif siniestro.estado == 'aprobado' or siniestro.estado == 'liquidado' %}bg-emerald-100 text-emerald-800
@@ -332,7 +332,7 @@
             </button>
         
         {% elif siniestro.estado == 'documentos_completos' or siniestro.estado == 'docs_completos' %}
-            <button onclick="abrirModal('modal-enviar-aseguradora')" class="flex items-center gap-2 px-6 py-2 bg-[#0B3C5D] text-white rounded-lg hover:bg-[#082A42] font-medium shadow-md transition-all hover:scale-105">
+            <button onclick="abrirModal('modal-envio')" class="flex items-center gap-2 px-6 py-2 bg-[#0B3C5D] text-white rounded-lg hover:bg-[#082A42] font-medium shadow-md transition-all hover:scale-105">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
                 Enviar a Aseguradora
             </button>
@@ -343,7 +343,7 @@
                 Revisar Nuevamente
             </button>
 
-        {% elif siniestro.estado == 'enviado_aseguradora' %}
+        {% elif siniestro.estado == 'enviado' %}
             <button onclick="abrirModal('modal-revision')" class="flex items-center gap-2 px-6 py-2 bg-[#1F6FB2] text-white rounded-lg hover:bg-blue-700 font-medium shadow-md transition-all hover:scale-105">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 Marcar En Revisión
