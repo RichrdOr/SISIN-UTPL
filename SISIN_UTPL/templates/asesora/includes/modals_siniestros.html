@@ -17,7 +17,6 @@
                 <div>
                     <label class="block text-sm text-gray-600 mb-3 font-semibold">Seleccione los documentos faltantes:</label>
                     
-                    <!-- Documentos principales del siniestro -->
                     <div class="space-y-2 mb-4">
                         <p class="text-xs text-gray-500 uppercase font-bold mb-2">📁 Documentos de Soporte</p>
                         <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
@@ -50,7 +49,6 @@
                         </label>
                     </div>
 
-                    <!-- Documentos específicos para robo -->
                     {% if siniestro.tipo_evento == 'robo' %}
                     <div class="space-y-2 mb-4 pt-4 border-t">
                         <p class="text-xs text-red-500 uppercase font-bold mb-2">🚨 Documentos de Robo</p>
@@ -64,7 +62,6 @@
                     </div>
                     {% endif %}
 
-                    <!-- Otros documentos -->
                     <div class="space-y-2 pt-4 border-t">
                         <p class="text-xs text-gray-500 uppercase font-bold mb-2">📋 Otros</p>
                         <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors border border-transparent hover:border-orange-200">
@@ -144,10 +141,12 @@
 </div>
 
 <div id="modal-envio" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full">
-        <div class="bg-[#1F6FB2] text-white p-6 rounded-t-lg flex items-center justify-between">
+    <div class="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-[#0B3C5D] text-white p-6 rounded-t-lg flex items-center justify-between z-10">
             <h2 class="text-xl font-semibold">📤 Enviar a Aseguradora</h2>
-            <button type="button" onclick="cerrarModal('modal-envio')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg">✕</button>
+            <button type="button" onclick="cerrarModal('modal-envio')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
         </div>
 
         <form method="POST" action="{% url 'enviar_aseguradora' siniestro.id %}">
@@ -157,32 +156,87 @@
                     <span class="text-2xl">📧</span>
                     <div>
                         <p class="text-sm text-gray-800">
-                            Se enviará un correo a la aseguradora con la información y documentos disponibles actualmente.
+                            Se enviará un correo oficial con la documentación adjunta para iniciar el reclamo.
                         </p>
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm text-gray-600 mb-1">Destinatario</label>
-                    <input type="text" value="siniestros@aseguradora.com" class="w-full border rounded-lg p-2 bg-gray-50" readonly>
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <h4 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2">Resumen del Caso</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500 block">Nº Siniestro:</span>
+                            <span class="font-medium text-gray-900">#{{ siniestro.numero_siniestro }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 block">Póliza:</span>
+                            <span class="font-medium text-gray-900">{{ siniestro.poliza.numero_poliza }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 block">Asegurado:</span>
+                            <span class="font-medium text-gray-900">{{ siniestro.reclamante_nombre }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 block">Aseguradora:</span>
+                            <span class="font-medium text-gray-900">{{ siniestro.poliza.aseguradora }}</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1">Nota Adicional al Correo</label>
-                    <textarea name="mensaje_correo" rows="3" class="w-full border rounded-lg p-2"></textarea>
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">📎 Documentos Adjuntos al Correo:</h4>
+                    <div class="border rounded-lg max-h-40 overflow-y-auto bg-gray-50 p-2 space-y-2">
+                        {% for doc in siniestro.documentos.all %}
+                        <div class="flex items-center gap-3 p-2 bg-white rounded border border-gray-200">
+                            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v15a2 2 0 002 2z"></path></svg>
+                            <span class="text-sm text-gray-700">{{ doc.tipo }}</span>
+                            <span class="text-xs text-gray-400 ml-auto">PDF</span>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-sm text-orange-500 py-2 italic">
+                            ⚠️ No hay documentos cargados. Se enviará solo la notificación.
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
 
-                <div class="flex items-start gap-2">
-                    <input type="checkbox" required id="check_envio" class="mt-1">
-                    <label for="check_envio" class="text-sm text-gray-600 cursor-pointer">
-                        Confirmo el envío de la información disponible para iniciar el trámite.
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">
+                        Destinatario (Aseguradora) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-gray-400">@</span>
+                        <input type="email" 
+                               name="correo_aseguradora" 
+                               required
+                               value="{{ form_enviar_aseguradora.initial.correo_aseguradora|default:'' }}"
+                               placeholder="ej: siniestros@aseguradora.com"
+                               class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B3C5D] focus:border-[#0B3C5D] outline-none transition-all">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Puedes modificar este correo si es necesario.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Mensaje Adicional</label>
+                    <textarea name="mensaje" rows="3" placeholder="Añadir notas específicas para el analista..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B3C5D] outline-none"></textarea>
+                </div>
+
+                <div class="flex items-start gap-2 pt-2">
+                    <input type="checkbox" required id="check_envio_final" class="mt-1 w-4 h-4 text-[#0B3C5D] rounded cursor-pointer">
+                    <label for="check_envio_final" class="text-sm text-gray-600 cursor-pointer select-none">
+                        Confirmo que he revisado la información y autorizo el envío.
                     </label>
                 </div>
             </div>
 
             <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end gap-3 border-t">
-                <button type="button" onclick="cerrarModal('modal-envio')" class="px-4 py-2 border rounded-lg">Cancelar</button>
-                <button type="submit" class="px-6 py-2 bg-[#1F6FB2] text-white rounded-lg hover:bg-blue-700">Enviar Correo</button>
+                <button type="button" onclick="cerrarModal('modal-envio')" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-white transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" class="flex items-center gap-2 px-6 py-2 bg-[#0B3C5D] text-white rounded-lg hover:bg-[#082A42] font-medium shadow-md transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    Enviar Correo
+                </button>
             </div>
         </form>
     </div>
@@ -371,8 +425,18 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm text-gray-600 mb-2">Comprobante de Transferencia (PDF/IMG) *</label>
-                    <input type="file" name="comprobante_pago" required class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                    <label class="block text-sm text-gray-600 mb-2">Comprobante de Transferencia (PDF o Imagen) *</label>
+                    <input type="file" 
+                           name="comprobante_pago" 
+                           required 
+                           accept=".pdf, .jpg, .jpeg, .png"
+                           class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer">
+                    <p class="text-xs text-gray-500 mt-1">Formatos permitidos: PDF, JPG, PNG.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">Observaciones (Opcional)</label>
+                    <textarea name="observaciones" rows="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500" placeholder="Ej: Transferencia #123456 Banco Pichincha"></textarea>
                 </div>
             </div>
 

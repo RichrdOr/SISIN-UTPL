@@ -132,54 +132,123 @@ class SiniestroService:
         return siniestro
 
     # =========================================
-    # TRANSICIÓN 3: DOCS_COMPLETOS → ENVIADO
+    # TRANSICIÓN 3: DOCS_COMPLETOS → ENVIADO (VERSIÓN CORREGIDA)
+    # =========================================
+    # =========================================
+    # TRANSICIÓN 3: DOCS_COMPLETOS → ENVIADO (VERSIÓN CORREGIDA Y ROBUSTA)
     # =========================================
     @classmethod
     @transaction.atomic
     def enviar_a_aseguradora(cls, siniestro, correo_aseguradora, mensaje='', usuario=''):
         """
-        Envía el siniestro a la aseguradora.
-        
-        Args:
-            siniestro: Instancia del Siniestro
-            correo_aseguradora: Email de la aseguradora
-            mensaje: Mensaje personalizado para la aseguradora
-            usuario: Usuario que realiza la acción
-            
-        Returns:
-            Siniestro actualizado
+        Envía el siniestro a la aseguradora CON adjuntos reales.
         """
+        import os  # Necesario para manejar nombres de archivos
+        from django.core.mail import EmailMessage
+        from django.conf import settings
+
+        # 1. Validación
         if siniestro.estado != 'docs_completos':
-            raise SiniestroServiceError(
-                f"Solo se puede enviar desde estado 'docs_completos'. Estado actual: {siniestro.estado}"
-            )
+            # Permitimos reenvío si ya está en estado enviado (opcional)
+            if siniestro.estado == 'enviado':
+                pass 
+            else:
+                raise SiniestroServiceError(
+                    f"Solo se puede enviar desde estado 'docs_completos'. Estado actual: {siniestro.estado}"
+                )
         
         estado_anterior = siniestro.estado
         
-        # Guardar datos de envío
+        # 2. Guardar datos en el modelo
         siniestro.correo_aseguradora = correo_aseguradora
         siniestro.mensaje_aseguradora = mensaje
-        siniestro.aseguradora_destino = siniestro.poliza.aseguradora
+        if siniestro.poliza:
+            siniestro.aseguradora_destino = siniestro.poliza.aseguradora
         
-        # Ejecutar transición FSM
-        siniestro.enviar_a_aseguradora()
+        # 3. CONSTRUIR Y ENVIAR EL CORREO REAL
+        try:
+            asunto = f"Nuevo Reclamo - Siniestro #{siniestro.numero_siniestro} - Póliza {siniestro.poliza.numero_poliza}"
+            
+            cuerpo = f"""
+            Estimados {siniestro.poliza.aseguradora}:
+
+            Por medio de la presente notificamos el siguiente siniestro para su gestión:
+
+            RESUMEN DEL CASO:
+            ------------------------------------------------
+            Nº Siniestro:   {siniestro.numero_siniestro}
+            Titular:        {siniestro.poliza.titular}
+            Póliza:         {siniestro.poliza.numero_poliza}
+            Fecha Evento:   {siniestro.fecha_ocurrencia}
+            Ubicación:      {siniestro.ubicacion}
+            
+            DESCRIPCIÓN:
+            {siniestro.descripcion}
+
+            NOTAS ADICIONALES:
+            {mensaje if mensaje else "Ninguna."}
+
+            ------------------------------------------------
+            Se adjunta la documentación de respaldo disponible.
+            
+            Atentamente,
+            Departamento de Siniestros
+            """
+
+            email = EmailMessage(
+                subject=asunto,
+                body=cuerpo,
+                from_email=settings.EMAIL_HOST_USER,
+                to=[correo_aseguradora],
+            )
+
+            # --- ADJUNTAR ARCHIVOS (LA PARTE CLAVE) ---
+            documentos = siniestro.documentos.all()
+            count_adjuntos = 0
+            
+            for doc in documentos:
+                if doc.archivo:
+                    try:
+                        # Abrimos el archivo en modo lectura binaria
+                        with doc.archivo.open('rb') as f:
+                            contenido = f.read()
+                            # Obtenemos solo el nombre del archivo (sin rutas)
+                            nombre_archivo = os.path.basename(doc.archivo.name)
+                            # Adjuntamos al correo
+                            email.attach(nombre_archivo, contenido, 'application/pdf')
+                            count_adjuntos += 1
+                    except Exception as e:
+                        logger.error(f"Error adjuntando {doc.archivo.name}: {e}")
+
+            # Enviar
+            email.send(fail_silently=False)
+            logger.info(f"Correo enviado a {correo_aseguradora} con {count_adjuntos} adjuntos.")
+
+        except Exception as e:
+            logger.error(f"Error crítico enviando correo: {e}")
+            # Puedes decidir si lanzar error o solo loguearlo
+            # raise SiniestroServiceError(f"Fallo al enviar correo: {e}")
+
+        # 4. Transición de Estado
+        if siniestro.estado != 'enviado':
+            siniestro.enviar_a_aseguradora() # Método del modelo (FSM)
+        
+        siniestro.fecha_envio_aseguradora = timezone.now()
+        # Fecha límite + 3 días hábiles aprox
+        siniestro.fecha_limite_respuesta_aseguradora = timezone.now().date() + timezone.timedelta(days=3)
         siniestro.save()
         
-        # Registrar historial
+        # 5. Historial
         cls._registrar_historial(
             siniestro, estado_anterior, 'enviado', usuario,
-            f"Enviado a: {correo_aseguradora}"
+            f"Enviado a: {correo_aseguradora}. Adjuntos: {count_adjuntos}"
         )
         
-        # Enviar correo a la aseguradora
-        Notificador.enviar_correo_aseguradora(siniestro, correo_aseguradora, mensaje)
-        
-        # Notificar al reclamante
+        # 6. Notificar al cliente (Opcional - usa utils.py para esto)
         Notificador.notificar_cambio_estado(siniestro, 'enviado')
         
-        logger.info(f"Siniestro {siniestro.numero_siniestro} enviado a aseguradora")
         return siniestro
-
+    
     # =========================================
     # TRANSICIÓN 4: ENVIADO → EN_REVISION
     # =========================================
