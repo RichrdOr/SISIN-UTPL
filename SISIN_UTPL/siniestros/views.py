@@ -242,6 +242,7 @@ def dashboard_asesora(request):
     return render(request, 'asesora/dashboard.html', context)
 
 
+
 def siniestros_asesora(request):
     """Listado general de siniestros para la asesora"""
     siniestros = Siniestro.objects.select_related('poliza', 'ramo', 'asesor_asignado').order_by('-fecha_reporte')
@@ -256,6 +257,8 @@ def siniestros_asesora(request):
         'siniestros_finalizados_count': siniestros_finalizados_count,
     }
     return render(request, "asesora/siniestros.html", context)
+
+
 
 
 # ==========================================
