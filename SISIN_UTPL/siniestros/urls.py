@@ -40,7 +40,7 @@ urlpatterns = [
     path('dashboard/', dashboard_asesora, name='dashboard_asesora'),
     
     # Listado de siniestros
-    path('siniestros/asesora/', siniestros_asesora, name='siniestros_asesora'),
+    path('siniestros/asesora/', siniestros_asesora, name='siniestros'),
     path('siniestros/exportar/', exportar_siniestros_excel, name='exportar_siniestros_excel'),
     
     # CRUD de siniestros

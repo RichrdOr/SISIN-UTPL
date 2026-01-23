@@ -28,15 +28,11 @@ from django.db.models.functions import TruncMonth
 # ==========================================
 # VISTAS DE DASHBOARD Y LISTADOS (ASESORA)
 # ==========================================
-
 def dashboard_siniestros(request):
-    """Dashboard principal con métricas, alertas, gráficos y colores corregidos."""
+    """Dashboard principal con métricas, alertas y gráficos."""
     hoy = date.today()
-    fecha_limite = hoy + timedelta(days=30)
     
-    # ==========================================
-    # 1. MÉTRICAS PRINCIPALES (STATS)
-    # ==========================================
+    # Métricas Principales
     total_siniestros = Siniestro.objects.count()
     siniestros_reportados = Siniestro.objects.filter(estado='reportado').count()
     siniestros_revision = Siniestro.objects.filter(estado='en_revision').count()
@@ -45,19 +41,14 @@ def dashboard_siniestros(request):
     siniestros_rechazados = Siniestro.objects.filter(estado='rechazado').count()
     
     polizas_activas = Poliza.objects.filter(estado='activa').count()
-    polizas_por_vencer = Poliza.objects.filter(
-        fecha_vencimiento__gte=hoy,
-        fecha_vencimiento__lte=fecha_limite
-    ).count()
     
-    # Tiempo promedio
+    # Tiempo promedio y Tasa de aprobación
     siniestros_cerrados = Siniestro.objects.filter(
         estado__in=['aprobado', 'pagado', 'cerrado'],
         tiempo_resolucion_dias__isnull=False
     )
     tiempo_promedio = siniestros_cerrados.aggregate(promedio=Avg('tiempo_resolucion_dias'))['promedio'] or 0
     
-    # Tasa aprobación
     total_procesados = siniestros_aprobados + siniestros_pagados + siniestros_rechazados
     tasa_aprobacion = round((siniestros_aprobados + siniestros_pagados) / total_procesados * 100, 1) if total_procesados > 0 else 0
     
@@ -69,151 +60,12 @@ def dashboard_siniestros(request):
         'pagados': siniestros_pagados,
         'rechazados': siniestros_rechazados,
         'polizas_activas': polizas_activas,
-        'polizas_por_vencer': polizas_por_vencer,
         'tiempo_promedio': round(tiempo_promedio, 1),
         'tasa_aprobacion': tasa_aprobacion,
     }
-
-    # ==========================================
-    # 2. CONFIGURACIÓN DE COLORES PARA TABLA Y GRÁFICOS
-    # ==========================================
-    # Mapeo de (estado_bd -> configuración visual)
-    config_estados = {
-        'reportado': {'bg': '#f3f4f6', 'color': '#374151', 'label': 'Reportado'}, # Gris
-        'docs_incompletos': {'bg': '#ffedd5', 'color': '#c2410c', 'label': 'Docs Incompletos'}, # Naranja
-        'documentos_incompletos': {'bg': '#ffedd5', 'color': '#c2410c', 'label': 'Docs Incompletos'}, # Alias
-        'docs_completos': {'bg': '#dbeafe', 'color': '#1d4ed8', 'label': 'Docs Completos'}, # Azul claro
-        'documentos_completos': {'bg': '#dbeafe', 'color': '#1d4ed8', 'label': 'Docs Completos'}, # Alias
-        'enviado': {'bg': '#e0e7ff', 'color': '#4338ca', 'label': 'Enviado'}, # Indigo
-        'en_revision': {'bg': '#cffafe', 'color': '#0e7490', 'label': 'En Revisión'}, # Cyan
-        'aprobado': {'bg': '#dcfce7', 'color': '#15803d', 'label': 'Aprobado'}, # Verde
-        'pagado': {'bg': '#bbf7d0', 'color': '#166534', 'label': 'Pagado'}, # Verde fuerte
-        'liquidado': {'bg': '#bae6fd', 'color': '#0369a1', 'label': 'Liquidado'}, # Azul
-        'rechazado': {'bg': '#fee2e2', 'color': '#b91c1c', 'label': 'Rechazado'}, # Rojo
-        'cerrado': {'bg': '#f3f4f6', 'color': '#6b7280', 'label': 'Cerrado'}, # Gris oscuro
-        'fuera_plazo': {'bg': '#fee2e2', 'color': '#991b1b', 'label': 'Fuera de Plazo'}, # Rojo oscuro
-    }
-
-    # ==========================================
-    # 3. TABLA: ÚLTIMOS SINIESTROS (PROCESADA)
-    # ==========================================
-    ultimos_siniestros = Siniestro.objects.select_related('poliza').order_by('-fecha_reporte')[:5]
-
-    # Inyectamos los colores dinámicamente
-    for s in ultimos_siniestros:
-        # Buscamos la config usando el estado actual, si no existe usa 'reportado' por defecto
-        config = config_estados.get(s.estado, config_estados['reportado'])
-        
-        # Asignamos atributos temporales al objeto para que el template los lea
-        s.estado_bg = config['bg']
-        s.estado_color = config['color']
-        s.estado_label = config['label']
-
-    # ==========================================
-    # 4. GRÁFICO: EVOLUCIÓN MENSUAL
-    # ==========================================
-    evolucion_qs = (
-        Siniestro.objects
-        .annotate(mes=TruncMonth('fecha_reporte'))
-        .values('mes')
-        .annotate(total=Count('id'))
-        .order_by('mes')
-    )
-
-    chart_evolucion = {
-        'labels': [e['mes'].strftime('%B %Y') if e['mes'] else 'Sin Fecha' for e in evolucion_qs], 
-        'data': [e['total'] for e in evolucion_qs]
-    }
-
-    # ==========================================
-    # 5. GRÁFICO: ESTADOS (DONUT)
-    # ==========================================
-    estados_qs = Siniestro.objects.values('estado').annotate(total=Count('id'))
     
-    chart_estados = {
-        'labels': [],
-        'data': [],
-        'colors': []
-    }
-    
-    for item in estados_qs:
-        key = item['estado']
-        count = item['total']
-        conf = config_estados.get(key, config_estados['reportado'])
-        
-        chart_estados['labels'].append(conf['label'])
-        chart_estados['data'].append(count)
-        # Usamos el color de texto ('color') o fondo ('bg') para el gráfico
-        chart_estados['colors'].append(conf['color']) 
+    return render(request, "asesora/dashboard.html", {'stats': stats})
 
-    # ==========================================
-    # 6. GRÁFICO: TIPOS DE EVENTO
-    # ==========================================
-    tipos_qs = Siniestro.objects.values('tipo_evento').annotate(total=Count('id'))
-    chart_tipos = {
-        'labels': [t['tipo_evento'].capitalize().replace('_', ' ') for t in tipos_qs],
-        'data': [t['total'] for t in tipos_qs],
-        'colors': ['#6366f1', '#f97316', '#10b981', '#ef4444', '#3b82f6', '#8b5cf6'] 
-    }
-
-    # ==========================================
-    # 7. GRÁFICO: MONTOS
-    # ==========================================
-    montos = Siniestro.objects.aggregate(
-        reclamado=Sum('monto_reclamado'),
-        aprobado=Sum('monto_aprobado'),
-        pagado=Sum('monto_a_pagar')
-    )
-    chart_montos = {
-        'labels': ['Reclamado', 'Aprobado', 'Pagado'],
-        'data': [
-            float(montos['reclamado'] or 0), 
-            float(montos['aprobado'] or 0), 
-            float(montos['pagado'] or 0)
-        ]
-    }
-
-    # ==========================================
-    # 8. LISTAS ADICIONALES (Pendientes, Vencer, Notif)
-    # ==========================================
-    pendientes = Siniestro.objects.filter(
-        estado__in=['reportado', 'docs_incompletos', 'docs_completos', 'enviado', 'en_revision']
-    ).order_by('fecha_reporte')[:5]
-    
-    # Calculamos días transcurridos para pendientes
-    for p in pendientes:
-        p.dias_transcurridos = (date.today() - p.fecha_reporte).days
-
-    proximas_vencer = Poliza.objects.filter(
-        fecha_vencimiento__gte=hoy,
-        fecha_vencimiento__lte=fecha_limite
-    ).order_by('fecha_vencimiento')[:5]
-    
-    for p in proximas_vencer:
-        p.dias_para_vencer = (p.fecha_vencimiento - hoy).days
-        # Color de urgencia
-        p.urgencia_color = '#ef4444' if p.dias_para_vencer < 7 else '#f59e0b'
-
-    notificaciones = Notificacion.objects.order_by('-fecha_creacion')[:5]
-    # Asignar iconos/colores básicos a notificaciones si no tienen
-    for n in notificaciones:
-        if not hasattr(n, 'color'): n.color = '#3b82f6'
-        if not hasattr(n, 'icono'): n.icono = 'bell'
-
-    # Contexto final para el template
-    context = {
-        'stats': stats,
-        'ultimos_siniestros': ultimos_siniestros,
-        'chart_evolucion': json.dumps(chart_evolucion),
-        'chart_estados': json.dumps(chart_estados),
-        'chart_tipos': json.dumps(chart_tipos),
-        'chart_montos': json.dumps(chart_montos),
-        'pendientes': pendientes,
-        'proximas_vencer': proximas_vencer,
-        'notificaciones': notificaciones,
-    }
-    
-    return render(request, "asesora/dashboard.html", context)
 
 
 def dashboard_asesora(request):
@@ -562,6 +414,7 @@ def dashboard_asesora(request):
     }
 
     return render(request, 'asesora/dashboard.html', context)
+
 
 
 def siniestros_asesora(request):
@@ -578,6 +431,9 @@ def siniestros_asesora(request):
         'siniestros_finalizados_count': siniestros_finalizados_count,
     }
     return render(request, "asesora/siniestros.html", context)
+    
+
+
 
 
 # ==========================================

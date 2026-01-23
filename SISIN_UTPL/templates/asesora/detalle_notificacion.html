@@ -1,0 +1,43 @@
+{% extends "asesora/base.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto p-6">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-4">
+
+        <div class="flex items-center gap-3">
+            <span class="px-3 py-1 rounded-full text-xs font-medium
+                {% if notificacion.tipo == 'critica' %}bg-[#FFEBEE] text-[#C0392B]
+                {% elif notificacion.tipo == 'alerta' %}bg-[#FEF3E2] text-[#F2A900]
+                {% else %}bg-[#E3F2FD] text-[#1F6FB2]{% endif %}">
+                {{ notificacion.get_tipo_display }}
+            </span>
+
+            <span class="text-sm text-gray-500">
+                {{ notificacion.fecha_creacion|date:"d/m/Y H:i" }}
+            </span>
+        </div>
+
+        <h2 class="text-xl font-semibold text-[#2C2C2C]">
+            {{ notificacion.titulo }}
+        </h2>
+
+        <p class="text-[#6E6E6E]">
+            {{ notificacion.mensaje }}
+        </p>
+
+        {% if notificacion.contenido %}
+        <div class="bg-gray-50 p-4 rounded-md text-sm">
+            <strong>Relacionado con:</strong> {{ notificacion.contenido }}
+        </div>
+        {% endif %}
+
+        <div class="pt-4">
+            <a href="{% url 'notificaciones' %}"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-[#1F6FB2] text-white rounded-md hover:bg-[#0B3C5D] transition">
+                Volver a notificaciones.
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
