@@ -1,15 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, FileResponse
-from django.forms import inlineformset_factory
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+<<<<<<< Updated upstream
 from .models import Poliza, RamoPoliza, Deducible
 from .forms import RamoPolizaForm, PolizaForm, DeducibleForm
 import os
 import logging
 import csv
+=======
+from django.contrib import messages
+from .models import Poliza, RamoPoliza, Deducible, BienAsegurado, Zona
+from usuarios.models import Usuario
+import logging
+import json
+>>>>>>> Stashed changes
 from datetime import datetime, timedelta
-from django.conf import settings
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
@@ -151,36 +157,101 @@ def editar_poliza(request, poliza_id):
     poliza = get_object_or_404(Poliza, id=poliza_id)
     
     try:
-        data = request.POST
-        pdf_file = request.FILES.get('pdf_file')
-        
-        # Actualizar póliza
-        poliza.tipo_poliza = data.get('tipo_poliza', poliza.tipo_poliza)
-        poliza.fecha_inicio = data.get('fecha_inicio', poliza.fecha_inicio)
-        poliza.fecha_fin = data.get('fecha_fin', poliza.fecha_fin)
-        poliza.prima = data.get('prima', poliza.prima)
-        
-        # Actualizar PDF si se sube uno nuevo
-        if pdf_file:
-            poliza.pdf_file = pdf_file
+        with transaction.atomic():
+            data = request.POST
+            files = request.FILES
             
-        poliza.save()
-        
-        # Actualizar deducibles
-        poliza.deducibles.all().delete()
-        deducibles_data = request.POST.getlist('deducibles')
-        for ded_data in deducibles_data:
-            if ded_data:
+            logger.info(f"Datos recibidos para editar póliza {poliza_id}: {dict(data)}")
+            
+            # 1. Actualizar Bien Asegurado
+            zona_nombre = data.get('zona', 'Sin especificar')
+            zona, _ = Zona.objects.get_or_create(nombre=zona_nombre)
+            
+            # Mapear tipo de bien a entero
+            tipo_bien_map = {
+                'Residencial': 1,
+                'Comercial': 2,
+                'Industrial': 3,
+            }
+            tipo_bien_str = data.get('tipo_bien', 'Residencial')
+            tipo_bien_int = tipo_bien_map.get(tipo_bien_str, 1)
+            
+            # Actualizar bien existente
+            bien = poliza.bien
+            bien.descripcion = data.get('descripcion_bien', bien.descripcion)
+            bien.tipo_bien = tipo_bien_int
+            bien.zona = zona
+            bien.valor = data.get('valor_bien', bien.valor) or 0
+            bien.save()
+            
+            # 2. Actualizar Póliza
+            poliza.aseguradora = data.get('aseguradora', poliza.aseguradora)
+            poliza.tipo_poliza = tipo_bien_str
+            poliza.fecha_emision = data.get('fecha_emision', poliza.fecha_emision)
+            poliza.fecha_vencimiento = data.get('fecha_fin', poliza.fecha_vencimiento)
+            poliza.fecha_inicio = data.get('fecha_inicio', poliza.fecha_inicio)
+            poliza.fecha_fin = data.get('fecha_fin', poliza.fecha_fin)
+            poliza.prima = data.get('total_prima', poliza.prima) or 0
+            poliza.cobertura = data.get('descripcion_bien', poliza.cobertura)
+            
+            # Actualizar PDF si se sube uno nuevo
+            if files.get('pdf_file'):
+                poliza.pdf_file = files.get('pdf_file')
+                
+            poliza.save()
+            
+            # 3. Eliminar ramos existentes y crear nuevos
+            poliza.ramos.all().delete()
+            ramos_data = json.loads(data.get('ramos_json', '[]'))
+            for item in ramos_data:
+                RamoPoliza.objects.create(
+                    poliza=poliza,
+                    grupo=item.get('grupo', ''),
+                    subgrupo=item.get('subgrupo', ''),
+                    ramo=item.get('ramo', ''),
+                    suma_asegurada=item.get('suma_asegurada', 0) or 0,
+                    prima=0,
+                    base_imponible=0,
+                    iva=0,
+                    total_facturado=0,
+                    deducible_minimo=0,
+                    deducible_porcentaje=item.get('deducible_porcentaje', 0) or 0
+                )
+            
+            # 4. Eliminar deducibles existentes y crear nuevos
+            poliza.deducibles.all().delete()
+            deducibles_data = json.loads(data.get('deducibles_json', '[]'))
+            for item in deducibles_data:
+                # Intentar convertir monto a decimal
+                monto_str = item.get('monto', '0')
+                try:
+                    monto_clean = ''.join(c for c in str(monto_str) if c.isdigit() or c in '.,')
+                    monto_clean = monto_clean.replace(',', '.')
+                    monto = float(monto_clean) if monto_clean else 0
+                except (ValueError, TypeError):
+                    monto = 0
+                    
                 Deducible.objects.create(
                     poliza=poliza,
-                    concepto=ded_data.get('concepto', ''),
-                    monto=ded_data.get('monto', 0),
-                    porcentaje=ded_data.get('porcentaje')
+                    concepto=item.get('concepto', ''),
+                    monto=monto
                 )
-        
-        return JsonResponse({'success': True, 'message': 'Póliza actualizada exitosamente'})
+            
+            logger.info(f"Póliza {poliza.numero_poliza} actualizada exitosamente")
+            messages.success(request, f'¡Póliza {poliza.numero_poliza} actualizada exitosamente!')
+            return JsonResponse({'success': True, 'message': 'Póliza actualizada exitosamente'})
+            
     except Exception as e:
+        logger.error(f"Error al actualizar póliza {poliza_id}: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         return JsonResponse({'success': False, 'message': str(e)})
+
+def formulario_editar_poliza(request, poliza_id):
+    """Vista para mostrar el formulario de editar póliza con datos cargados"""
+    poliza = get_object_or_404(Poliza, id=poliza_id)
+    context = {'poliza': poliza}
+    return render(request, 'asesora/editar_poliza.html', context)
 
 def obtener_poliza(request, poliza_id):
     poliza = get_object_or_404(Poliza, id=poliza_id)
@@ -203,6 +274,7 @@ def obtener_poliza(request, poliza_id):
     
     return JsonResponse(data)
 
+<<<<<<< Updated upstream
 def crear_poliza_old(request):
     # 1. Definimos el formset
     RamoFormSet = inlineformset_factory(
@@ -233,8 +305,20 @@ def crear_poliza_old(request):
     }
     
     return render(request, 'asesora/crear_poliza.html', context)
+=======
 
-@csrf_exempt
+def formulario_crear_poliza(request):
+    """Vista para mostrar el formulario de crear póliza"""
+    return render(request, 'asesora/crear_poliza.html')
+
+
+def ver_poliza_detalle(request, poliza_id):
+    poliza = get_object_or_404(Poliza, id=poliza_id)
+    context = {'poliza': poliza}
+    return render(request, 'asesora/poliza_detalle.html', context)
+>>>>>>> Stashed changes
+
+# ... (rest of the code remains the same)
 @require_http_methods(["POST"])
 def exportar_excel(request):
     try:

@@ -1,0 +1,151 @@
+{% extends "asesora/base.html" %}
+
+{% block title %}Notificaciones{% endblock %}
+
+{% block content %}
+<div class="space-y-6 p-6">
+    <div>
+        <h2 class="text-2xl font-semibold text-[#2C2C2C] mb-1">Notificaciones</h2>
+        <p class="text-[#6E6E6E] text-sm">
+            Alertas y comunicaciones relacionadas con siniestros y pólizas
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-10 h-10 bg-[#E3F2FD] rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-[#1F6FB2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <span class="text-2xl font-bold text-[#2C2C2C]">{{ notificaciones|length }}</span>
+            </div>
+            <div class="text-sm text-[#6E6E6E]">Total</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-10 h-10 bg-[#FFEBEE] rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-[#C0392B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <span class="text-2xl font-bold text-[#2C2C2C]">{{ no_leidas_count }}</span>
+            </div>
+            <div class="text-sm text-[#6E6E6E]">No leídas</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-10 h-10 bg-[#E8F5E9] rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-[#2E8B57]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <span class="text-2xl font-bold text-[#2C2C2C]">{{ leidas_count }}</span>
+            </div>
+            <div class="text-sm text-[#6E6E6E]">Leídas</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-10 h-10 bg-[#FEF3E2] rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-[#F2A900]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <span class="text-2xl font-bold text-[#2C2C2C]">{{ criticas_count }}</span>
+            </div>
+            <div class="text-sm text-[#6E6E6E]">Críticas</div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex gap-2">
+                <a href="?filtro=todas" class="px-4 py-2 rounded-lg text-sm transition-colors {% if filtro == 'todas' %}bg-[#1F6FB2] text-white{% else %}bg-[#F4F6F8] text-[#2C2C2C] hover:bg-gray-200{% endif %}">
+                    Todas
+                </a>
+                <a href="?filtro=no-leidas" class="px-4 py-2 rounded-lg text-sm transition-colors {% if filtro == 'no-leidas' %}bg-[#1F6FB2] text-white{% else %}bg-[#F4F6F8] text-[#2C2C2C] hover:bg-gray-200{% endif %}">
+                    No leídas
+                </a>
+                <a href="?filtro=polizas" class="px-4 py-2 rounded-lg text-sm transition-colors {% if filtro == 'polizas' %}bg-[#1F6FB2] text-white{% else %}bg-[#F4F6F8] text-[#2C2C2C] hover:bg-gray-200{% endif %}">Pólizas</a>
+                <a href="?filtro=siniestros" class="px-4 py-2 rounded-lg text-sm transition-colors {% if filtro == 'siniestros' %}bg-[#1F6FB2] text-white{% else %}bg-[#F4F6F8] text-[#2C2C2C] hover:bg-gray-200{% endif %}">Siniestros</a>
+                <a href="?filtro=sistema" class="px-4 py-2 rounded-lg text-sm transition-colors {% if filtro == 'sistema' %}bg-[#1F6FB2] text-white{% else %}bg-[#F4F6F8] text-[#2C2C2C] hover:bg-gray-200{% endif %}">Sistema</a>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <form id="form-marcar-todas" action="{% url 'notificaciones:marcar_todas_leidas' %}" method="POST" class="inline-block ajax-form">
+                    {% csrf_token %}
+                    <button type="submit" class="flex items-center gap-2 px-4 py-2 text-sm text-[#1F6FB2] hover:bg-[#E3F2FD] rounded-lg transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Marcar todas como leídas
+                    </button>
+                </form>
+
+                <form id="form-limpiar-todo" action="{% url 'notificaciones:limpiar_todo' %}" method="POST" class="inline-block ajax-form">
+                    {% csrf_token %}
+                    <button type="submit" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V4a1 1 0 011-1h6a1 1 0 011 1v3"></path></svg>
+                        Limpiar todo
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% include 'asesora/_notificaciones_list.html' %}
+</div>
+    <script>
+    // Clickable cards and AJAX actions that reload the notifications partial
+    document.addEventListener('DOMContentLoaded', function(){
+        function getCSRF(){ return document.querySelector('input[name=csrfmiddlewaretoken]')?.value || ''; }
+
+        function refreshList(){
+            const url = window.location.pathname + window.location.search;
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newList = doc.getElementById('notificaciones-list');
+                    const oldList = document.getElementById('notificaciones-list');
+                    if(newList && oldList){ oldList.replaceWith(newList); attachHandlers(); }
+                }).catch(()=>console.warn('No se pudo actualizar la lista'));
+        }
+
+        function attachHandlers(){
+            // clickable cards
+            document.querySelectorAll('.notification-card').forEach(function(card){
+                card.removeEventListener('click', card._notifClick);
+                const handler = function(e){ if(e.target.closest('form') || e.target.closest('button') || e.target.tagName === 'A') return; const url = card.dataset.detailUrl; if(url) window.location.href = url; };
+                card._notifClick = handler;
+                card.addEventListener('click', handler);
+            });
+
+            // individual action buttons
+            document.querySelectorAll('.ajax-action').forEach(function(f){
+                const btnDelete = f.querySelector('.btn-delete');
+                const btnMark = f.querySelector('.btn-mark');
+                const action = f.getAttribute('action');
+                const pk = f.dataset.pk;
+
+                if(btnDelete){ btnDelete.onclick = function(ev){ ev.preventDefault(); fetch(action, { method: 'POST', headers: { 'X-CSRFToken': getCSRF(), 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(r=> r.json()).then(data=>{ if(data.success){ const card = document.querySelector('#notif-'+pk); if(card) card.remove(); const c = document.getElementById('notif-count'); if(c) c.textContent = data.unread_count; } else alert('Error'); }).catch(()=> alert('Error de red')); }; }
+
+                if(btnMark){ btnMark.onclick = function(ev){ ev.preventDefault(); fetch(action, { method: 'POST', headers: { 'X-CSRFToken': getCSRF(), 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(r=> r.json()).then(data=>{ if(data.success){ const c = document.getElementById('notif-count'); if(c) c.textContent = data.unread_count; refreshList(); } else alert('Error'); }).catch(()=> alert('Error de red')); }; }
+            });
+        }
+
+        // top-level forms (mark all / clear) which should refresh the list after success
+        document.querySelectorAll('.ajax-form').forEach(function(f){
+            f.addEventListener('submit', function(ev){
+                ev.preventDefault();
+                const action = f.getAttribute('action');
+                fetch(action, { method: 'POST', headers: { 'X-CSRFToken': getCSRF(), 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(r=> r.json()).then(data=>{
+                        if(data.success){ const c = document.getElementById('notif-count'); if(c) c.textContent = data.unread_count; refreshList(); }
+                        else alert('Error');
+                    }).catch(()=> alert('Error de red'));
+            });
+        });
+
+        // initial attach
+        attachHandlers();
+    });
+    </script>
+{% endblock %}

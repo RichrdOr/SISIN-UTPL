@@ -9,6 +9,7 @@
 <form method="post" class="space-y-6" id="poliza-form">
   {% csrf_token %}
 
+<<<<<<< Updated upstream
   <!-- Encabezado -->
   <div class="flex items-center gap-4">
     <a href="{% url 'ver_polizas' %}" class="p-2 hover:bg-accent rounded-lg">←</a>
@@ -19,6 +20,15 @@
       </p>
     </div>
   </div>
+=======
+        <div class="flex items-center gap-4">
+            <a href="{% url 'polizas:ver_polizas' %}" class="p-2 hover:bg-accent rounded-lg">←</a>
+            <div>
+                <h2 class="text-xl font-semibold">Crear Nueva Póliza</h2>
+                <p class="text-muted-foreground text-sm">Ingrese la información general de la póliza</p>
+            </div>
+        </div>
+>>>>>>> Stashed changes
 
   <!-- SECCIÓN 1: DATOS DE LA PÓLIZA -->
   <div class="bg-card rounded-lg border p-6">
@@ -185,6 +195,7 @@
     </div>
   </div>
 
+<<<<<<< Updated upstream
   <!-- BOTONES -->
   <div class="flex justify-end gap-4">
     <a href="{% url 'ver_polizas' %}" class="px-6 py-3 border rounded-lg hover:bg-accent transition">Cancelar</a>
@@ -193,6 +204,57 @@
     </button>
   </div>
 </form>
+=======
+        <div class="bg-card rounded-lg border p-6">
+            <h3 class="mb-4 pb-3 border-b font-medium">📎 Documentos y Deducibles</h3>
+            <div class="mb-6">
+                <label class="block text-sm font-medium mb-2">PDF de la Póliza</label>
+                <div class="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer" onclick="document.getElementById('pdfInput').click()">
+                    <i data-lucide="upload" class="w-12 h-12 mx-auto mb-4 text-muted-foreground"></i>
+                    <p class="text-sm text-muted-foreground mb-2">Haz clic para seleccionar el PDF de la póliza</p>
+                    <input type="file" name="pdf_file" accept=".pdf" class="hidden" id="pdfInput">
+                    <div id="pdfFileName" class="mt-2 text-sm font-medium text-primary"></div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-4">Tabla de Deducibles</label>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-separate border-spacing-y-2">
+                        <thead>
+                            <tr class="bg-muted/30 text-xs text-muted-foreground uppercase">
+                                <th class="p-3 text-left">CONCEPTO</th>
+                                <th class="p-3 text-left">MONTO</th>
+                                <th class="p-3 text-center">ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deduciblesTable">
+                            <tr class="bg-white border">
+                                <td class="px-4 py-3"><input type="text" name="concepto_0" placeholder="Ej: Pérdida Total" class="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-primary outline-none"></td>
+                                <td class="px-4 py-3"><input type="text" name="monto_0" placeholder="Ej: 10% del valor" class="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-primary outline-none"></td>
+                                <td class="px-4 py-3 text-center">
+                                    <button type="button" onclick="removeDeducible(this)" class="p-1 hover:bg-red-50 rounded transition-colors text-red-600">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button type="button" onclick="addDeducible()" class="mt-4 flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-primary-foreground transition">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Añadir Deducible
+                </button>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-4">
+            <a href="{% url 'polizas:ver_polizas' %}" class="px-6 py-3 border rounded-lg hover:bg-accent transition font-medium">Cancelar</a>
+            <button type="submit" id="submit-btn" class="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition font-medium">
+                Guardar Póliza
+            </button>
+        </div>
+    </form>
+>>>>>>> Stashed changes
 </div>
 {% endblock %}
 
@@ -262,6 +324,7 @@ document.getElementById('pdfInput').addEventListener('change', function(e) {
 
 // Form submission
 document.getElementById('poliza-form').addEventListener('submit', function(e) {
+<<<<<<< Updated upstream
   e.preventDefault();
   
   const formData = new FormData(this);
@@ -307,6 +370,78 @@ document.getElementById('poliza-form').addEventListener('submit', function(e) {
     console.error('Error:', error);
     alert('Error al crear la póliza');
   });
+=======
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    const originalText = btn.innerHTML;
+    
+    // Bloquear botón para evitar doble clic
+    btn.disabled = true;
+    btn.innerHTML = '<span class="flex items-center gap-2"><i data-lucide="loader-2" class="animate-spin w-4 h-4"></i> Guardando...</span>';
+    lucide.createIcons();
+
+    const formData = new FormData(this);
+
+    // 1. Recolectar RAMOS
+    const ramos = [];
+    document.querySelectorAll('#ramos-container tr').forEach(row => {
+        const grupo = row.querySelector('input[name*="-grupo"]')?.value;
+        const ramo = row.querySelector('input[name*="-ramo"]')?.value;
+        if (grupo && ramo) {
+            ramos.push({
+                grupo: grupo,
+                subgrupo: row.querySelector('input[name*="-subgrupo"]')?.value,
+                ramo: ramo,
+                suma_asegurada: row.querySelector('input[name*="-suma_asegurada"]')?.value,
+                deducible_porcentaje: row.querySelector('input[name*="-deducible"]')?.value
+            });
+        }
+    });
+    formData.append('ramos_json', JSON.stringify(ramos));
+
+    // 2. Recolectar DEDUCIBLES
+    const deducibles = [];
+    document.querySelectorAll('#deduciblesTable tr').forEach(row => {
+        const concepto = row.querySelector('input[name^="concepto_"]')?.value;
+        const monto = row.querySelector('input[name^="monto_"]')?.value;
+        if (concepto && monto) {
+            deducibles.push({ concepto, monto });
+        }
+    });
+    formData.append('deducibles_json', JSON.stringify(deducibles));
+
+    // ENVÍO AL BACKEND
+    fetch('/polizas/crear/', {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            // REDIRECCIÓN A LA LISTA DE PÓLIZAS
+            // El mensaje de éxito se mostrará gracias a Django messages
+            window.location.href = "{% url 'polizas:ver_polizas' %}";
+        } else {
+            // Mostrar error detallado
+            showErrorMessage('Error al guardar: ' + data.message);
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            lucide.createIcons();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showErrorMessage('Error crítico de conexión: ' + error.message);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        lucide.createIcons();
+    });
+>>>>>>> Stashed changes
 });
 
 // CSRF token function

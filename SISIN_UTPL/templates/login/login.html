@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISIN UTPL - Sistema de Seguros</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+
+        .gradient-bg { background: linear-gradient(180deg, #f4f8fb 0%, #eaf3fb 100%); }
+        .glass-effect { background: rgba(255,255,255,0.98); backdrop-filter: blur(6px); border: 1px solid rgba(30,58,90,0.06); }
+
+        .floating-shapes { position: absolute; width: 100%; height: 100%; overflow: hidden; z-index: 0; pointer-events: none; }
+        .shape { position: absolute; opacity: 0.06; filter: blur(18px); }
+        .shape-1 { width: 360px; height: 360px; background: #9cc9e6; border-radius: 50%; top: -6%; left: -6%; }
+        .shape-2 { width: 260px; height: 260px; background: #bfe0f7; border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%; right: -8%; bottom: -4%; }
+        .shape-3 { width: 180px; height: 180px; background: #d8eefc; border-radius: 50%; top: 40%; left: 56%; }
+
+        .role-card { transition: all 0.22s ease; cursor: pointer; background: #fff; }
+        .role-card:hover { transform: translateY(-6px); box-shadow: 0 8px 20px rgba(35,47,65,0.06); }
+        .role-card.selected { border-color: rgba(43,108,176,0.14); background: linear-gradient(180deg,#f8fbfe,#ffffff); box-shadow: 0 12px 30px rgba(43,108,176,0.06); }
+
+        .btn-primary { background: linear-gradient(180deg, #2b6cb0 0%, #68a0cf 100%); transition: all 0.18s ease; box-shadow: 0 8px 18px rgba(40,88,129,0.12); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(40,88,129,0.14); }
+
+        @keyframes float { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-10px);} }
+
+        /* Inputs */
+        input[type="text"], input[type="password"], input[type="email"] {
+            width: 100%; padding: 0.75rem 1rem; border-radius: 0.6rem; border: 1px solid rgba(30,58,90,0.08);
+            background: #fbfdff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); outline: none; transition: box-shadow .12s, border-color .12s;
+        }
+        input:focus { border-color: rgba(43,108,176,0.28); box-shadow: 0 6px 20px rgba(43,108,176,0.06); }
+        .input-with-icon { position: relative; }
+        .input-with-icon .icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: rgba(45,55,72,0.4); cursor: pointer; }
+        /* email suffix inside input */
+        .email-suffix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: rgba(17,24,39,0.28); font-size:0.875rem; pointer-events: none; }
+        .email-suffix.hidden { display: none; }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="glass-effect rounded-2xl shadow-2xl w-full max-w-4xl p-8 relative z-10">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-4">
+                <i class="fas fa-shield-alt text-white text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">SISIN UTPL</h1>
+            <p class="text-gray-600">Sistema Integral de Seguros</p>
+            <!-- Messages (moved inside header so appear above role options) -->
+            {% if messages %}
+                <div class="mt-4 max-w-3xl mx-auto">
+                    {% for message in messages %}
+                        <div class="{% if message.tags == 'success' %}bg-green-50 border-green-300 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-red-300 text-red-800{% else %}bg-blue-50 border-blue-300 text-blue-800{% endif %} border rounded-lg p-3 px-4 mb-3 shadow-sm flex items-center gap-3">
+                            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} text-base"></i>
+                            <span class="text-sm">{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Login Form -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Role Selection: large ACCESOR left, small Gerente icon+label right -->
+            <div class="mb-8">
+                <!-- hidden radio inputs -->
+                <input type="radio" name="rol" value="gerente" id="rol_gerente" class="hidden">
+                <input type="radio" name="rol" value="asesor" id="rol_asesor" class="hidden" checked>
+
+                <!-- Gerente icon in top-right corner -->
+                <div class="absolute top-4 right-4">
+                    <button type="button" class="gerente-small inline-flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 transition-colors" onclick="selectRole(this, 'gerente')" id="gerente-small">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center text-white text-lg">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- ACCESOR big card (centered) -->
+                <div class="flex justify-center">
+                    <div class="role-card border-2 border-gray-200 rounded-xl p-6 text-center w-2/3 max-w-2xl" onclick="selectRole(this, 'asesor')">
+                        <div class="w-14 h-14 mx-auto bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center mb-3 text-white text-xl">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <h3 class="text-base font-medium text-gray-800 mb-1">ACCESOR</h3>
+                        <p class="text-sm text-gray-600">Gestión de pólizas y siniestros</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Fields -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-envelope text-gray-400 mr-2"></i>{{ form.username.label }}
+                    </label>
+                    <div class="relative">
+                        {{ form.username }}
+                        <span id="email-suffix" class="email-suffix hidden">utpl.edu.ec</span>
+                    </div>
+                    {% if form.username.errors %}
+                        <div class="text-red-500 text-sm mt-1">
+                            {% for error in form.username.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-lock text-gray-400 mr-2"></i>{{ form.password.label }}
+                    </label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                        <div class="text-red-500 text-sm mt-1">
+                            {% for error in form.password.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex items-center justify-between">
+                <button type="submit" class="btn-primary text-white font-semibold py-3 px-8 rounded-lg flex items-center gap-2">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Iniciar Sesión
+                </button>
+                
+                <a href="#" class="text-sm text-gray-600 hover:text-blue-600 transition">
+                    <i class="fas fa-question-circle mr-1"></i>
+                    ¿Olvidó su contraseña?
+                </a>
+            </div>
+        </form>
+
+        <!-- Footer -->
+        <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+            <p class="text-sm text-gray-600">
+                © 2024 SISIN UTPL - Universidad Técnica Particular de Loja
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function selectRole(elem, role) {
+            // Remove selected class from all cards
+            document.querySelectorAll('.role-card').forEach(card => card.classList.remove('selected'));
+            // Add selected class to clicked card or button
+            if(elem && elem.classList) elem.classList.add('selected');
+            // Check the corresponding radio button from the form
+            const radioButtons = document.querySelectorAll('input[name="rol"]');
+            radioButtons.forEach(radio => { if (radio.value === role) radio.checked = true; else radio.checked = false; });
+
+            // Update email placeholder / suffix when asesor selected
+            const email = document.querySelector('input[name="username"]');
+            const suffix = document.getElementById('email-suffix');
+            if(role === 'asesor'){
+                if(email) email.placeholder = 'utpl.edu.ec';
+                if(suffix) suffix.classList.remove('hidden');
+            } else {
+                if(email) email.placeholder = 'Correo electrónico';
+                if(suffix) suffix.classList.add('hidden');
+            }
+        }
+
+        // Initialize selection based on checked input on load
+        document.addEventListener('DOMContentLoaded', function(){
+            const checked = document.querySelector('input[name="rol"]:checked');
+            if(checked){
+                // find matching visual element
+                if(checked.value === 'asesor'){
+                    const asesorCard = document.querySelector('.role-card[onclick*="asesor"]'); if(asesorCard) asesorCard.classList.add('selected');
+                } else if(checked.value === 'gerente'){
+                    const g = document.getElementById('gerente-small'); if(g) g.classList.add('selected');
+                }
+                // call selectRole to set placeholder/suffix
+                selectRole(null, checked.value);
+            }
+        });
+
+        // add password visibility toggle icon
+        (function(){
+            const pwd = document.querySelector('input[name="password"]');
+            if(pwd){
+                const wrapper = document.createElement('div'); wrapper.className = 'input-with-icon';
+                pwd.parentNode.insertBefore(wrapper, pwd);
+                wrapper.appendChild(pwd);
+                const icon = document.createElement('span'); icon.className = 'icon'; icon.innerHTML = '<i class="fas fa-eye"></i>';
+                wrapper.appendChild(icon);
+                icon.addEventListener('click', function(){
+                    if(pwd.type === 'password'){ pwd.type = 'text'; icon.innerHTML = '<i class="fas fa-eye-slash"></i>'; }
+                    else { pwd.type = 'password'; icon.innerHTML = '<i class="fas fa-eye"></i>'; }
+                });
+            }
+        })();
+
+        // Add form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const rol = document.querySelector('input[name="rol"]:checked');
+            const email = document.querySelector('input[name="username"]').value;
+            const password = document.querySelector('input[name="password"]').value;
+            
+            if (!rol) {
+                e.preventDefault();
+                alert('Por favor seleccione su tipo de acceso');
+                return;
+            }
+            
+            if (!email || !password) {
+                e.preventDefault();
+                alert('Por favor complete todos los campos');
+                return;
+            }
+        });
+
+        // Initialize Lucide icons if needed
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>

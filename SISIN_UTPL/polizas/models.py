@@ -5,6 +5,7 @@
 from django.db import models
 from django_fsm import FSMField, transition
 from usuarios.models import Usuario, PersonaResponsable
+from django.urls import reverse
 
 class Zona(models.Model):
     nombre = models.CharField(max_length=100)
@@ -52,6 +53,10 @@ class Poliza(models.Model):
 
     def __str__(self):
         return f"Póliza {self.numero_poliza} - {self.titular}"
+
+    def get_absolute_url(self):
+        # Redirige a la lista de pólizas y añade query param para resaltar
+        return f"{reverse('ver_polizas')}?highlight={self.id}"
 
     @transition(field=estado, source='activa', target='suspendida')
     def suspender(self):

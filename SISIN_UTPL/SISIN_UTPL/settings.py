@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-6npi*(29#@=0z40%(2w9#bbb-05(=!zsaj2nc9tilf62tp&*f9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -67,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'SISIN_UTPL.context_processors.unread_notifications_count',
             ],
         },
     },
@@ -108,7 +109,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -138,3 +138,22 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+<<<<<<< Updated upstream
+=======
+
+# Configuración de Envío de Correos (Gmail SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+# Tus credenciales que me pasaste
+EMAIL_HOST_USER = 'cris235g.1@gmail.com'
+EMAIL_HOST_PASSWORD = 'gchm fnsj jzad urim'  # Las 16 letras de Google
+
+# Remitente por defecto
+DEFAULT_FROM_EMAIL = 'SISIN UTPL <cris235g.1@gmail.com>'
+
+# Redirect URL after logout
+LOGOUT_REDIRECT_URL = '/'
+>>>>>>> Stashed changes

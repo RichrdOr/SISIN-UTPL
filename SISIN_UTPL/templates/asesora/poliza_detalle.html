@@ -1,0 +1,34 @@
+{% extends "asesora/base.html" %}
+
+{% block title %}Detalle Póliza{% endblock %}
+{% block header %}Detalle de Póliza{% endblock %}
+
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow-sm">
+  <h3 class="text-xl font-bold mb-2">{{ poliza.numero_poliza }}</h3>
+  <p class="text-sm text-muted mb-4">Titular: {{ poliza.titular }}</p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <p class="text-sm"><strong>Tipo:</strong> {{ poliza.tipo_poliza }}</p>
+      <p class="text-sm"><strong>Estado:</strong> {{ poliza.get_estado_display }}</p>
+      <p class="text-sm"><strong>Prima:</strong> ${{ poliza.prima }}</p>
+    </div>
+    <div>
+      <p class="text-sm"><strong>Fecha inicio:</strong> {{ poliza.fecha_inicio }}</p>
+      <p class="text-sm"><strong>Fecha fin:</strong> {{ poliza.fecha_fin }}</p>
+      <p class="text-sm"><strong>Aseguradora:</strong> {{ poliza.aseguradora }}</p>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <h4 class="font-medium">Cobertura</h4>
+    <p class="text-sm text-muted">{{ poliza.cobertura }}</p>
+  </div>
+
+  <div class="mt-6 flex gap-2">
+    <a href="{% url 'polizas:ver_polizas' %}" class="px-4 py-2 border rounded">Volver</a>
+    <a href="{% url 'polizas:descargar_pdf' poliza.id %}" class="px-4 py-2 bg-primary text-white rounded">Descargar PDF</a>
+  </div>
+</div>
+{% endblock %}

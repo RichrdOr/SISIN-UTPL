@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Gerente - SISIN UTPL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar {
+            background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <div class="flex h-screen">
+        <div class="sidebar w-64 text-white p-6">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-white"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">SISIN UTPL</h2>
+                    <p class="text-sm text-blue-200">Panel Gerencial</p>
+                </div>
+            </div>
+
+            <nav class="space-y-2">
+                <a href="{% url 'gerencia:dashboard_gerencial' %}" class="flex items-center gap-3 p-3 bg-white/10 rounded-lg">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'polizas' %}" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Pólizas</span>
+                </a>
+                <a href="{% url 'aseguradora:bandeja_siniestros' %}" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fas fa-car-crash"></i>
+                    <span>Siniestros</span>
+                </a>
+                <a href="{% url 'gerencia:usuarios_gerencial' %}" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fas fa-users"></i>
+                    <span>Usuarios</span>
+                </a>
+                <a href="{% url 'gerencia:reportes_gerencial' %}" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Reportes</span>
+                </a>
+                <a href="{% url 'gerencia:parametros_gerencial' %}" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fas fa-cog"></i>
+                    <span>Configuración</span>
+                </a>
+            </nav>
+
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="bg-white/10 rounded-lg p-4">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold">{{ usuario.get_full_name|default:usuario.username }}</p>
+                            <p class="text-sm text-blue-200">Gerente</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'logout' %}" class="flex items-center gap-2 text-sm hover:text-blue-200 transition">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Header -->
+            <div class="bg-white shadow-sm border-b px-8 py-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">Dashboard Gerencial</h1>
+                        <p class="text-gray-600">Bienvenido al panel de control administrativo</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button class="relative p-2 text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-bell"></i>
+                            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-600">Último acceso</p>
+                            <p class="text-sm font-semibold">{% now "d/m/Y H:i" %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                <div class="px-8 py-4">
+                    {% for message in messages %}
+                        <div class="{% if message.tags == 'success' %}bg-green-100 border-green-500 text-green-700{% elif message.tags == 'error' %}bg-red-100 border-red-500 text-red-700{% else %}bg-blue-100 border-blue-500 text-blue-700{% endif %} border-l-4 p-4 rounded-lg flex items-center gap-3 mb-2">
+                            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Stats Cards -->
+            <div class="px-8 py-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">Resumen General</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="stat-card bg-white rounded-xl shadow-sm border p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file-contract text-blue-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">Total</span>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-800">{{ total_polizas }}</p>
+                        <p class="text-sm text-gray-600">Pólizas</p>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-xl shadow-sm border p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">Activas</span>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-800">{{ polizas_activas }}</p>
+                        <p class="text-sm text-gray-600">Pólizas Vigentes</p>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-xl shadow-sm border p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">Pendientes</span>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-800">{{ siniestros_pendientes }}</p>
+                        <p class="text-sm text-gray-600">Siniestros</p>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-xl shadow-sm border p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-dollar-sign text-purple-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">Total</span>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-800">${{ prima_total|floatformat:2 }}</p>
+                        <p class="text-sm text-gray-600">Prima Acumulada</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="px-8 py-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">Acciones Rápidas</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border p-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-plus text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Nueva Póliza</h3>
+                                <p class="text-sm text-gray-600">Crear una nueva póliza de seguro</p>
+                            </div>
+                        </div>
+                        <button class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+                            Crear Póliza
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border p-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file-alt text-green-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Reporte Mensual</h3>
+                                <p class="text-sm text-gray-600">Generar reporte del mes actual</p>
+                            </div>
+                        </div>
+                        <button class="mt-4 w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">
+                            Generar Reporte
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border p-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-users text-purple-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Gestionar Usuarios</h3>
+                                <p class="text-sm text-gray-600">Administrar accesos y permisos</p>
+                            </div>
+                        </div>
+                        <button class="mt-4 w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition">
+                            Administrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,6 +1,24 @@
 # Solo los modelos de personitas :3
 
 from django.db import models
+from django.contrib.auth.models import User
+
+class PerfilUsuario(models.Model):
+    ROLES = (
+        ('gerente', 'Gerente'),
+        ('asesor', 'Asesor'),
+    )
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Usuario")
+    rol = models.CharField(max_length=10, choices=ROLES, default='asesor', verbose_name="Rol")
+    telefono = models.CharField(max_length=15, blank=True, verbose_name="Teléfono")
+    
+    class Meta:
+        verbose_name = "Perfil de Usuario"
+        verbose_name_plural = "Perfiles de Usuarios"
+    
+    def __str__(self):
+        return f"{self.user.username} ({self.get_rol_display()})"
 
 class Usuario(models.Model):
     nombre = models.CharField(max_length=100, verbose_name="Nombre")

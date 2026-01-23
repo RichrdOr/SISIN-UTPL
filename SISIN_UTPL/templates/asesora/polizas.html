@@ -28,11 +28,11 @@
         <i data-lucide="refresh-cw" class="w-4 h-4"></i>
         Renovar Vencidas
       </button>
-      <button onclick="openModal()" 
-              class="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition">
+      <a href="{% url 'polizas:formulario_crear_poliza' %}" 
+         class="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition">
         <i data-lucide="plus" class="w-5 h-5"></i>
         Crear Póliza
-      </button>
+      </a>
     </div>
   </div>
 
@@ -131,7 +131,7 @@
         <tbody class="divide-y">
 
           {% for poliza in polizas %}
-          <tr class="hover:bg-accent transition-colors">
+          <tr id="poliza-{{ poliza.id }}" class="hover:bg-accent transition-colors">
 
             <td class="px-6 py-4 font-medium tracking-normal">{{ poliza.numero_poliza }}</td>
             
@@ -173,7 +173,7 @@
 
             <!-- PDF -->
             <td class="px-6 py-4">
-              <a href="{% url 'descargar_pdf' poliza.id %}" 
+              <a href="{% url 'polizas:descargar_pdf' poliza.id %}" 
                  class="p-2 hover:bg-accent rounded transition-colors inline-block"
                  title="Descargar PDF">
                 <i data-lucide="file-text" class="w-4 h-4 text-muted-foreground"></i>
@@ -183,10 +183,10 @@
             <!-- Acciones -->
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
-                <button onclick="editPoliza('{{ poliza.id }}')" 
-                        class="p-2 hover:bg-accent rounded transition-colors">
+                <a href="{% url 'polizas:formulario_editar_poliza' poliza.id %}" 
+                   class="p-2 hover:bg-accent rounded transition-colors inline-block">
                   <i data-lucide="edit" class="w-4 h-4 text-muted-foreground"></i>
-                </button>
+                </a>
                 <button onclick="deletePoliza('{{ poliza.id }}')" 
                         class="p-2 hover:bg-accent rounded transition-colors">
                   <i data-lucide="trash-2" class="w-4 h-4 text-red-600"></i>
@@ -225,225 +225,27 @@
 
 </div>
 
-<!-- Modal Crear/Editar Póliza -->
-<div id="polizaModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl">
-    <!-- Header Modal -->
-    <div class="flex items-center justify-between p-6 border-b bg-gray-50 rounded-t-xl">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-          <i data-lucide="file-text" class="w-5 h-5 text-primary-foreground"></i>
-        </div>
-        <div>
-          <h3 class="text-xl font-bold text-foreground">Crear Nueva Póliza</h3>
-          <p class="text-sm text-muted-foreground">Complete la información de la póliza</p>
-        </div>
-      </div>
-      <button onclick="closeModal()" class="p-2 hover:bg-accent rounded-lg transition-colors">
-        <i data-lucide="x" class="w-5 h-5 text-muted-foreground"></i>
-      </button>
-    </div>
-
-    <!-- Form Content -->
-    <form id="polizaForm" class="space-y-6 p-6">
-      <!-- SECCIÓN 1: DATOS DE LA PÓLIZA -->
-      <div class="bg-card rounded-lg border p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-            <i data-lucide="file-text" class="w-4 h-4 text-blue-600"></i>
-          </div>
-          <h3 class="text-lg font-semibold text-foreground">Datos de la Póliza</h3>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
-              <i data-lucide="hash" class="w-4 h-4 text-muted-foreground"></i>
-              Nro. Póliza
-            </label>
-            <input name="numero_poliza" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="POL-000123" required />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
-              <i data-lucide="building" class="w-4 h-4 text-muted-foreground"></i>
-              Aseguradora
-            </label>
-            <input name="aseguradora" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Nombre de la aseguradora" required />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
-              <i data-lucide="calendar" class="w-4 h-4 text-muted-foreground"></i>
-              Fecha de Emisión
-            </label>
-            <input type="date" name="fecha_emision" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
-              <i data-lucide="calendar-days" class="w-4 h-4 text-muted-foreground"></i>
-              Fecha Inicio
-            </label>
-            <input type="date" name="fecha_inicio" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
-              <i data-lucide="calendar-check" class="w-4 h-4 text-muted-foreground"></i>
-              Fecha Fin
-            </label>
-            <input type="date" name="fecha_fin" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
-              <i data-lucide="dollar-sign" class="w-4 h-4 text-muted-foreground"></i>
-              Total Prima
-            </label>
-            <input type="number" step="0.01" name="total_prima" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00" required />
-          </div>
-        </div>
-      </div>
-
-      <!-- SECCIÓN 2: BIEN ASEGURADO -->
-      <div class="bg-card rounded-lg border p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-            <i data-lucide="home" class="w-4 h-4 text-green-600"></i>
-          </div>
-          <h3 class="text-lg font-semibold text-foreground">Bien Asegurado</h3>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="col-span-1 md:col-span-2">
-            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
-              <i data-lucide="file-text" class="w-4 h-4 text-muted-foreground"></i>
-              Descripción del Bien
-            </label>
-            <textarea name="descripcion_bien" rows="3" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Descripción detallada del bien asegurado..." required></textarea>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
-              <i data-lucide="building-2" class="w-4 h-4 text-muted-foreground"></i>
-              Tipo de Bien
-            </label>
-            <select name="tipo_bien" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required>
-              <option value="">Seleccione</option>
-              <option value="Residencial">Residencial</option>
-              <option value="Comercial">Comercial</option>
-              <option value="Industrial">Industrial</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
-              <i data-lucide="map-pin" class="w-4 h-4 text-muted-foreground"></i>
-              Zona / Ubicación
-            </label>
-            <input name="zona" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ciudad / Sector" required />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium mb-2 flex items-center gap-2">
-              <i data-lucide="trending-up" class="w-4 h-4 text-muted-foreground"></i>
-              Valor del Bien
-            </label>
-            <input type="number" step="0.01" name="valor_bien" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00" required />
-          </div>
-        </div>
-      </div>
-
-      <!-- SECCIÓN 3: RAMOS -->
-      <div class="bg-card rounded-lg border p-6">
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-              <i data-lucide="layers" class="w-4 h-4 text-purple-600"></i>
-            </div>
-            <h3 class="text-lg font-semibold text-foreground">Ramos de la Póliza</h3>
-          </div>
-          <button type="button" id="add-ramo-btn-modal" class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition flex items-center gap-2">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            Agregar Ramo
-          </button>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full border-separate border-spacing-y-2">
-            <thead>
-              <tr class="bg-muted/30">
-                <th class="p-3 text-sm text-left">Grupo</th>
-                <th class="p-3 text-sm text-left">Subgrupo</th>
-                <th class="p-3 text-sm text-left">Ramo</th>
-                <th class="p-3 text-sm text-left">Suma Asegurada</th>
-                <th class="p-3 text-sm text-left">Deducible %</th>
-                <th class="p-3 text-sm text-center">Acción</th>
-              </tr>
-            </thead>
-            <tbody id="ramos-container-modal">
-              <tr class="ramo-form bg-white">
-                <td class="p-1"><input name="ramos-0-grupo" class="w-full px-2 py-1 border rounded text-sm" required></td>
-                <td class="p-1"><input name="ramos-0-subgrupo" class="w-full px-2 py-1 border rounded text-sm"></td>
-                <td class="p-1"><input name="ramos-0-ramo" class="w-full px-2 py-1 border rounded text-sm" required></td>
-                <td class="p-1"><input type="number" step="0.01" name="ramos-0-suma_asegurada" class="w-full px-2 py-1 border rounded text-sm" required></td>
-                <td class="p-1"><input type="number" step="0.01" name="ramos-0-deducible" class="w-full px-2 py-1 border rounded text-sm"></td>
-                <td class="p-2 text-center">
-                  <button type="button" class="delete-ramo-btn-modal text-red-600 hover:bg-red-50 p-1 rounded">🗑️</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- SECCIÓN 4: PDF -->
-      <div class="bg-card rounded-lg border p-6">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-            <i data-lucide="paperclip" class="w-4 h-4 text-orange-600"></i>
-          </div>
-          <h3 class="text-lg font-semibold text-foreground">Documentos</h3>
-        </div>
-        
-        <!-- PDF Upload -->
-        <div>
-          <label class="block text-sm font-medium mb-2 flex items-center gap-2">
-            <i data-lucide="upload" class="w-4 h-4 text-muted-foreground"></i>
-            PDF de la Póliza
-          </label>
-          <div class="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
-            <i data-lucide="upload" class="w-12 h-12 mx-auto mb-4 text-muted-foreground"></i>
-            <p class="text-sm text-muted-foreground mb-2">Arrastra y suelta el PDF aquí o haz clic para seleccionar</p>
-            <input type="file" name="pdf_file" accept=".pdf" class="hidden" id="pdfInput">
-            <button type="button" onclick="document.getElementById('pdfInput').click()"
-                    class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition">
-              Seleccionar Archivo
-            </button>
-            <div id="pdfFileName" class="mt-2 text-sm text-muted-foreground"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Botones de Acción -->
-      <div class="flex items-center justify-end gap-4 pt-6 border-t">
-        <button type="button" onclick="closeModal()" 
-                class="px-6 py-3 border rounded-lg hover:bg-accent transition-colors flex items-center gap-2">
-          <i data-lucide="x" class="w-4 h-4"></i>
-          Cancelar
-        </button>
-        <button type="submit" 
-                class="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition flex items-center gap-2">
-          <i data-lucide="save" class="w-4 h-4"></i>
-          Guardar Póliza
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
+<script>
+// Si llega ?highlight=<id> desplazarse y resaltar la fila
+function getQueryParam(name){
+  const url = new URL(window.location.href);
+  return url.searchParams.get(name);
+}
+document.addEventListener('DOMContentLoaded', function(){
+  const hid = getQueryParam('highlight');
+  if(hid){
+    const el = document.getElementById('poliza-' + hid);
+    if(el){
+      el.scrollIntoView({behavior: 'smooth', block: 'center'});
+      el.classList.add('ring','ring-2','ring-primary','bg-yellow-50');
+      setTimeout(()=>{ el.classList.remove('bg-yellow-50'); }, 5000);
+    }
+  }
+});
+</script>
 
 {% endblock %}
+<<<<<<< Updated upstream
 
 {% block extra_js %}
 <script>
@@ -847,3 +649,5 @@ function renewExpiredPolicies() {
 }
 </script>
 {% endblock %}
+=======
+>>>>>>> Stashed changes
