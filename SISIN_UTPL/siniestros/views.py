@@ -10,6 +10,8 @@ import json
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill
 
+from notificaciones.models import Notificacion, Alerta  # ✅ Agregar Alerta
+
 # Modelos y Forms
 from .models import Siniestro, DocumentoSiniestro, RoboSiniestro, HistorialEstado
 from .forms import (
@@ -65,6 +67,7 @@ def dashboard_siniestros(request):
     }
     
     return render(request, "asesora/dashboard.html", {'stats': stats})
+
 
 
 
@@ -225,6 +228,11 @@ def dashboard_asesora(request):
         fecha_vencimiento__lte=fecha_limite
     ).order_by('fecha_vencimiento')[:5]
 
+    # ✅ CAMBIO: Usar Alerta en lugar de Notificacion
+    from notificaciones.models import Alerta  # Asegurar import
+    alertas_recientes = Alerta.objects.select_related('usuario').order_by('-fecha_creacion')[:10]
+    
+    # También obtener notificaciones si las necesitas
     notificaciones = Notificacion.objects.order_by('-fecha_creacion')[:5]
 
     context = {
@@ -236,10 +244,12 @@ def dashboard_asesora(request):
         'ultimos_siniestros': ultimos_siniestros,
         'pendientes': pendientes,
         'proximas_vencer': proximas_vencer,
+        'alertas_recientes': alertas_recientes,  # ✅ Ahora sí pasará las alertas correctas
         'notificaciones': notificaciones,
     }
 
     return render(request, 'asesora/dashboard.html', context)
+
 
 
 

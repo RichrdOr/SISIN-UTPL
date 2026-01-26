@@ -1,5 +1,8 @@
 {% extends "asesora/base.html" %}
 
+{% block title %}Detalle de Notificaciones{% endblock %}
+{% block header %}Detalle de Notificaciones{% endblock %}
+
 {% block content %}
 <div class="max-w-4xl mx-auto p-6 space-y-6">
     <!-- Botón de regreso -->
@@ -168,7 +171,65 @@
     <!-- Acciones -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
         <h2 class="text-lg font-semibold text-[#2C2C2C] mb-4">Acciones</h2>
-        <div class="flex gap-3">
+        
+        <!-- ADVERTENCIA GRANDE Y LLAMATIVA -->
+        {% if notificacion.correo_enviado %}
+        <div class="mb-6 p-5 bg-gradient-to-r from-orange-50 to-yellow-50 border-2 border-orange-300 rounded-xl shadow-md">
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0">
+                    <div class="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center border-2 border-orange-400">
+                        <svg class="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-orange-900 mb-2 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        Correo ya enviado anteriormente
+                    </h3>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-3 text-orange-800">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="font-semibold">Enviado:</span>
+                            </div>
+                            <span class="font-bold text-orange-900 text-lg">{{ notificacion.veces_enviado }}</span>
+                            <span>vez{% if notificacion.veces_enviado != 1 %}ces{% endif %}</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-orange-700">
+                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span class="font-medium">Última vez:</span>
+                            <span class="font-bold">{{ notificacion.fecha_envio_correo|date:"d/m/Y" }}</span>
+                            <span>a las</span>
+                            <span class="font-bold">{{ notificacion.fecha_envio_correo|date:"H:i" }}</span>
+                        </div>
+                    </div>
+                    {% if mostrar_confirmacion %}
+                    <div class="mt-4 pt-4 border-t-2 border-orange-200">
+                        <p class="text-orange-900 font-semibold text-base flex items-center gap-2">
+                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            ¿Estás seguro de enviarlo nuevamente?
+                        </p>
+                        <p class="text-sm text-orange-700 mt-1">
+                            El correo se enviará otra vez a los mismos destinatarios.
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="flex gap-3 flex-wrap">
             {% if not notificacion.leida %}
             <form action="{% url 'marcar_leida' notificacion.id %}" method="POST" class="inline">
                 {% csrf_token %}
@@ -187,6 +248,39 @@
                 Notificación leída
             </div>
             {% endif %}
+            
+            <!-- Botón para enviar/reenviar correo -->
+            <form action="{% url 'reenviar_correo' notificacion.id %}" method="POST" class="inline">
+                {% csrf_token %}
+                {% if mostrar_confirmacion %}
+                    <input type="hidden" name="confirmar" value="si">
+                    <button type="submit" class="inline-flex items-center gap-2 px-5 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span class="font-semibold">Sí, reenviar correo</span>
+                    </button>
+                {% else %}
+                    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-[#1F6FB2] text-white rounded-lg hover:bg-[#0B3C5D] transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        {% if notificacion.correo_enviado %}Reenviar Correo{% else %}Enviar Correo{% endif %}
+                    </button>
+                {% endif %}
+            </form>
+
+            <!-- Botón eliminar -->
+            <form action="{% url 'eliminar_notificacion' notificacion.id %}" method="POST" class="inline"
+                onsubmit="return confirm('¿Estás seguro de eliminar esta notificación?\n\nEsta acción no se puede deshacer.');">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Eliminar notificación
+                </button>
+            </form>
         </div>
     </div>
 </div>

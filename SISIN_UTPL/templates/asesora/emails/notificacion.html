@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ notificacion.titulo }}</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #1F6FB2; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { padding: 25px; background: #fff; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; }
+        .info-box { background: #f8f9fa; border-left: 4px solid #1F6FB2; padding: 15px; margin: 20px 0; }
+        .warning { border-left-color: #e67e22; }
+        .critical { border-left-color: #c0392b; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: #f1f5f9; width: 35%; }
+        .button { display: inline-block; background: #1F6FB2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 15px 0; }
+        .footer { text-align: center; font-size: 12px; color: #777; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 style="margin:0; font-size:24px;">{{ asunto_prefijo|default:"Notificación" }} - {{ notificacion.titulo }}</h1>
+    </div>
+
+    <div class="content">
+        <p>Estimado/a {{ asesor.nombre_completo|default:asesor.email }},</p>
+        
+        <p><strong>{{ notificacion.fecha_creacion|date:"d \d\e F \d\e Y" }} {{ notificacion.fecha_creacion|time:"H:i" }}</strong></p>
+
+        {% if es_reenvio %}
+        <div class="info-box warning">
+            <strong>IMPORTANTE:</strong> Este es un <strong>reenvío</strong> del correo original.<br>
+            Ha sido enviado {{ veces_enviado }} vez{{ veces_enviado|pluralize }}.<br>
+            Último envío: {{ ultimo_envio|date:"d/m/Y H:i" }}
+        </div>
+        {% endif %}
+
+        <div class="info-box {% if notificacion.tipo == 'critica' %}critical{% endif %}">
+            <strong>Tipo:</strong> {{ tipo_display }}<br>
+            <strong>Categoría:</strong> {{ categoria_display }}<br>
+            <strong>Estado:</strong> {% if notificacion.leida %}Leída{% else %}No leída{% endif %}
+        </div>
+
+        <h3>Mensaje:</h3>
+        <p style="white-space: pre-line;">{{ notificacion.mensaje }}</p>
+
+        {% if objeto_info %}
+        <h3>Información relacionada ({{ objeto_tipo }}):</h3>
+        <table>
+            {% for clave, valor in objeto_info.items %}
+            <tr>
+                <th>{{ clave|title|replace:"_":" " }}</th>
+                <td>{{ valor }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+
+        <p style="text-align:center; margin:30px 0;">
+            <a href="{{ notificacion_url }}" class="button">Ver detalle en el sistema</a>
+        </p>
+
+        {% if objeto_url %}
+        <p style="text-align:center;">
+            <a href="{{ objeto_url }}" class="button">Ir directamente al {{ objeto_tipo|lower }}</a>
+        </p>
+        {% endif %}
+    </div>
+
+    <div class="footer">
+        <p>Sistema SISIN UTPL – Notificaciones automáticas<br>
+        No responder a este correo • Fecha de envío: {{ now|date:"d/m/Y H:i" }}</p>
+    </div>
+</body>
+</html>

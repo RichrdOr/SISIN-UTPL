@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumen Diario de Notificaciones</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #1F6FB2 0%, #0B3C5D 100%);
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .criticas { color: #C0392B; }
+        .alertas { color: #F2A900; }
+        .info { color: #1F6FB2; }
+        .content {
+            padding: 30px;
+        }
+        .notificacion {
+            border-left: 4px solid #ddd;
+            padding: 15px;
+            margin: 15px 0;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .notificacion.critica { border-left-color: #C0392B; background-color: #FFF5F5; }
+        .notificacion.alerta { border-left-color: #F2A900; background-color: #FFFBF0; }
+        .notificacion.info { border-left-color: #1F6FB2; background-color: #F0F7FF; }
+        .notificacion h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .notificacion p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+        .badge-critica { background-color: #FFEBEE; color: #C0392B; }
+        .badge-alerta { background-color: #FEF3E2; color: #F2A900; }
+        .badge-info { background-color: #E3F2FD; color: #1F6FB2; }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 20px 0;
+            background: linear-gradient(135deg, #1F6FB2 0%, #0B3C5D 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="font-size: 40px; margin-bottom: 10px;">📊</div>
+            <h1>Resumen Diario</h1>
+            <p style="margin: 10px 0 0 0;">{{ "now"|date:"l, d \d\e F \d\e Y" }}</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-number criticas">{{ criticas }}</div>
+                <div class="stat-label">Críticas</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number alertas">{{ alertas }}</div>
+                <div class="stat-label">Alertas</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number info">{{ info }}</div>
+                <div class="stat-label">Informativas</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <p>Estimado/a <strong>{{ asesor.nombre }} {{ asesor.apellido }}</strong>,</p>
+            
+            <p>Tienes <strong>{{ total }}</strong> notificación{% if total != 1 %}es{% endif %} pendiente{% if total != 1 %}s{% endif %} de revisión:</p>
+
+            <h3 style="color: #1F6FB2; margin-top: 30px;">Notificaciones Pendientes</h3>
+
+            {% for notificacion in notificaciones %}
+            <div class="notificacion {{ notificacion.tipo }}">
+                <div>
+                    <span class="badge badge-{{ notificacion.tipo }}">{{ notificacion.get_tipo_display }}</span>
+                    <span class="badge" style="background-color: #E8E8E8; color: #666;">{{ notificacion.get_categoria_display }}</span>
+                </div>
+                <h4>{{ notificacion.titulo }}</h4>
+                <p>{{ notificacion.mensaje|truncatewords:30 }}</p>
+                <p style="font-size: 12px; color: #999; margin-top: 10px;">
+                    {{ notificacion.fecha_creacion|date:"d/m/Y H:i" }}
+                </p>
+            </div>
+            {% endfor %}
+
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="{{ site_url }}/notificaciones/" class="btn">
+                    Ver Todas las Notificaciones
+                </a>
+            </div>
+
+            {% if criticas > 0 %}
+            <div style="background-color: #FFEBEE; border-left: 4px solid #C0392B; padding: 15px; border-radius: 4px; margin-top: 30px;">
+                <strong style="color: #C0392B;">⚠️ Atención Urgente</strong><br>
+                <span style="color: #666; font-size: 14px;">
+                    Tienes {{ criticas }} notificación{% if criticas != 1 %}es{% endif %} crítica{% if criticas != 1 %}s{% endif %} que requiere{% if criticas == 1 %}n{% endif %} tu atención inmediata.
+                </span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="footer">
+            <p style="margin: 0;">
+                <strong>Sistema de Siniestros - UTPL</strong><br>
+                Este es un correo automático, por favor no responder.
+            </p>
+            <p style="margin: 10px 0 0 0; font-size: 12px;">
+                © {{ "now"|date:"Y" }} Universidad Técnica Particular de Loja
+            </p>
+        </div>
+    </div>
+</body>
+</html>

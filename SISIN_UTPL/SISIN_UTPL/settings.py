@@ -139,6 +139,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+# Configuración de Email
 # Configuración de Envío de Correos (Gmail SMTP)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -151,3 +153,12 @@ EMAIL_HOST_PASSWORD = 'gchm fnsj jzad urim'  # Las 16 letras de Google
 
 # Remitente por defecto
 DEFAULT_FROM_EMAIL = 'SISIN UTPL <cris235g.1@gmail.com>'
+
+
+
+
+# Agregar al final de tu settings.py
+
+
+SERVER_EMAIL = 'cris235g.1@gmail.com'
+#SITE_URL = 'http://127.0.0.1:8000'

@@ -16,7 +16,6 @@ class Notificacion(models.Model):
         ('siniestro_plazo', 'Siniestro Fuera de Plazo'),
         ('aseguradora_plazo', 'Aseguradora Fuera de Plazo'),
         ('pago_pendiente', 'Pago Pendiente'),
-        ('general', 'General'),
     ]
 
     titulo = models.CharField(max_length=150)
@@ -31,7 +30,7 @@ class Notificacion(models.Model):
     categoria = models.CharField(
         max_length=30,
         choices=CATEGORIA_CHOICES,
-        default='general'
+        default='siniestro_docs'
     )
 
     # Relación genérica (siniestro, póliza, etc.)
@@ -52,6 +51,11 @@ class Notificacion(models.Model):
 
     leida = models.BooleanField(default=False)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    
+    # Nuevo: Control de envío de correos
+    correo_enviado = models.BooleanField(default=False, verbose_name="Correo Enviado")
+    fecha_envio_correo = models.DateTimeField(null=True, blank=True, verbose_name="Fecha de Envío")
+    veces_enviado = models.IntegerField(default=0, verbose_name="Veces Enviado")
 
     class Meta:
         verbose_name = "Notificación"
@@ -64,6 +68,14 @@ class Notificacion(models.Model):
     def marcar_leida(self):
         """Marca la notificación como leída"""
         self.leida = True
+        self.save()
+    
+    def registrar_envio_correo(self):
+        """Registra que se envió el correo"""
+        from django.utils import timezone
+        self.correo_enviado = True
+        self.fecha_envio_correo = timezone.now()
+        self.veces_enviado += 1
         self.save()
 
 
