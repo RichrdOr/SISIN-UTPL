@@ -242,6 +242,7 @@ def dashboard_asesora(request):
     return render(request, 'asesora/dashboard.html', context)
 
 
+
 def dashboard_asesora(request):
     """Dashboard principal para la asesora con métricas, gráficos y listados."""
     hoy = date.today()

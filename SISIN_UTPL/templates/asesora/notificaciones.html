@@ -9,6 +9,7 @@
         </p>
     </div>
 
+    <!-- ESTADÍSTICAS -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
             <div class="flex items-center justify-between mb-2">
@@ -51,6 +52,49 @@
         </div>
     </div>
 
+    <!-- ALERTAS RECIENTES -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-[#2C2C2C]">Actividad Reciente</h3>
+            <span class="text-xs text-[#6E6E6E]">Últimas 10 acciones</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="border-b border-gray-200">
+                    <tr class="text-left text-[#6E6E6E]">
+                        <th class="pb-3 font-medium">Tipo</th>
+                        <th class="pb-3 font-medium">Descripción</th>
+                        <th class="pb-3 font-medium">Usuario</th>
+                        <th class="pb-3 font-medium text-right">Fecha</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for alerta in alertas_recientes %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="py-3">
+                            <span class="px-2 py-1 bg-[#E3F2FD] text-[#1F6FB2] rounded text-xs font-medium">
+                                {{ alerta.get_tipo_actividad_display }}
+                            </span>
+                        </td>
+                        <td class="py-3 text-[#2C2C2C]">{{ alerta.descripcion }}</td>
+                        <td class="py-3 text-[#6E6E6E]">{{ alerta.usuario|default:"Sistema" }}</td>
+                        <td class="py-3 text-[#6E6E6E] text-right">
+                            {{ alerta.fecha_creacion|date:"d/m/Y H:i" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="py-6 text-center text-gray-400">
+                            No hay actividad reciente registrada
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- FILTROS -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex gap-2">
@@ -73,6 +117,7 @@
         </div>
     </div>
 
+    <!-- LISTA DE NOTIFICACIONES -->
     <div class="space-y-3">
         {% for n in notificaciones %}
         <div class="bg-white rounded-lg shadow-sm border-l-4 transition-all hover:shadow-md 
@@ -134,7 +179,11 @@
         </div>
         {% empty %}
         <div class="bg-white rounded-lg p-12 text-center border border-dashed border-gray-300">
+            <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+            </svg>
             <p class="text-gray-500">No tienes notificaciones pendientes.</p>
+            <p class="text-sm text-gray-400 mt-1">Las notificaciones aparecerán aquí cuando se generen alertas.</p>
         </div>
         {% endfor %}
     </div>
