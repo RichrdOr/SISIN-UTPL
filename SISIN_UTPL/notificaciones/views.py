@@ -94,10 +94,15 @@ def detalle_notificacion(request, notificacion_id):
     Vista de detalle de una notificación específica
     Marca automáticamente como leída al acceder
     """
-    asesor, created = AsesorUTPL.objects.get_or_create(
-        usuario=request.user,
-        defaults={'nombre': request.user.username}
-    )
+    try:
+        asesor = AsesorUTPL.objects.first()
+        if not asesor:
+            asesor = AsesorUTPL.objects.create(
+                nombre=request.user.username,
+                email=request.user.email
+            )
+    except Exception as e:
+        asesor = AsesorUTPL.objects.first()
     
     notificacion = get_object_or_404(
         Notificacion,
@@ -135,15 +140,16 @@ def marcar_todas_leidas(request):
     Marca todas las notificaciones del asesor como leídas
     """
     if request.method == 'POST':
-        asesor, created = AsesorUTPL.objects.get_or_create(
-            usuario=request.user,
-            defaults={'nombre': request.user.username}
-        )
+        try:
+            asesor = AsesorUTPL.objects.first()
+        except Exception as e:
+            asesor = None
         
-        Notificacion.objects.filter(
-            destinatario=asesor,
-            leida=False
-        ).update(leida=True)
+        if asesor:
+            Notificacion.objects.filter(
+                destinatario=asesor,
+                leida=False
+            ).update(leida=True)
     
     return redirect('notificaciones')
 
@@ -154,17 +160,18 @@ def marcar_leida(request, notificacion_id):
     Marca una notificación específica como leída
     """
     if request.method == 'POST':
-        asesor, created = AsesorUTPL.objects.get_or_create(
-            usuario=request.user,
-            defaults={'nombre': request.user.username}
-        )
+        try:
+            asesor = AsesorUTPL.objects.first()
+        except Exception as e:
+            asesor = None
         
-        notificacion = get_object_or_404(
-            Notificacion,
-            id=notificacion_id,
-            destinatario=asesor
-        )
-        notificacion.marcar_leida()
+        if asesor:
+            notificacion = get_object_or_404(
+                Notificacion,
+                id=notificacion_id,
+                destinatario=asesor
+            )
+            notificacion.marcar_leida()
     
     return redirect('notificaciones')
 
