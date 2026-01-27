@@ -24,24 +24,28 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          # 👇 AGREGADO AQUÍ
+          # 👇 1. Ruta correcta al archivo de bloqueo
           cache-dependency-path: './SISIN_UTPL/package-lock.json'
       
       - name: Install dependencies
         run: npm ci
+        working-directory: ./SISIN_UTPL  # 👈 2. Ejecutar dentro de la carpeta
       
       - name: Run linting (TypeScript check)
         run: npx tsc --noEmit
+        working-directory: ./SISIN_UTPL  # 👈 2. Ejecutar dentro de la carpeta
       
       - name: Run tests
         run: npm test -- --no-watch --browsers=ChromeHeadless --code-coverage
+        working-directory: ./SISIN_UTPL  # 👈 2. Ejecutar dentro de la carpeta
         continue-on-error: true
       
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
         if: always()
         with:
-          files: ./coverage/lcov.info
+          # 👇 3. Ruta ajustada para buscar el reporte
+          files: ./SISIN_UTPL/coverage/lcov.info
           fail_ci_if_error: false
 
   build:
@@ -58,29 +62,32 @@ jobs:
         with:
           node-version: '20.x'
           cache: 'npm'
-          # 👇 AGREGADO AQUÍ
           cache-dependency-path: './SISIN_UTPL/package-lock.json'
       
       - name: Install dependencies
         run: npm ci
+        working-directory: ./SISIN_UTPL  # 👈 2. Ejecutar dentro de la carpeta
       
       - name: Build application
         run: npm run build -- --configuration=production
+        working-directory: ./SISIN_UTPL  # 👈 2. Ejecutar dentro de la carpeta
       
       - name: Check build artifacts
         run: |
-          if [ ! -d "dist/riskless-diem" ]; then
+          # 👇 Verificamos la carpeta dist DENTRO de SISIN_UTPL
+          if [ ! -d "SISIN_UTPL/dist/riskless-diem" ]; then
             echo "Build failed: dist directory not found"
             exit 1
           fi
-          echo "Build successful. Artifacts in dist/riskless-diem"
-          ls -lah dist/riskless-diem/
+          echo "Build successful. Artifacts in SISIN_UTPL/dist/riskless-diem"
+          ls -lah SISIN_UTPL/dist/riskless-diem/
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: dist/riskless-diem
+          # 👇 3. Ruta ajustada para subir el artifact
+          path: SISIN_UTPL/dist/riskless-diem
           retention-days: 7
 
   security-audit:
@@ -96,12 +103,13 @@ jobs:
         with:
           node-version: '20.x'
           cache: 'npm'
-          # 👇 AGREGADO AQUÍ
           cache-dependency-path: './SISIN_UTPL/package-lock.json'
       
       - name: Install dependencies
         run: npm ci
+        working-directory: ./SISIN_UTPL  # 👈 2. Ejecutar dentro de la carpeta
       
       - name: Run npm audit
         run: npm audit --audit-level=moderate
+        working-directory: ./SISIN_UTPL  # 👈 2. Ejecutar dentro de la carpeta
         continue-on-error: true
