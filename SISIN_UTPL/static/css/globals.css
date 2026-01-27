@@ -1,8 +1,11 @@
 @import "tailwindcss";
 @custom-variant dark (&:is(.dark *));
 
+/* =========================================
+   1. VARIABLES Y CONFIGURACIÓN DEL TEMA
+   ========================================= */
 :root {
-  /* --- TUS CONFIGURACIONES DE FUENTE Y COLORES --- */
+  /* --- CONFIGURACIONES BASE --- */
   --font-size: 16px;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
@@ -14,7 +17,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
 
-  /* MANTENIENDO TU AZUL CORPORATIVO */
+  /* AZUL CORPORATIVO */
   --primary: #0B3C5D;
   --primary-foreground: #FFFFFF;
 
@@ -28,17 +31,17 @@
   --destructive-foreground: #ffffff;
   
   --border: rgba(0, 0, 0, 0.1);
-  --input: #ffffff; /* Manteniendo tu blanco explícito */
+  --input: #ffffff;
   --ring: oklch(0.708 0 0);
   
-  /* TUS VARIABLES PERSONALIZADAS EXTRA */
+  /* VARIABLES EXTRA */
   --input-background: #f3f3f5;
   --switch-background: #cbced4;
 
   /* RADIUS */
   --radius: 0.625rem;
 
-  /* MANTENIENDO TU SIDEBAR AZUL */
+  /* SIDEBAR AZUL */
   --sidebar: #0B3C5D;
   --sidebar-foreground: #FFFFFF;
   --sidebar-primary: #1F6FB2;
@@ -48,7 +51,7 @@
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: oklch(0.708 0 0);
 
-  /* AGREGADO DEL NUEVO: CHARTS */
+  /* CHARTS */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -77,7 +80,7 @@
   --input: oklch(0.269 0 0);
   --ring: oklch(0.439 0 0);
   
-  /* AGREGADO DEL NUEVO: CHARTS DARK */
+  /* CHARTS DARK */
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -114,20 +117,17 @@
   --color-border: var(--border);
   --color-input: var(--input);
   
-  /* TUS VARIABLES EXTRA EN EL THEME */
   --color-input-background: var(--input-background);
   --color-switch-background: var(--switch-background);
   
   --color-ring: var(--ring);
   
-  /* AGREGADO DEL NUEVO: CHARTS MAPEO */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
-  /* AGREGADO DEL NUEVO: RADIUS VARIANTS */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -143,19 +143,31 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* =========================================
+   2. ESTILOS BASE (Fusionados)
+   ========================================= */
 @layer base {
   * {
-    border-color: var(--border);
-    outline-color: hsl(var(--ring) / 0.5); /* Ajuste para compatibilidad */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* Del nuevo */
+    border-color: var(--border); /* Del antiguo */
+    outline-color: hsl(var(--ring) / 0.5);
   }
 
   body {
-    @apply bg-background text-foreground;
+    /* Tipografía del Login */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+
+    /* Colores del Tema Original */
+    @apply bg-background text-foreground;
   }
 
-  /* AGREGADO DEL NUEVO: TIPOGRAFÍA BASE CONSISTENTE */
+  /* Tipografía Base Consistente */
   :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
     h1 { font-size: var(--text-2xl); font-weight: var(--font-weight-medium); line-height: 1.5; }
     h2 { font-size: var(--text-xl); font-weight: var(--font-weight-medium); line-height: 1.5; }
@@ -167,14 +179,15 @@
   }
 }
 
-/* --- TUS COMPONENTES PERSONALIZADOS (CRÍTICO: NO BORRAR) --- */
+/* =========================================
+   3. COMPONENTES PERSONALIZADOS
+   ========================================= */
 @layer components {
-  /* Estilo general para inputs manuales corregido */
+  /* Estilo general para inputs manuales */
   .input {
     @apply w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm 
            focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary 
            text-foreground transition-all duration-200;
-    /* Los !important van fuera de @apply */
     min-height: 40px !important;
     background-color: white !important;
   }
@@ -185,7 +198,7 @@
     background-size: 1.5rem 1.5rem;
   }
 
-  /* FORZAR ESTILOS EN TABLA DE RAMOS (SOLUCIÓN FINAL) */
+  /* FORZAR ESTILOS EN TABLA DE RAMOS (CRÍTICO) */
   #ramos-container input {
     display: block !important;
     width: 100% !important;
@@ -205,6 +218,20 @@
            rounded-lg hover:bg-[#257249] transition-colors text-sm font-medium border-none;
     cursor: pointer;
   }
+}
+
+/* =========================================
+   4. UTILIDADES Y ANIMACIONES (Nuevo Login)
+   ========================================= */
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.animate-shake {
+  animation: shake 0.3s ease-in-out;
 }
 
 html {

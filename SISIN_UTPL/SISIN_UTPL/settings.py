@@ -86,7 +86,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'sisis_utpl',
         'USER': 'postgres',
-        'PASSWORD': 'PIZZA3',
+        'PASSWORD': 'password',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -162,3 +162,14 @@ DEFAULT_FROM_EMAIL = 'SISIN UTPL <cris235g.1@gmail.com>'
 
 SERVER_EMAIL = 'cris235g.1@gmail.com'
 #SITE_URL = 'http://127.0.0.1:8000'
+
+# settings.py (Al final del archivo)
+
+# 1. Si Django necesita mandar a alguien al login, usa esta URL (que definiste en usuarios/urls.py)
+LOGIN_URL = 'login'
+
+# 2. Cuando el login es EXITOSO, manda a tu vista "semáforo"
+LOGIN_REDIRECT_URL = 'redireccion_inicial'
+
+# 3. Cuando cierras sesión, vuelves al login
+LOGOUT_REDIRECT_URL = 'login'

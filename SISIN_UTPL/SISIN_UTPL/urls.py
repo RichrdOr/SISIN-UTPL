@@ -22,11 +22,19 @@ from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('usuarios.urls')),
+
+    # --- 1. REDIRECCIÓN DE LA RAÍZ (La Clave) ---
+    # Si alguien entra a "http://127.0.0.1:8000/" (vacío), 
+    # Django lo mandará automáticamente al 'login'
+    path('', RedirectView.as_view(pattern_name='login', permanent=False)),
+
+    # --- 2. TUS APPS ---
+    # 'usuarios.urls' contiene las rutas /login/, /logout/, /inicio/ y los dashboards
+    path('', include('usuarios.urls')), 
+    
     path("siniestros/", include("siniestros.urls")),
     path("aseguradora/", include("aseguradora.urls")),
     path("polizas/", include("polizas.urls")),
     path("notificaciones/", include("notificaciones.urls")),
-    # Redirige la raíz al dashboard de la asesora
-    path('dashboard/', RedirectView.as_view(url='/siniestros/dashboard/', permanent=False), name='dashboard_redirect'),
+    path("gerencia/", include("gerencia.urls")),
 ]
