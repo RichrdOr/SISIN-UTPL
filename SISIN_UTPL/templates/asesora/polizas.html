@@ -1,4 +1,4 @@
-{% extends "asesora/base.html" %}
+o{% extends "asesora/base.html" %}
 
 {% block title %}Gestión de Pólizas{% endblock %}
 {% block header %}Gestión de Pólizas{% endblock %}
@@ -260,8 +260,8 @@
           <i data-lucide="file-text" class="w-5 h-5 text-primary-foreground"></i>
         </div>
         <div>
-          <h3 class="text-xl font-bold text-foreground">Crear Nueva Póliza</h3>
-          <p class="text-sm text-muted-foreground">Complete la información de la póliza</p>
+          <h3 class="text-xl font-bold text-foreground">Editar Póliza</h3>
+        <p class="text-sm text-muted-foreground">Polizas </p>
         </div>
       </div>
       <button onclick="closeModal()" class="p-2 hover:bg-accent rounded-lg transition-colors">
@@ -476,10 +476,11 @@ let currentEditingId = null;
 let ramosCountModal = 1;
 
 function openModal() {
-  currentEditingId = null;
   document.getElementById('polizaModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
-  resetForm();
+  if (!currentEditingId) {
+    resetForm();
+  }
   setTimeout(() => lucide.createIcons(), 100);
 }
 
@@ -543,66 +544,109 @@ async function editPoliza(id) {
   try {
     const response = await fetch(`/polizas/obtener/${id}/`);
     console.log('Response status:', response.status);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
     console.log('Data received:', data);
-    
+
+    // Open modal first to make elements accessible
+    openModal();
+
+    // Wait a bit for modal to render
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     // Load data into form
     const numeroPoliza = document.querySelector('[name="numero_poliza"]');
     if (numeroPoliza) {
       numeroPoliza.value = data.numero_poliza || '';
+      console.log('Set numero_poliza:', data.numero_poliza);
     }
-    
+
     const aseguradora = document.querySelector('[name="aseguradora"]');
     if (aseguradora) {
       aseguradora.value = data.aseguradora || '';
+      console.log('Set aseguradora:', data.aseguradora);
     }
-    
+
     const fechaEmision = document.querySelector('[name="fecha_emision"]');
     if (fechaEmision) {
       fechaEmision.value = data.fecha_emision || '';
+      console.log('Set fecha_emision:', data.fecha_emision);
     }
-    
+
     const fechaInicio = document.querySelector('[name="fecha_inicio"]');
     if (fechaInicio) {
       fechaInicio.value = data.fecha_inicio || '';
+      console.log('Set fecha_inicio:', data.fecha_inicio);
     }
-    
+
     const fechaFin = document.querySelector('[name="fecha_fin"]');
     if (fechaFin) {
       fechaFin.value = data.fecha_fin || '';
+      console.log('Set fecha_fin:', data.fecha_fin);
     }
-    
+
     const totalPrima = document.querySelector('[name="total_prima"]');
     if (totalPrima) {
       totalPrima.value = data.total_prima || '';
+      console.log('Set total_prima:', data.total_prima);
     }
-    
+
     const descripcionBien = document.querySelector('[name="descripcion_bien"]');
     if (descripcionBien) {
       descripcionBien.value = data.descripcion_bien || '';
+      console.log('Set descripcion_bien:', data.descripcion_bien);
     }
-    
+
     const tipoBien = document.querySelector('[name="tipo_bien"]');
     if (tipoBien) {
       tipoBien.value = data.tipo_bien || '';
+      console.log('Set tipo_bien:', data.tipo_bien);
     }
-    
+
     const zona = document.querySelector('[name="zona"]');
     if (zona) {
       zona.value = data.zona || '';
+      console.log('Set zona:', data.zona);
     }
-    
+
     const valorBien = document.querySelector('[name="valor_bien"]');
     if (valorBien) {
       valorBien.value = data.valor_bien || '';
+      console.log('Set valor_bien:', data.valor_bien);
     }
-    
-    openModal();
+
+    // Load ramos data
+    const ramosContainer = document.getElementById('ramos-container-modal');
+    if (ramosContainer && data.ramos && data.ramos.length > 0) {
+      console.log('Loading ramos:', data.ramos);
+      ramosContainer.innerHTML = '';
+      data.ramos.forEach((ramo, index) => {
+        const row = document.createElement('tr');
+        row.className = 'ramo-form bg-white';
+        row.innerHTML = `
+          <td class="p-1"><input name="ramos-${index}-grupo" class="w-full px-2 py-1 border rounded text-sm" value="${ramo.grupo || ''}" required></td>
+          <td class="p-1"><input name="ramos-${index}-subgrupo" class="w-full px-2 py-1 border rounded text-sm" value="${ramo.subgrupo || ''}"></td>
+          <td class="p-1"><input name="ramos-${index}-ramo" class="w-full px-2 py-1 border rounded text-sm" value="${ramo.ramo || ''}" required></td>
+          <td class="p-1"><input type="number" step="0.01" name="ramos-${index}-suma_asegurada" class="w-full px-2 py-1 border rounded text-sm" value="${ramo.suma_asegurada || ''}" required></td>
+          <td class="p-1"><input type="number" step="0.01" name="ramos-${index}-deducible" class="w-full px-2 py-1 border rounded text-sm" value="${ramo.deducible_porcentaje || ''}"></td>
+          <td class="p-2 text-center">
+            <button type="button" class="delete-ramo-btn-modal text-red-600 hover:bg-red-50 p-1 rounded">🗑️</button>
+          </td>
+        `;
+        ramosContainer.appendChild(row);
+      });
+      ramosCountModal = data.ramos.length;
+    } else {
+      console.log('No ramos data or container not found');
+    }
+
+    // Load deducibles data (if needed in the future)
+    // For now, deducibles are handled separately in the backend
+
     reinitializeIcons();
   } catch (error) {
     console.error('Error loading policy:', error);

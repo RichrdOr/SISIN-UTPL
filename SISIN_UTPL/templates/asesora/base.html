@@ -7,15 +7,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="{% static 'css/output.css' %}">
-  <script src="https://cdn.tailwindcss.com"></script>
   
   {% block extra_css %}{% endblock %}
   {% block extra_head %}{% endblock %}
 </head>
 
-<body class="h-screen bg-gray-50 text-foreground antialiased flex flex-col overflow-hidden">
+<body class="bg-background text-foreground antialiased min-h-screen">
 
-  <nav class="h-16 bg-[#0B3C5D] text-white flex items-center justify-between px-6 shrink-0 shadow-md z-50">
+  <nav class="bg-[#0B3C5D] text-white flex items-center justify-between px-6 shadow-md"
+       style="position: fixed; top: 0; left: 0; right: 0; height: 64px; z-index: 50;">
     
     <div class="flex items-center gap-4">
       <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-inner text-[#0B3C5D]">
@@ -26,20 +26,24 @@
       </h1>
     </div>
 
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-6">
       
-      <a href="{% url 'notificaciones' %}" class="relative cursor-pointer hover:bg-white/10 p-2 rounded-full transition-colors">
-        <i data-lucide="bell" class="w-5 h-5"></i>
-        <span class="absolute top-1 right-1 w-4 h-4 bg-red-600 rounded-full text-[10px] flex items-center justify-center font-bold">3</span>
-      </a>
-
       <div class="flex items-center gap-3 pl-4 border-l border-white/20">
-        <div class="w-9 h-9 bg-[#1F6FB2] rounded-full flex items-center justify-center text-sm font-bold border-2 border-white/30 uppercase">
+        <div class="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold border-2 border-white/30 uppercase">
           {{ request.user.username|slice:":2" }}
         </div>
+        
         <div class="text-sm leading-tight hidden md:block">
-          <div class="font-semibold">{{ request.user.username }}</div>
-          <div class="text-xs opacity-80">Asesora</div>
+          <div class="font-semibold">
+            {{ request.user.get_full_name|default:request.user.username }}
+          </div>
+          <div class="text-xs opacity-80">
+            {% if request.user.is_superuser %}
+                Administrador
+            {% else %}
+                Asesor
+            {% endif %}
+          </div>
         </div>
       </div>
 
@@ -51,62 +55,59 @@
           </button>
         </form>
       </div>
-
     </div>
   </nav>
 
-  <div class="flex flex-1 overflow-hidden"> 
-    <aside class="w-64 bg-[#0B3C5D] text-white hidden md:flex flex-col border-r border-white/10 overflow-y-auto">
-      <div class="h-16 flex items-center px-6 shrink-0">
-        <span class="text-xs font-bold tracking-widest opacity-60 text-white uppercase">
-          Menú Principal
-        </span>
-      </div>
+  <aside class="bg-sidebar text-white border-r border-sidebar-border hidden md:flex flex-col overflow-y-auto"
+         style="position: fixed; top: 64px; left: 0; bottom: 0; width: 256px; z-index: 40;">
+      
+    <div class="h-16 flex items-center px-6 shrink-0 border-b border-sidebar-border">
+      <span class="text-sm font-bold tracking-widest opacity-70 text-white">
+        MENU PRINCIPAL
+      </span>
+    </div>
 
-      <nav class="flex-1 p-4 space-y-2 text-sm">
-        
-        <a href="{% url 'dashboard_asesora' %}"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if request.resolver_match.url_name == 'dashboard_asesora' %}bg-[#1F6FB2] text-white shadow-md{% else %}text-white/80 hover:bg-white/10 hover:text-white{% endif %} transition-all">
-          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-          <span class="font-medium">Dashboard</span>
-        </a>
+    <nav class="flex-1 p-4 space-y-2 text-sm">
+      <a href="{% url 'dashboard_asesora' %}"
+         class="flex items-center gap-3 px-3 py-2 rounded-md shadow-sm {% if request.resolver_match.url_name == 'dashboard_asesora' %}bg-sidebar-accent text-white{% else %}text-white/80 hover:bg-sidebar-accent hover:text-white{% endif %} transition-colors">
+        <i data-lucide="layout-dashboard" class="w-4 h-4 text-white"></i>
+        <span class="font-medium">Dashboard</span>
+      </a>
 
-        <a href="{% url 'ver_polizas' %}"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if 'polizas' in request.path %}bg-[#1F6FB2] text-white shadow-md{% else %}text-white/80 hover:bg-white/10 hover:text-white{% endif %} transition-all">
-          <i data-lucide="file-text" class="w-4 h-4"></i>
-          <span>Pólizas</span>
-        </a>
+      <a href="{% url 'ver_polizas' %}"
+         class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {% if 'polizas' in request.path %}bg-sidebar-accent text-white{% else %}text-white/80 hover:bg-sidebar-accent hover:text-white{% endif %}">
+        <i data-lucide="file-text" class="w-4 h-4 text-white"></i>
+        <span class="text-white">Pólizas</span>
+      </a>
 
-        <a href="{% url 'siniestros' %}"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if 'siniestros' in request.path %}bg-[#1F6FB2] text-white shadow-md{% else %}text-white/80 hover:bg-white/10 hover:text-white{% endif %} transition-all">
-          <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-          <span>Siniestros</span>
-        </a>
+      <a href="{% url 'siniestros' %}"
+         class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {% if 'siniestros' in request.path %}bg-sidebar-accent text-white{% else %}text-white/80 hover:bg-sidebar-accent hover:text-white{% endif %}">
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-white"></i>
+        <span class="text-white">Siniestros</span>
+      </a>
 
-        <a href="{% url 'notificaciones' %}"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if 'notificaciones' in request.path %}bg-[#1F6FB2] text-white shadow-md{% else %}text-white/80 hover:bg-white/10 hover:text-white{% endif %} transition-all">
-          <i data-lucide="bell" class="w-4 h-4"></i>
-          <span>Notificaciones</span>
-        </a>
+      <a href="{% url 'notificaciones' %}"
+         class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {% if 'notificaciones' in request.path %}bg-sidebar-accent text-white{% else %}text-white/80 hover:bg-sidebar-accent hover:text-white{% endif %}">
+        <i data-lucide="bar-chart-3" class="w-4 h-4 text-white"></i>
+        <span class="text-white">Notificaciones</span>
+      </a>
+    </nav>
+  </aside>
 
-      </nav>
-      </aside>
+  <main class="bg-background min-h-screen w-full relative"
+        style="padding-top: 64px; padding-left: 256px;"> 
+    
+    <header class="bg-white border-b border-border px-8 py-5 shadow-sm">
+      <h2 class="text-xl font-bold text-foreground">
+        {% block header %}Dashboard{% endblock %}
+      </h2>
+    </header>
 
-    <main class="flex-1 overflow-y-auto bg-gray-50 relative">
-      <header class="bg-white border-b border-gray-200 px-8 py-5 shadow-sm sticky top-0 z-30">
-        <h2 class="text-xl font-bold text-gray-800">
-          {% block header %}Dashboard{% endblock %}
-        </h2>
-      </header>
+    <div class="p-8 max-w-7xl mx-auto">
+      {% block content %}{% endblock %}
+    </div>
 
-      <div class="p-6 md:p-8">
-        <div class="max-w-7xl mx-auto">
-          {% block content %}{% endblock %}
-        </div>
-      </div>
-    </main>
-
-  </div>
+  </main>
 
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
