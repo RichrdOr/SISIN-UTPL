@@ -14,3 +14,12 @@ db.sqlite3
 
 # Archivos del sistema
 .DS_Store
+
+__pycache__/
+*.py[cod]
+*$py.class
+db.sqlite3
+.env
+venv/
+env/
+staticfiles/
