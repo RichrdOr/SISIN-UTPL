@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os  # Importamos os aquí al inicio para evitar errores
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,7 +44,7 @@ INSTALLED_APPS = [
     'usuarios',
     'polizas',
     'siniestros',
-    'notificaciones',  # ← AGREGAR ESTA LÍNEA
+    'notificaciones',
     'reportes',
     'gerencia',
 ]
@@ -129,11 +130,16 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# 👇 AGREGA ESTA LÍNEA OBLIGATORIA PARA EL PIPELINE
+# (Import os ya está arriba, aquí definimos la ruta)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -147,7 +153,6 @@ EMAIL_USE_TLS = True
 
 # Tus credenciales que me pasaste
 EMAIL_HOST_USER = 'cris235g.1@gmail.com'
-EMAIL_HOST_PASSWORD = 'gchm fnsj jzad urim'  # Las 16 letras de Google
-
+EMAIL_HOST_PASSWORD = 'gchm fnsj jzad urim'
 # Remitente por defecto
 DEFAULT_FROM_EMAIL = 'SISIN UTPL <cris235g.1@gmail.com>'
