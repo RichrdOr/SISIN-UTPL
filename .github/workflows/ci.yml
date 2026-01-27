@@ -1,7 +1,6 @@
 name: CI Pipeline - SISIN UTPL
 
 on:
-  # Permite ejecutarlo manualmente desde el botón "Run workflow"
   workflow_dispatch:
   push:
     branches: [ '**' ]
@@ -9,9 +8,37 @@ on:
     branches: [ '**' ]
 
 jobs:
-  test-and-validate:
-    name: Django Tests & Quality
+  # --- TRABAJO 1: CALIDAD DE CÓDIGO (LINTING) ---
+  linting:
+    name: 1. Code Quality (Linting)
     runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Linting Tools
+        working-directory: ./SISIN_UTPL
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+
+      - name: Run Flake8 Analysis
+        working-directory: ./SISIN_UTPL
+        # Revisa sintaxis pero ignora carpetas ajenas
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=migrations,venv,.venv,node_modules
+
+  # --- TRABAJO 2: PRUEBAS UNITARIAS (TESTING) ---
+  testing:
+    name: 2. Django Unit Tests
+    runs-on: ubuntu-latest
+    needs: linting  # Espera a que el Linting pase para iniciar (se ve ordenado)
     
     services:
       postgres:
@@ -32,56 +59,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # --- 1. CONFIGURACIÓN DE PYTHON ---
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install Python Dependencies
-        working-directory: ./SISIN_UTPL
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install flake8
-
-      # --- 2. CONFIGURACIÓN DE NODE ---
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'npm'
-          cache-dependency-path: './SISIN_UTPL/package-lock.json'
-
-      - name: Install Node Dependencies
-        working-directory: ./SISIN_UTPL
-        run: npm ci
-
-      # --- 3. AUDITORÍA Y LINTING ---
-      - name: Python Linting (Flake8)
-        working-directory: ./SISIN_UTPL
-        # Excluimos carpetas basura
-        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=migrations,venv,.venv,node_modules
-
-      # --- 4. TESTS ---
-      - name: Run Django Tests
-        working-directory: ./SISIN_UTPL
-        env:
-          SECRET_KEY: 'django-insecure-test-key-ci-pipeline'
-          DEBUG: 'True'
-        run: |
-          python manage.py test
-
-  build-check:
-    name: Build Production Artifacts
-    runs-on: ubuntu-latest
-    needs: test-and-validate
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -90,8 +67,40 @@ jobs:
 
       - name: Install Requirements
         working-directory: ./SISIN_UTPL
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Django Tests
+        working-directory: ./SISIN_UTPL
+        env:
+          SECRET_KEY: 'django-insecure-test-key-ci-pipeline'
+          DEBUG: 'True'
+        run: |
+          python manage.py test
+
+  # --- TRABAJO 3: CONSTRUCCIÓN (BUILD) ---
+  build:
+    name: 3. Build Production Artifacts
+    runs-on: ubuntu-latest
+    needs: testing  # Espera a que los tests pasen
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Setup Python para collectstatic
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python Deps
+        working-directory: ./SISIN_UTPL
         run: pip install -r requirements.txt
 
+      # Setup Node para Tailwind
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -99,31 +108,33 @@ jobs:
           cache: 'npm'
           cache-dependency-path: './SISIN_UTPL/package-lock.json'
 
-      - name: Install Node Deps & Build Tailwind
+      - name: Build Tailwind CSS
         working-directory: ./SISIN_UTPL
         run: |
           npm ci
           npm run build
 
-      # --- AQUÍ ESTABA EL ERROR DE INDENTACIÓN CORREGIDO ---
-      - name: Collect Static Files
+      - name: Django Collectstatic
         working-directory: ./SISIN_UTPL
         env:
           SECRET_KEY: 'build-key'
         run: |
           python manage.py collectstatic --noinput
 
-      - name: Verify Build Artifacts
+      - name: Verify Artifacts
         run: |
           if [ ! -d "SISIN_UTPL/staticfiles" ] && [ ! -d "SISIN_UTPL/static" ]; then
             echo "Build failed: Static directory not found"
             exit 1
           fi
-          echo "Build successful. Static files collected."
+          echo "Build successful."
 
-  security-audit:
-    name: Security Audit (npm)
+  # --- TRABAJO 4: SEGURIDAD (AUDIT) ---
+  security:
+    name: 4. Security Audit
     runs-on: ubuntu-latest
+    # Este puede correr en paralelo para ahorrar tiempo, o ponerle 'needs: build' si quieres una escalera perfecta
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -135,7 +146,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: './SISIN_UTPL/package-lock.json'
       
-      - name: Audit Node Dependencies
+      - name: Run npm audit
         working-directory: ./SISIN_UTPL
         run: npm audit --audit-level=high
         continue-on-error: true
