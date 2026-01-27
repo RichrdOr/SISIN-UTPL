@@ -1,10 +1,12 @@
 name: CI Pipeline - SISIN UTPL
 
 on:
+  # Permite ejecutarlo manualmente desde el botón "Run workflow"
+  workflow_dispatch:
   push:
-    branches: [ main, master, develop ]
+    branches: [ '**' ]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [ '**' ]
 
 jobs:
   test-and-validate:
@@ -12,7 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     
     services:
-      # Servicio de base de datos para tests (Opcional, pero recomendado para Django)
       postgres:
         image: postgres:15
         env:
@@ -31,7 +32,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # --- 1. CONFIGURACIÓN DE PYTHON (BACKEND) ---
+      # --- 1. CONFIGURACIÓN DE PYTHON ---
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -45,7 +46,7 @@ jobs:
           pip install -r requirements.txt
           pip install flake8
 
-      # --- 2. CONFIGURACIÓN DE NODE (FRONTEND/TAILWIND) ---
+      # --- 2. CONFIGURACIÓN DE NODE ---
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -57,13 +58,13 @@ jobs:
         working-directory: ./SISIN_UTPL
         run: npm ci
 
-      # --- 3. AUDITORÍA Y LINTING (CORREGIDO) ---
+      # --- 3. AUDITORÍA Y LINTING ---
       - name: Python Linting (Flake8)
         working-directory: ./SISIN_UTPL
-        # 👇 AQUÍ ESTÁ EL CAMBIO: Excluimos venv, .venv y node_modules
+        # Excluimos carpetas basura
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=migrations,venv,.venv,node_modules
 
-      # --- 4. EJECUCIÓN DE TESTS ---
+      # --- 4. TESTS ---
       - name: Run Django Tests
         working-directory: ./SISIN_UTPL
         env:
@@ -81,7 +82,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Instalar Python nuevamente (Github Actions limpia el entorno entre trabajos)
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -90,3 +90,52 @@ jobs:
 
       - name: Install Requirements
         working-directory: ./SISIN_UTPL
+        run: pip install -r requirements.txt
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: './SISIN_UTPL/package-lock.json'
+
+      - name: Install Node Deps & Build Tailwind
+        working-directory: ./SISIN_UTPL
+        run: |
+          npm ci
+          npm run build
+
+      # --- AQUÍ ESTABA EL ERROR DE INDENTACIÓN CORREGIDO ---
+      - name: Collect Static Files
+        working-directory: ./SISIN_UTPL
+        env:
+          SECRET_KEY: 'build-key'
+        run: |
+          python manage.py collectstatic --noinput
+
+      - name: Verify Build Artifacts
+        run: |
+          if [ ! -d "SISIN_UTPL/staticfiles" ] && [ ! -d "SISIN_UTPL/static" ]; then
+            echo "Build failed: Static directory not found"
+            exit 1
+          fi
+          echo "Build successful. Static files collected."
+
+  security-audit:
+    name: Security Audit (npm)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: './SISIN_UTPL/package-lock.json'
+      
+      - name: Audit Node Dependencies
+        working-directory: ./SISIN_UTPL
+        run: npm audit --audit-level=high
+        continue-on-error: true
