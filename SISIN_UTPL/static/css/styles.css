@@ -45,6 +45,7 @@
     --color-green-50: oklch(98.2% 0.018 155.826);
     --color-green-100: oklch(96.2% 0.044 156.743);
     --color-green-200: oklch(92.5% 0.084 155.995);
+    --color-green-300: oklch(87.1% 0.15 154.449);
     --color-green-500: oklch(72.3% 0.219 149.579);
     --color-green-600: oklch(62.7% 0.194 149.214);
     --color-green-700: oklch(52.7% 0.154 150.069);
@@ -61,6 +62,7 @@
     --color-blue-50: oklch(97% 0.014 254.604);
     --color-blue-100: oklch(93.2% 0.032 255.585);
     --color-blue-200: oklch(88.2% 0.059 254.128);
+    --color-blue-300: oklch(80.9% 0.105 251.813);
     --color-blue-500: oklch(62.3% 0.214 259.815);
     --color-blue-600: oklch(54.6% 0.245 262.881);
     --color-blue-700: oklch(48.8% 0.243 264.376);
@@ -454,6 +456,9 @@
   .mb-8 {
     margin-bottom: calc(var(--spacing) * 8);
   }
+  .ml-1 {
+    margin-left: calc(var(--spacing) * 1);
+  }
   .ml-2 {
     margin-left: calc(var(--spacing) * 2);
   }
@@ -718,6 +723,9 @@
   .animate-spin {
     animation: var(--animate-spin);
   }
+  .cursor-not-allowed {
+    cursor: not-allowed;
+  }
   .cursor-pointer {
     cursor: pointer;
   }
@@ -959,6 +967,9 @@
   .border-blue-200 {
     border-color: var(--color-blue-200);
   }
+  .border-blue-300 {
+    border-color: var(--color-blue-300);
+  }
   .border-blue-500 {
     border-color: var(--color-blue-500);
   }
@@ -985,6 +996,9 @@
   }
   .border-green-200 {
     border-color: var(--color-green-200);
+  }
+  .border-green-300 {
+    border-color: var(--color-green-300);
   }
   .border-green-500 {
     border-color: var(--color-green-500);
@@ -1163,6 +1177,12 @@
   .bg-blue-50 {
     background-color: var(--color-blue-50);
   }
+  .bg-blue-50\/30 {
+    background-color: color-mix(in srgb, oklch(97% 0.014 254.604) 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-blue-50) 30%, transparent);
+    }
+  }
   .bg-blue-100 {
     background-color: var(--color-blue-100);
   }
@@ -1196,6 +1216,12 @@
   .bg-green-50 {
     background-color: var(--color-green-50);
   }
+  .bg-green-50\/30 {
+    background-color: color-mix(in srgb, oklch(98.2% 0.018 155.826) 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-green-50) 30%, transparent);
+    }
+  }
   .bg-green-100 {
     background-color: var(--color-green-100);
   }
@@ -1222,6 +1248,12 @@
   }
   .bg-orange-50 {
     background-color: var(--color-orange-50);
+  }
+  .bg-orange-50\/30 {
+    background-color: color-mix(in srgb, oklch(98% 0.016 73.684) 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-orange-50) 30%, transparent);
+    }
   }
   .bg-orange-100 {
     background-color: var(--color-orange-100);
